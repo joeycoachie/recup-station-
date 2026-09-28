@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recup Station · My Ascension Card</title>
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  body { font-family: var(--sans); }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
+  .top { text-align: center; margin-bottom: 24px; }
+  .logo { font: 800 20px var(--mono); letter-spacing: 3px; }
+  .kicker { font: 11px var(--mono); letter-spacing: 2px; color: var(--accent); margin-top: 6px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 18px; }
+  .who { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .who h1 { margin: 0; font-size: 26px; }
+  .code { font: 800 26px var(--mono); letter-spacing: 3px; color: var(--accent); }
+  .status { display: inline-block; margin-top: 10px; font: 700 11px var(--mono); letter-spacing: 1px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); }
+  .status.active { background: var(--success); color: #000; border-color: var(--success); }
+  .meter { display: flex; gap: 6px; margin-top: 16px; }
+  .meter div { flex: 1; height: 10px; border-radius: 5px; background: #222; }
+  .meter div.on { background: var(--accent); }
+  h2 { font-size: 15px; letter-spacing: 1px; margin: 0 0 4px; font-family: var(--mono); }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  .rung { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
+  .rung:first-of-type { border-top: none; }
+  .num { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #3a4250; display: grid; place-items: center; font: 800 16px var(--mono); color: var(--muted); }
+  .rung.done .num { background: var(--accent); border-color: var(--accent); color: #000; }
+  .rung.next .num { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px rgba(0,242,255,.4); }
+  .rung h3 { margin: 0; font: 700 15px var(--mono); letter-spacing: 1px; }
+  .rung .step { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .benefit { margin-top: 8px; font-weight: 700; }
+  .rung.done .benefit { color: var(--success); }
+  .data { margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .pill { font: 700 10px var(--mono); letter-spacing: 1px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+  .pill.now { background: var(--accent); color: #000; }
+  .pill.ok { background: rgba(0,255,136,.15); color: var(--success); }
+  .find { display: flex; gap: 8px; }
+  .find .field { margin: 0; }
+  .find .btn { width: auto; margin: 0; padding: 0 20px; }
+  .note { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
+  a.btn { text-decoration: none; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="logo">RECUP STATION</div><div class="kicker">GLENHILL SAUJANA · THE ASCENSION MODEL</div></div>
+
+  <div class="card" id="me" style="display:none">
+    <div class="who">
+      <div><div class="sub" style="margin:0">PERFORMANCE PARTNER</div><h1 id="mName"></h1></div>
+      <div class="code" id="mCode"></div>
+    </div>
+    <span class="status" id="mStatus"></span>
+    <div class="meter" id="mMeter"></div>
+    <p class="sub" style="margin:12px 0 0" id="mNext"></p>
+  </div>
+
+  <div class="card" id="findCard" style="display:none">
+    <h2>FIND MY CARD</h2>
+    <p class="sub">Enter the member code you got at check-in (e.g. RS-7Q4K).</p>
+    <div class="find"><input class="field" id="q" placeholder="RS-····" autocapitalize="characters"><button class="btn" onclick="lookup()">GO</button></div>
+    <div class="err" id="err" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2>FROM "THIRSTY" TO ACTIVATED PERFORMANCE PARTNER</h2>
+    <p class="sub">Every cup moves you up. Show your code at the Recup table to log it.</p>
+    <div id="ladder"></div>
+  </div>
+
+  <a class="btn" id="manualBtn" href="repair-manual.html">OPEN MY RUNNER'S REPAIR MANUAL</a>
+  <p class="note" style="margin-top:18px">Your details are only used for your guide and rewards. Never shared or sold.<br>Want your data removed? Tell us at the booth or reply "DELETE" to our WhatsApp.</p>
+</div>
+
+<script src="assets/recup-core.js"></script>
+<script>
+  const C = RECUP_CONFIG; const $ = id => document.getElementById(id);
+  function render(l) {
+    const cups = l ? (+l.cups || 0) : 0;
+    $('ladder').innerHTML = C.LADDER.map(r => {
+      const cls = cups >= r.cup ? 'done' : (cups + 1 === r.cup && l ? 'next' : '');
+      const pill = cups >= r.cup ? '<span class="pill ok">UNLOCKED</span>' : (cls === 'next' ? '<span class="pill now">NEXT</span>' : '');
+      return `<div class="rung ${cls}"><div class="num">${r.cup === C.LADDER.length ? '★' : r.cup}</div><div>
+        <h3>${r.name}${pill}</h3><div class="step">${r.step}</div>
+        <div class="benefit">${r.reward}</div>
+        <div class="data">We'll ask: ${r.data}</div></div></div>`;
+    }).join('');
+    if (!l) return;
+    $('me').style.display = 'block'; $('findCard').style.display = 'none';
+    $('mName').textContent = (l.name || 'Runner').split(' ')[0];
+    $('mCode').textContent = l.code;
+    const activated = cups >= 4;
+    $('mStatus').textContent = activated ? (cups >= C.LADDER.length ? '★ MILESTONE MEMBER' : '● ACCOUNT ACTIVATED') : `${4 - cups} CUP${4 - cups === 1 ? '' : 'S'} TO ACTIVATION`;
+    $('mStatus').className = 'status' + (activated ? ' active' : '');
+    $('mMeter').innerHTML = C.LADDER.map(r => `<div class="${cups >= r.cup ? 'on' : ''}"></div>`).join('');
+    const next = RECUP.nextTier(cups);
+    $('mNext').textContent = next ? `${cups} cup${cups === 1 ? '' : 's'} logged. Next: ${next.name} → ${next.reward}` : 'You hold the Milestone: 25% off every cup.';
+    $('manualBtn').href = RECUP.manualUrl(l);
+  }
+  async function lookup(code) {
+    code = (code || $('q').value).trim().toUpperCase(); if (!code) return;
+    if (!/^RS-/.test(code)) code = 'RS-' + code;
+    const l = await RECUP.getByCode(code);
+    if (!l) { $('findCard').style.display = 'block'; $('err').textContent = 'Code not found yet. If you just checked in, give it a minute.'; render(null); return; }
+    history.replaceState(null, '', '?c=' + l.code); render(l);
+  }
+  const c = new URLSearchParams(location.search).get('c');
+  render(null);
+  if (c) lookup(c); else $('findCard').style.display = 'block';
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RECUP STATION // HUB</title>
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  body { min-height: 100vh; padding: 28px 16px; text-transform: uppercase; }
+  .hub { width: 100%; max-width: 980px; margin: 0 auto; }
+  .head { text-align: center; margin-bottom: 30px; }
+  .head h1 { font-size: 30px; letter-spacing: 4px; margin: 0; }
+  .head p { color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+  .grid.two { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 760px) { .grid, .grid.two { grid-template-columns: 1fr; } }
+  .tile { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; transition: .2s; }
+  .tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tile .k { font-size: 10px; color: var(--accent); letter-spacing: 2px; }
+  .tile h2 { margin: 8px 0; font-size: 16px; letter-spacing: 1px; }
+  .tile p { margin: 0; color: var(--muted); font-size: 12px; text-transform: none; line-height: 1.6; }
+  .god { border-color: var(--accent); background: linear-gradient(180deg, rgba(0,242,255,.08), var(--panel)); text-align: center; padding: 30px; margin-bottom: 14px; }
+  .god h2 { font-size: 26px; color: var(--accent); letter-spacing: 3px; }
+  .arrow { text-align: center; color: var(--accent); letter-spacing: 4px; font-size: 11px; margin: 4px 0 14px; }
+  .sec { font-size: 11px; letter-spacing: 2px; color: var(--muted); margin: 22px 0 10px; }
+</style>
+</head>
+<body>
+<div class="hub">
+  <div class="head"><h1>RECUP <span class="accent">STATION</span></h1><p>BODY SCIENCE SPECIALIST · NODE_001 GLENHILL SAUJANA</p></div>
+
+  <div class="sec">DATA COLLECTION · 3 DOORS IN</div>
+  <div class="grid">
+    <a class="tile" href="intake-ig.html"><div class="k">PHASE 1 · ONLINE</div><h2>THE DIAGNOSTIC</h2><p>IG participation link. Squat test + runner profile → Grade, member code, reserved Protocol.</p></a>
+    <a class="tile" href="intake-ipad.html"><div class="k">PHASE 2 · ROADSIDE</div><h2>iPAD CHECK-IN</h2><p>"Did you do the online diagnostic?" YES → find reservation · NO → 60-sec check-in · I'M BACK → log cup.</p></a>
+    <a class="tile" href="intake-ipad.html?src=qr"><div class="k">PHASE 2 · SELF-SERVE</div><h2>QR STAND</h2><p>Same check-in on the runner's own phone. Beats the queue.</p></a>
+  </div>
+  <div class="arrow">▼ ALL FEED ONE DATABASE ▼</div>
+  <a class="tile god" href="terminal.html"><div class="k">COMMAND</div><h2>GOD TERMINAL</h2><p>Runners, Ascension ladder, PDF delivery, KPIs, financials, readiness, warnings.</p></a>
+
+  <div class="sec">WHAT THE RUNNER GETS</div>
+  <div class="grid two">
+    <a class="tile" href="repair-manual.html"><div class="k">FREE PDF</div><h2>RUNNER'S REPAIR MANUAL</h2><p>4 quick hits + menu & schedule. Personalised with their code.</p></a>
+    <a class="tile" href="member.html"><div class="k">LOYALTY</div><h2>ASCENSION CARD</h2><p>The 5-cup ladder: 10% → Nitric → Buddy free → 20% + activation → 25% + kit.</p></a>
+  </div>
+
+  <div class="sec">FOR THE TEAM</div>
+  <div class="grid">
+    <a class="tile" href="playbook.html"><div class="k">TRAINING</div><h2>PARTNER PLAYBOOK</h2><p>Booth script, Runner Protocols, what's in the jugs, ops checklist.</p></a>
+    <a class="tile" href="poster.html"><div class="k">PRINT</div><h2>POSTERS</h2><p>A · The Protocol menu (A3) · B · QR stand sign.</p></a>
+    <a class="tile" href="marketing.html"><div class="k">INSTAGRAM</div><h2>MARKETING KIT</h2><p>Hook story, Not-a-juice-bar, 55 nodes, the menu, the Ascension ladder, and the A3 identity poster. Captions included.</p></a>
+  </div>
+</div>
+</body>
+</html>

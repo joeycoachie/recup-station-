@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recup Station · Posters</title>
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  body { font-family: var(--sans); padding: 20px 16px 60px; }
+  .bar { max-width: 900px; margin: 0 auto 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .bar .btn { width: auto; margin: 0; padding: 12px 20px; }
+  .warn-box { max-width: 900px; margin: 0 auto 16px; border: 1px solid var(--warn); color: var(--warn); padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+  .poster { max-width: 900px; aspect-ratio: 297 / 420; margin: 0 auto 30px; background: #05070a; border: 1px solid var(--border); padding: 5% 6%; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .poster::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 85% 0%, rgba(0,242,255,.18), transparent 45%); pointer-events: none; }
+  .p-kicker { font: 700 clamp(10px, 1.5vw, 15px) var(--mono); letter-spacing: 4px; color: var(--accent); }
+  .p-title { font: 800 clamp(40px, 9vw, 96px)/.9 var(--mono); letter-spacing: 2px; margin: 12px 0 8px; }
+  .p-sub { font-size: clamp(13px, 1.9vw, 20px); color: var(--muted); margin-bottom: 4%; }
+  .phase { border-top: 2px solid var(--border); padding: 2.2% 0; display: grid; grid-template-columns: 22% 1fr; gap: 3%; }
+  .phase .lab { font: 800 clamp(11px, 1.6vw, 17px) var(--mono); letter-spacing: 2px; color: var(--accent); }
+  .phase .lab small { display: block; color: var(--muted); font-weight: 400; letter-spacing: 1px; margin-top: 4px; font-size: .8em; }
+  .item { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 1.4%; }
+  .item .nm { font: 800 clamp(16px, 3vw, 32px) var(--mono); letter-spacing: 1px; }
+  .item .ds { font-size: clamp(11px, 1.6vw, 17px); color: var(--muted); }
+  .item .pr { font: 800 clamp(16px, 3vw, 32px) var(--mono); color: var(--accent); white-space: nowrap; }
+  .locked { opacity: .5; }
+  .lock { font: 700 clamp(9px, 1.3vw, 14px) var(--mono); border: 1px solid var(--muted); padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+  .foot { margin-top: auto; display: grid; grid-template-columns: 1fr auto; gap: 4%; align-items: end; border-top: 2px solid var(--accent); padding-top: 3%; }
+  .hook { font: 800 clamp(16px, 3.2vw, 34px)/1.1 var(--mono); }
+  .hook span { color: var(--accent); }
+  .ladder { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .ladder div { font: 700 clamp(8px, 1.2vw, 12px) var(--mono); border: 1px solid var(--border); padding: 4px 8px; border-radius: 3px; color: var(--muted); }
+  .qr img { width: clamp(90px, 18vw, 190px); height: auto; background: #fff; padding: 8px; display: block; image-rendering: pixelated; }
+  .qr div { font: 700 10px var(--mono); letter-spacing: 1px; text-align: center; margin-top: 6px; color: var(--muted); }
+  /* A5 QR stand */
+  .stand { max-width: 520px; aspect-ratio: 148 / 210; margin: 0 auto; background: #05070a; border: 1px solid var(--border); padding: 7%; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+  .stand h2 { font: 800 clamp(28px, 7vw, 46px)/1 var(--mono); margin: 0; }
+  .stand .qr img { width: 70%; margin: 0 auto; }
+  .stand p { color: var(--muted); font-size: clamp(12px, 2.4vw, 16px); margin: 0; }
+  @media print {
+    @page { size: A3; margin: 0; }
+    body { padding: 0; background: #05070a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bar, .warn-box, .label { display: none; }
+    .poster, .stand { max-width: none; width: 100%; border: none; margin: 0; page-break-after: always; }
+    .poster { height: 100vh; aspect-ratio: auto; }
+    .stand { height: 100vh; aspect-ratio: auto; justify-content: space-around; }
+  }
+  .label { max-width: 900px; margin: 0 auto 8px; font: 11px var(--mono); color: var(--muted); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="bar"><button class="btn" onclick="window.print()">PRINT / SAVE PDF</button><span class="muted" style="font-size:13px">Prints A3. For the QR stand, print page 2 at A5 or A4.</span></div>
+<div class="warn-box" id="warn" style="display:none">⚠ SITE_URL isn't set in assets/recup-core.js, so these QR codes point to this computer and won't work on runners' phones. Host the site first, set SITE_URL, then print.</div>
+
+<div class="label">POSTER A · THE PROTOCOL MENU (A3)</div>
+<div class="poster">
+  <div class="p-kicker">RECUP STATION · BODY SCIENCE SPECIALIST</div>
+  <div class="p-title">THE<br>PROTOCOL</div>
+  <div class="p-sub">Not a juice bar. Metabolic Protocols for runners. Glenhill Saujana.</div>
+  <div id="menu"></div>
+  <div class="foot">
+    <div>
+      <div class="hook">SCAN FOR YOUR <span>10% DISCOUNT</span><br>+ FREE RECOVERY PDF</div>
+      <div class="ladder" id="ladder"></div>
+    </div>
+    <div class="qr" id="qr1"></div>
+  </div>
+</div>
+
+<div class="label">POSTER B · QR STAND (A5 / A4)</div>
+<div class="stand">
+  <div><div class="p-kicker">RECUP STATION · CHECK-IN</div><h2 style="margin-top:14px">SCAN.<br><span class="accent">10% OFF</span></h2></div>
+  <div class="qr" id="qr2"></div>
+  <div><p style="color:var(--text);font-weight:700;font-size:clamp(14px,2.8vw,19px)">+ Free Runner's Repair Manual</p><p style="margin-top:8px">60 seconds. Phone number optional.<br>Did the online diagnostic? Just show your code.</p></div>
+</div>
+
+<script src="assets/qrcode.js"></script>
+<script src="assets/recup-core.js"></script>
+<script>
+  const C = RECUP_CONFIG; const $ = id => document.getElementById(id);
+  if (!C.SITE_URL) $('warn').style.display = 'block';
+  const price = p => p.locked ? '<span class="lock">🔒 COMING SOON</span>' : `<span class="pr">${p.price ? 'RM' + p.price : ''}</span>`;
+  const item = p => `<div class="item ${p.locked ? 'locked' : ''}"><div><div class="nm">${p.name}</div><div class="ds">${p.tag}</div></div>${price(p)}</div>`;
+  $('menu').innerHTML = `
+    <div class="phase locked"><div class="lab">PRE-RUN<small>The Nitric Prime</small></div><div>${item(C.ADDONS.NITRIC)}</div></div>
+    <div class="phase"><div class="lab">DURING-RUN<small>The Electrolyte Balance · sip every 2km</small></div><div>${item(C.PROTOCOLS.N01)}</div></div>
+    <div class="phase"><div class="lab">POST-RUN<small>The Metabolic Window · the "Recup" phase</small></div><div>${item(C.PROTOCOLS.FLUSH)}${item(C.PROTOCOLS.N02)}${item(C.ADDONS.ACAI)}${item(C.ADDONS.NIGHT)}</div></div>`;
+  $('ladder').innerHTML = C.LADDER.map(r => `<div>${r.cup === C.LADDER.length ? '★' : 'CUP ' + r.cup} · ${r.reward.split(' + ')[0].split(' — ')[0]}</div>`).join('');
+  function qr(el, text) { try { const q = qrcode(0, 'M'); q.addData(text); q.make(); $(el).innerHTML = q.createImgTag(6, 0); } catch {} }
+  const checkin = RECUP.siteUrl('intake-ipad.html?src=qr');
+  qr('qr1', checkin); $('qr1').insertAdjacentHTML('beforeend', '<div>SCAN TO CHECK IN</div>');
+  qr('qr2', checkin);
+</script>
+</body>
+</html>

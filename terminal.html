@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RECUP STATION // GOD TERMINAL</title>
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  body { padding: 16px; text-transform: uppercase; font-size: 13px; }
+  .wrap { max-width: 1360px; margin: 0 auto; display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px; min-width: 0; }
+  .s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s6 { grid-column: span 6; } .s4 { grid-column: span 4; }
+  @media (max-width: 1000px) { .s8, .s6, .s4 { grid-column: span 12; } }
+  h2 { color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0 0 12px; font-size: 14px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  h2 small { color: var(--muted); font-size: 11px; font-weight: normal; }
+  h3 { font-size: 12px; margin: 14px 0 8px; color: var(--text); letter-spacing: 1px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .title { font-size: 18px; font-weight: 800; letter-spacing: 2px; } .title span { color: var(--accent); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.live { background: var(--success); box-shadow: 0 0 8px var(--success); } .dot.local { background: var(--warn); } .dot.bad { background: var(--danger); }
+  .countdown { color: var(--danger); font-weight: 800; letter-spacing: 1px; }
+  .kpis { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+  .kpi { background: var(--panel-2); border: 1px solid var(--border); padding: 12px; border-radius: 4px; }
+  .kpi .v { font-size: 24px; font-weight: 800; color: var(--accent); display: block; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+  .kpi .sub { font-size: 10px; color: var(--muted); margin-top: 4px; display: block; text-transform: none; }
+  .btn-t { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 10px; font-size: 11px; cursor: pointer; border-radius: 3px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; display: inline-block; font-family: var(--mono); }
+  .btn-t:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-t.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .btn-t.sm { padding: 3px 7px; font-size: 10px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: var(--muted); font-weight: normal; font-size: 10px; letter-spacing: 1px; padding: 6px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  td { padding: 7px 6px; border-bottom: 1px solid #161b22; vertical-align: middle; white-space: nowrap; }
+  .feed { max-height: 460px; overflow: auto; }
+  .tag { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: 700; border-radius: 2px; }
+  .t-ROADSIDE_IPAD { background: rgba(0,242,255,.15); color: var(--accent); }
+  .t-DIAGNOSTIC_ONLINE { background: rgba(255,0,85,.15); color: #ff5c93; }
+  .t-QR_STAND { background: rgba(255,176,32,.15); color: var(--warn); }
+  .res { color: var(--warn); font-size: 10px; }
+  .dots { display: inline-flex; gap: 3px; } .dots i { width: 9px; height: 9px; border-radius: 2px; background: #222; display: inline-block; } .dots i.on { background: var(--accent); }
+  .wa { color: #25d366; border-color: #25d366; }
+  .metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+  .meter { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin: 4px 0 12px; position: relative; }
+  .meter > div { height: 100%; background: var(--accent); }
+  .meter .target { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); }
+  .status-tag { padding: 2px 6px; border-radius: 2px; font-size: 10px; font-weight: 700; }
+  .on { background: var(--success); color: var(--bg); } .off { background: var(--danger); color: var(--text); } .mid { background: var(--warn); color: var(--bg); }
+  .bars .row { display: grid; grid-template-columns: 130px 1fr 32px; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 11px; }
+  .bars .row span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bars .track { height: 10px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+  .bars .fill { height: 100%; background: var(--accent); }
+  .bars .n { text-align: right; font-variant-numeric: tabular-nums; }
+  .rungs .r { display: grid; grid-template-columns: 150px 1fr 70px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #161b22; font-size: 11px; }
+  .rungs .r small { display: block; color: var(--muted); text-transform: none; font-size: 10px; margin-top: 2px; }
+  .rungs .n { text-align: right; font-size: 16px; font-weight: 800; color: var(--accent); }
+  .calc-input { background: var(--panel-2); border: 1px solid var(--accent); color: var(--accent); width: 72px; padding: 3px 4px; text-align: right; font: 12px var(--mono); }
+  .protocol-card { background: var(--panel-2); padding: 12px; margin-bottom: 10px; border-left: 2px solid var(--accent); }
+  .hl { color: var(--success); font-weight: 700; }
+  .arc-box { border: 1px dashed var(--accent); padding: 10px; font-size: 11px; line-height: 1.6; text-transform: none; }
+  .voice { font-size: 12px; line-height: 1.7; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 12px; text-transform: none; } .voice b { color: var(--text); }
+  .check { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; font-size: 11px; cursor: pointer; text-transform: none; }
+  .check input { accent-color: var(--accent); margin-top: 2px; }
+  .check.done span { color: var(--muted); text-decoration: line-through; }
+  .phase-h { font-size: 10px; letter-spacing: 1px; color: var(--accent); margin: 10px 0 2px; }
+  .alert { padding: 8px 10px; margin-bottom: 8px; font-size: 11px; border-left: 3px solid; background: var(--panel-2); text-transform: none; }
+  .alert.act { border-color: var(--danger); } .alert.watch { border-color: var(--warn); } .alert.good { border-color: var(--success); }
+  textarea.brief { width: 100%; height: 190px; background: var(--bg); color: var(--accent); border: 1px solid var(--border); font: 11px/1.5 var(--mono); padding: 10px; resize: vertical; }
+  .links a { display: flex; justify-content: space-between; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--border); margin-bottom: 6px; text-decoration: none; color: var(--text); font-size: 11px; }
+  .links a:hover { border-color: var(--accent); }
+  .links a span { color: var(--muted); text-transform: none; }
+  #qr img { background: #fff; padding: 6px; width: 110px; height: 110px; }
+  .empty { color: var(--muted); padding: 24px; text-align: center; text-transform: none; }
+  .filters .btn-t.active { border-color: var(--accent); color: var(--accent); }
+  .search { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font: 11px var(--mono); padding: 5px 8px; width: 160px; }
+  /* modal */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+  .modal.open { display: flex; }
+  .modal .box { background: var(--panel); border: 1px solid var(--accent); max-width: 480px; width: 100%; padding: 20px; border-radius: 6px; }
+  .modal select, .modal input { width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font: 12px var(--mono); padding: 8px; margin: 6px 0 12px; }
+  .keybar { display: none; gap: 6px; align-items: center; } .keybar.show { display: flex; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="panel s12">
+    <div class="topbar">
+      <div class="title">RECUP STATION <span>// GOD TERMINAL</span></div>
+      <span class="pill"><span class="dot" id="syncDot"></span><span id="syncTxt">CONNECTING…</span></span>
+      <span class="keybar" id="keybar"><input class="search" id="keyIn" type="password" placeholder="ADMIN KEY"><button class="btn-t" onclick="saveKey()">UNLOCK</button></span>
+      <span class="countdown" id="countdown">T-MINUS —</span>
+      <span class="muted" id="nodeName"></span>
+      <div class="btn-row"><button class="btn-t" onclick="refresh()">⟳ SYNC</button><a class="btn-t" href="index.html">⌂ HUB</a></div>
+    </div>
+  </div>
+
+  <div class="panel s12"><div class="kpis" id="kpis"></div></div>
+
+  <!-- 01 FEED -->
+  <div class="panel s8">
+    <h2>01_RUNNER_FEED <small>diagnostic + roadside + QR stand → one list</small>
+      <span class="btn-row">
+        <input class="search" id="search" placeholder="SEARCH NAME / CODE" oninput="renderFeed()">
+        <span class="filters btn-row">
+          <button class="btn-t active" data-f="ALL" onclick="setFilter('ALL')">ALL</button>
+          <button class="btn-t" data-f="DIAGNOSTIC_ONLINE" onclick="setFilter('DIAGNOSTIC_ONLINE')">ONLINE</button>
+          <button class="btn-t" data-f="ROADSIDE" onclick="setFilter('ROADSIDE')">ROADSIDE</button>
+          <button class="btn-t" data-f="RESERVED" onclick="setFilter('RESERVED')">RESERVED</button>
+          <button class="btn-t" data-f="TODO" onclick="setFilter('TODO')">PDF TO SEND</button>
+        </span>
+        <button class="btn-t" onclick="exportCSV()">⤓ CSV</button>
+      </span>
+    </h2>
+    <div class="feed"><table>
+      <thead><tr><th>TIME</th><th>SRC</th><th>RUNNER</th><th>REGION</th><th>LEAK</th><th>PROTOCOL</th><th>ASCENSION</th><th>PDF VIA</th><th></th></tr></thead>
+      <tbody id="feed"></tbody>
+    </table></div>
+  </div>
+
+  <!-- 02 ASCENSION -->
+  <div class="panel s4">
+    <h2>02_ASCENSION_PIPELINE <small>thirsty → activated partner</small></h2>
+    <div class="rungs" id="rungs"></div>
+    <div class="metric-row" style="margin-top:12px"><span>RUNNERS AT NODE (HEADCOUNT)</span><input class="calc-input" id="headcount" type="number" value="80" min="1"></div>
+    <div id="metrics"></div>
+    <div class="arc-box" id="arcBox"></div>
+  </div>
+
+  <!-- 03 INTEL -->
+  <div class="panel s6">
+    <h2>03_BACKEND_PIPELINE <small>the data that builds "new power"</small></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div><h3>WHAT HURTS MOST</h3><div class="bars" id="bPain"></div></div>
+      <div><h3>REGION</h3><div class="bars" id="bRegion"></div></div>
+      <div><h3>RUNNING FREQUENCY</h3><div class="bars" id="bFreq"></div></div>
+      <div><h3>PDF VIA (PRIVACY CHOICE)</h3><div class="bars" id="bContact"></div></div>
+      <div><h3>SOURCE</h3><div class="bars" id="bSource"></div></div>
+      <div><h3>GOALS (CUP 4)</h3><div class="bars" id="bGoal"></div></div>
+    </div>
+  </div>
+
+  <!-- 04 FINANCIALS -->
+  <div class="panel s6">
+    <h2>04_DYNAMIC_FINANCIALS <small>55 units · edit any cyan field</small></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="protocol-card">
+        <b>THE FLOW · DURING-RUN</b>
+        <div class="metric-row" style="margin-top:8px"><span>CR7 (1 SCOOP)</span><input class="calc-input f" id="a_cr7" value="2.00"></div>
+        <div class="metric-row"><span>COLLAGEN (1 SCOOP)</span><input class="calc-input f" id="a_col" value="4.00"></div>
+        <div class="metric-row"><span>BOTTLE + ICE</span><input class="calc-input f" id="a_btl" value="1.00"></div>
+        <div class="metric-row"><span>RETAIL</span><input class="calc-input f" id="a_price" value="18.00"></div>
+        <div class="metric-row"><span>UNIT COST</span><span id="a_cost" class="hl"></span></div>
+        <div class="metric-row"><span>MARGIN / UNIT</span><span id="a_margin" class="hl"></span></div>
+      </div>
+      <div class="protocol-card">
+        <b>THE BUILD · POST-RUN</b>
+        <div class="metric-row" style="margin-top:8px"><span>RS24 2 SCOOPS (LIST)</span><input class="calc-input f" id="b_rs" value="14.75"></div>
+        <div class="metric-row"><span>CUP + PREP</span><input class="calc-input f" id="b_cup" value="0.50"></div>
+        <div class="metric-row"><span>SUPERVISOR DISC %</span><input class="calc-input f" id="b_disc" value="50"></div>
+        <div class="metric-row"><span>+ COLLAGEN (NET)</span><input class="calc-input f" id="b_col" value="0.00"></div>
+        <div class="metric-row"><span><label><input type="checkbox" class="f" id="b_pb"> + PB/CARAMEL</label></span><input class="calc-input f" id="b_pbc" value="1.50"></div>
+        <div class="metric-row"><span>RETAIL</span><input class="calc-input f" id="b_price" value="28.00"></div>
+        <div class="metric-row"><span>UNIT COST</span><span id="b_cost" class="hl"></span></div>
+        <div class="metric-row"><span>MARGIN / UNIT</span><span id="b_margin" class="hl"></span></div>
+      </div>
+    </div>
+    <h3>PROJECTION · NODE_001_SAUJANA</h3>
+    <div class="metric-row"><span>MIX: FLOW / BUILD UNITS</span><span><input class="calc-input f" id="mixA" value="53"> / <input class="calc-input f" id="mixB" value="2"></span></div>
+    <div class="metric-row"><span>SATURDAYS / MONTH · NODES</span><span><input class="calc-input f" id="sats" value="4"> · <input class="calc-input f" id="nodes" value="1"></span></div>
+    <div id="proj"></div>
+  </div>
+
+  <!-- 05 WARNINGS -->
+  <div class="panel s4"><h2>05_WARNING_SIGNS <small>auto-checked</small></h2><div id="alerts"></div></div>
+
+  <!-- 06 READINESS -->
+  <div class="panel s4">
+    <h2>06_LAUNCH_READINESS <small id="readyPct"></small></h2>
+    <div class="meter"><div id="readyBar" style="width:0"></div></div>
+    <div id="checklist" style="max-height:420px;overflow:auto"></div>
+  </div>
+
+  <!-- 07 CHANNELS & MATERIALS -->
+  <div class="panel s4">
+    <h2>07_CHANNELS_&amp;_MATERIALS</h2>
+    <div class="links">
+      <a href="intake-ig.html" target="_blank">PHASE 1 · THE DIAGNOSTIC (IG LINK) <span>link in bio</span></a>
+      <a href="intake-ipad.html" target="_blank">PHASE 2 · ROADSIDE iPAD <span>staff mode</span></a>
+      <a href="intake-ipad.html?src=qr" target="_blank">QR STAND · SELF CHECK-IN <span>runner's phone</span></a>
+      <a href="repair-manual.html" target="_blank">RUNNER'S REPAIR MANUAL <span>the free PDF</span></a>
+      <a href="member.html" target="_blank">ASCENSION CARD <span>what members see</span></a>
+      <a href="playbook.html" target="_blank">PARTNER PLAYBOOK <span>training guide</span></a>
+      <a href="poster.html" target="_blank">POSTERS <span>menu A3 + QR stand</span></a>
+      <a href="marketing.html" target="_blank">MARKETING KIT <span>IG story + posts + A3 identity</span></a>
+    </div>
+    <div class="btn-row" style="margin-top:10px"><div id="qr"></div><div style="font-size:10px;text-transform:none" class="muted" id="qrHint"></div></div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn-t" onclick="copy(RECUP.siteUrl('intake-ig.html')+'?utm_content=bio')">COPY IG LINK</button>
+      <button class="btn-t" onclick="demo()">LOAD DEMO DATA</button>
+      <button class="btn-t" onclick="wipe()">CLEAR LOCAL</button>
+    </div>
+  </div>
+
+  <!-- 08 PROTOCOLS -->
+  <div class="panel s6">
+    <h2>08_MARKETING_VOICE · BODY_SCIENCE_SPECIALIST <a class="btn-t primary" href="marketing.html" target="_blank">OPEN MARKETING KIT →</a></h2>
+    <div class="protocol-card" style="opacity:.55"><b>A · PRE-RUN · NITRIC PRIME</b> <span class="status-tag mid">NOT LAUNCHED · CUP 2 REWARD</span><div class="muted" style="font-size:11px;margin-top:4px;text-transform:none">Nitric Oxide + Electrolytes 15 min before flag-off. "Opens your body's pipes so energy flows faster."</div></div>
+    <div class="protocol-card"><b>B · DURING-RUN · THE ELECTROLYTE BALANCE → THE FLOW</b><div class="muted" style="font-size:11px;margin-top:4px;text-transform:none">Sip electrolytes every 2km. Don't wait until you're thirsty.</div></div>
+    <div class="protocol-card"><b>C · POST-RUN · THE METABOLIC WINDOW → THE BUILD</b><div class="muted" style="font-size:11px;margin-top:4px;text-transform:none">1. Protein + Collagen immediately · 2. Acai antioxidant · 3. The Night Shift before bed.</div></div>
+    <div class="voice" style="margin-top:12px">
+      <b>HOOK:</b> "If you can't do this after your run, your metabolic engine is leaking. You aren't recovering; you're just decaying. Scan for the diagnostic."<br>
+      <b>BOOTH:</b> "Did you do the online diagnostic?" · Big jugs, no labels. "The Protocol", not a supplement.<br>
+      <b>CALL:</b> "Scan. Identify the Leak. Calibrate your Repair."
+    </div>
+  </div>
+
+  <!-- 09 HANDOVER -->
+  <div class="panel s6">
+    <h2>09_SYSTEM_HANDOVER <small>auto-updates</small> <button class="btn-t" onclick="copy($('brief').value)">COPY</button></h2>
+    <textarea class="brief" id="brief" readonly></textarea>
+  </div>
+</div>
+
+<!-- POUR MODAL -->
+<div class="modal" id="modal"><div class="box">
+  <h2 id="mTitle">POUR CUP</h2>
+  <div id="mReward" class="arc-box" style="margin-bottom:12px"></div>
+  <label>PROTOCOL</label><select id="mProduct"></select>
+  <div id="mAsk"></div>
+  <div class="btn-row"><button class="btn-t primary" onclick="confirmPour()">CONFIRM CUP</button><button class="btn-t" onclick="closeModal()">CANCEL</button></div>
+</div></div>
+
+<script src="assets/qrcode.js"></script>
+<script src="assets/recup-core.js"></script>
+<script>
+const C = RECUP_CONFIG;
+let LEADS = [], FILTER = 'ALL', LAST = {};
+const $ = id => document.getElementById(id);
+const rm = n => 'RM ' + (Math.round(n * 100) / 100).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SRC = { DIAGNOSTIC_ONLINE: 'ONLINE', ROADSIDE_IPAD: 'iPAD', QR_STAND: 'QR' };
+const settings = RECUP.store.get('recup_terminal_v2', { inputs: {}, checks: {} });
+const saveSettings = () => RECUP.store.set('recup_terminal_v2', settings);
+const hist = l => RECUP.safeJSON(l.history, []);
+
+function stats() {
+  const L = LEADS, s = {};
+  s.total = L.length;
+  s.online = L.filter(l => l.source === 'DIAGNOSTIC_ONLINE').length;
+  s.roadside = s.total - s.online;
+  s.reservedWaiting = L.filter(l => l.status === 'RESERVED' && !l.cups).length;
+  s.onlineArrived = L.filter(l => l.source === 'DIAGNOSTIC_ONLINE' && l.cups > 0).length;
+  s.cup1 = L.filter(l => l.cups >= 1).length;
+  s.cup2 = L.filter(l => l.cups >= 2).length;
+  s.activated = L.filter(l => l.cups >= 4).length;
+  s.units = 0; s.revenue = 0;
+  L.forEach(l => hist(l).forEach(h => { s.units += +h.units || 1; s.revenue += +h.paid || 0; }));
+  s.left = Math.max(0, C.STOCK_UNITS - s.units);
+  s.shared = L.filter(l => l.contactMethod && l.contactMethod !== 'NONE').length;
+  s.pdfTodo = L.filter(l => (l.phone || l.instagram) && !l.manualSent).length;
+  s.sent = L.filter(l => l.manualSent).length;
+  s.capture = pct(s.total, +$('headcount').value || 1);
+  s.conversion = pct(s.cup1, s.total);
+  s.returnRate = pct(s.cup2, s.cup1);
+  s.arrival = pct(s.onlineArrived, s.online);
+  return s;
+}
+
+function renderKPIs(s) {
+  $('kpis').innerHTML = [
+    ['RUNNERS', s.total, `${s.online} online · ${s.roadside} roadside`],
+    ['RESERVED WAITING', s.reservedWaiting, 'did diagnostic, not yet at booth'],
+    ['FIRST CUPS', s.cup1, `${s.conversion}% of runners`],
+    ['RETURNED (CUP 2+)', s.cup2, `${s.returnRate}% return rate`],
+    ['ACTIVATED (CUP 4+)', s.activated, 'performance partners'],
+    ['UNITS LEFT', `${s.left}/${C.STOCK_UNITS}`, `${s.units} poured`],
+    ['REVENUE (REAL)', rm(s.revenue), 'after ladder discounts'],
+    ['PDF TO SEND', s.pdfTodo, `${pct(s.shared, s.total)}% shared contact`],
+  ].map(([l, v, sub]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="sub">${sub}</span></div>`).join('');
+}
+
+function renderFeed() {
+  const q = $('search').value.trim().toLowerCase();
+  const rows = LEADS.filter(l =>
+    (FILTER === 'ALL' || l.source === FILTER || (FILTER === 'ROADSIDE' && l.source !== 'DIAGNOSTIC_ONLINE')
+      || (FILTER === 'RESERVED' && l.status === 'RESERVED' && !l.cups) || (FILTER === 'TODO' && (l.phone || l.instagram) && !l.manualSent))
+    && (!q || (l.name || '').toLowerCase().includes(q) || (l.code || '').toLowerCase().includes(q)));
+  if (!rows.length) { $('feed').innerHTML = `<tr><td colspan="9" class="empty">No runners here yet. Open a check-in channel, or load demo data to preview.</td></tr>`; return; }
+  $('feed').innerHTML = rows.map(l => {
+    const p = C.PROTOCOLS[l.protocol] || C.PROTOCOLS.N02; const t = new Date(l.ts);
+    const time = t.toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }) + ' ' + t.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const dots = C.LADDER.map(r => `<i class="${l.cups >= r.cup ? 'on' : ''}"></i>`).join('');
+    const via = { WHATSAPP: 'WA', EMAIL: 'EMAIL (AUTO)', INSTAGRAM: esc(l.instagram), NONE: 'QR ONLY' }[l.contactMethod] || '—';
+    let act = `<button class="btn-t sm primary" onclick="openPour('${l.id}')">+CUP</button> `;
+    if (l.phone) act += `<a class="btn-t sm wa" href="${RECUP.waLink(l)}" target="_blank" onclick="markSent('${l.id}')">WA${l.manualSent ? ' ✓' : ''}</a> `;
+    if (l.instagram) act += `<button class="btn-t sm" onclick="copy('${RECUP.manualUrl(l)}');markSent('${l.id}')">DM LINK${l.manualSent ? ' ✓' : ''}</button>`;
+    return `<tr>
+      <td class="muted">${time}</td>
+      <td><span class="tag t-${l.source}">${SRC[l.source] || l.source}</span></td>
+      <td style="text-transform:none"><b>${esc(l.name)}</b> <span class="muted">${esc(l.code)}</span>${l.status === 'RESERVED' && !l.cups ? ' <span class="res">RESERVED</span>' : ''}${l.grade ? ` <span class="muted">G-${l.grade}</span>` : ''}</td>
+      <td class="muted">${esc(l.region)}</td>
+      <td>${esc(l.pain)}</td>
+      <td>${p.name}</td>
+      <td><span class="dots">${dots}</span> <span class="muted">${l.cups}</span></td>
+      <td class="muted">${via}</td>
+      <td>${act}</td></tr>`;
+  }).join('');
+}
+
+function renderRungs(s) {
+  const L = LEADS;
+  const fill = { 2: 'painFocus', 3: 'referral', 4: 'goal', 5: 'wearable' };
+  $('rungs').innerHTML = C.LADDER.map(r => {
+    const at = L.filter(l => l.cups >= r.cup);
+    const got = fill[r.cup] ? at.filter(l => l[fill[r.cup]]).length : at.filter(l => l.contactMethod && l.contactMethod !== 'NONE').length;
+    return `<div class="r"><div><b>${r.name}</b><small>${r.reward}</small></div>
+      <div><div class="meter" style="margin:0"><div style="width:${pct(at.length, s.total || 1)}%"></div></div><small style="color:var(--muted);text-transform:none;font-size:10px">${r.data}: ${got}/${at.length}</small></div>
+      <div class="n">${at.length}</div></div>`;
+  }).join('');
+}
+
+function meter(label, val, target, unit = '%') {
+  const good = val >= target;
+  return `<div class="metric-row"><span>${label}</span><span class="status-tag ${good ? 'on' : val >= target * .6 ? 'mid' : 'off'}">${val}${unit} / ${target}${unit}</span></div>
+          <div class="meter"><div style="width:${Math.min(100, unit === '%' ? val : val / target * 100)}%"></div>${unit === '%' ? `<span class="target" style="left:${target}%"></span>` : ''}</div>`;
+}
+function renderMetrics(s) {
+  $('metrics').innerHTML = meter('CAPTURE RATE', s.capture, 40) + meter('ONLINE → BOOTH ARRIVAL', s.arrival, 60) + meter('RETURN (CUP 2)', s.returnRate, 25) + meter('PDF / WHATSAPP SENT', s.sent, C.WHATSAPP_FOLLOWUP_TARGET, '');
+  const p2 = s.sent >= C.WHATSAPP_FOLLOWUP_TARGET;
+  $('arcBox').innerHTML = `<b>ARC_TRANSITION: ${p2 ? '<span class="ok">PHASE 02 UNLOCKED</span>' : 'PHASE 01 · CHECK-IN'}</b><br>Phase 01 ends when ${C.WHATSAPP_FOLLOWUP_TARGET}+ runners have received the Repair Manual. <b>${s.sent}/${C.WHATSAPP_FOLLOWUP_TARGET}</b>.`;
+}
+
+function bars(el, counts) {
+  const e = Object.entries(counts).filter(([k]) => k && k !== 'undefined').sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...e.map(x => x[1]));
+  $(el).innerHTML = e.length ? e.map(([k, v]) => `<div class="row"><span title="${esc(k)}">${esc(k)}</span><div class="track"><div class="fill" style="width:${v / max * 100}%"></div></div><span class="n">${v}</span></div>`).join('') : '<div class="muted">—</div>';
+}
+const countBy = f => LEADS.reduce((a, l) => { const k = f(l); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
+function renderIntel() {
+  bars('bPain', countBy(l => l.pain)); bars('bRegion', countBy(l => l.region)); bars('bFreq', countBy(l => l.frequency));
+  bars('bContact', countBy(l => ({ WHATSAPP: 'WHATSAPP', EMAIL: 'EMAIL', INSTAGRAM: 'INSTAGRAM', NONE: 'QR ONLY (NO CONTACT)' })[l.contactMethod]));
+  bars('bSource', countBy(l => SRC[l.source])); bars('bGoal', countBy(l => l.goal));
+}
+
+const v = id => parseFloat($(id).value) || 0;
+function calc() {
+  const aCost = v('a_cr7') + v('a_col') + v('a_btl'), aMargin = v('a_price') - aCost;
+  const bCost = (v('b_rs') + v('b_cup')) * (1 - v('b_disc') / 100) + v('b_col') + ($('b_pb').checked ? v('b_pbc') : 0), bMargin = v('b_price') - bCost;
+  $('a_cost').textContent = rm(aCost); $('a_margin').textContent = rm(aMargin); $('b_cost').textContent = rm(bCost); $('b_margin').textContent = rm(bMargin);
+  const A = v('mixA'), B = v('mixB'), rev = A * v('a_price') + B * v('b_price'), profit = A * aMargin + B * bMargin, month = profit * v('sats');
+  $('proj').innerHTML = `
+    <div class="metric-row"><span>POTENTIAL REVENUE / SATURDAY</span><span class="accent">${rm(rev)}</span></div>
+    <div class="metric-row"><span>NET PROFIT / SATURDAY</span><span class="hl">${rm(profit)}</span></div>
+    <div class="metric-row"><span>NET / MONTH (${v('sats')} SATS × ${v('nodes')} NODE)</span><span class="hl">${rm(month * v('nodes'))}</span></div>
+    <div class="metric-row"><span>GOAL: 10 NODES</span><span class="accent">${rm(month * 10)} / MONTH</span></div>
+    <div class="muted" style="font-size:10px;text-transform:none">Potential = full retail. The ladder (10% / BOGO / 20% / 25%) lowers real revenue per cup; see REVENUE (REAL). Collagen in THE BUILD is 0 by default: add its cost.</div>`;
+  window.__fin = { aCost, aMargin, bCost, bMargin, rev, profit, month };
+  document.querySelectorAll('.f').forEach(el => settings.inputs[el.id] = el.type === 'checkbox' ? el.checked : el.value);
+  settings.inputs.headcount = $('headcount').value; saveSettings();
+}
+
+const CHECKLIST = [
+  ['PHASE 1 · FOUNDATION', [
+    'The Diagnostic (IG link) live + in @recup.stn bio',
+    'Roadside iPad check-in tested: YES / NO / I\'M BACK paths',
+    'Google Sheet connected (terminal shows LIVE) + admin key set',
+    'SITE_URL + BUSINESS_WA set so QR codes & WhatsApp links work',
+    'Menu prices locked (Flush / Flow / Build / Acai / Night Shift)',
+    'Intro offer + discount code set · Ascension rewards agreed',
+  ]],
+  ['PHASE 2 · OPERATIONAL (PACK THE NIGHT BEFORE)', [
+    'The Table & Signage (Recup Station branding)',
+    'Measuring Cups & Mixing Shakers',
+    'QR Code Stand (data collection) — poster B printed',
+    'Cooler Box / Ice (for the Fuel Protocols)',
+    'Printed Posters (The Protocols menu) — poster A',
+    'PDF Delivery: email auto-send tested + WhatsApp link tested',
+    'Big jugs, no labels · 10 cups of The Flush pre-poured',
+    'iPad charged + power bank · check-in added to Home Screen',
+  ]],
+  ['PHASE 3 · KNOWLEDGE (RUNNER PROTOCOLS)', [
+    'Partner trained on the Playbook (booth script + 3 paths)',
+    'Protocol B · During-run: Electrolyte Balance explained',
+    'Protocol C · Post-run: Metabolic Window explained',
+    'Protocol A · Nitric Prime held back (Cup 2 reward, not launched)',
+    'Runner\'s Repair Manual reviewed (4 quick hits) + prices filled',
+    'Phase 1 hook video filmed (Pistol / Patterson squat)',
+  ]],
+  ['PHASE 4 · SAFEGUARDS', [
+    'Phone optional: "Just show me the QR" path tested',
+    'Consent line on every form (PDPA)',
+    'Discounts beyond the ladder need owner approval',
+    'CSV backup exported after every node',
+  ]],
+  ['PHASE 5 · LAUNCH', [
+    'Soft test: 3 friends do online diagnostic → booth YES path',
+    'Soft test: 3 friends do roadside NO path + 1 returning cup',
+    'IG post: Invisible Energy Leak hook + run club tagged',
+    'Partner in "Repair Specialist" gear. No selling — just diagnosing',
+    'Open day at Glenhill Saujana',
+  ]],
+];
+function renderChecklist() {
+  let total = 0, done = 0, html = '';
+  CHECKLIST.forEach(([phase, items], pi) => {
+    html += `<div class="phase-h">${phase}</div>`;
+    items.forEach((t, i) => { const k = pi + '.' + i, on = !!settings.checks[k]; total++; if (on) done++;
+      html += `<label class="check ${on ? 'done' : ''}"><input type="checkbox" ${on ? 'checked' : ''} onchange="toggleCheck('${k}',this.checked)"><span>${t}</span></label>`; });
+  });
+  $('checklist').innerHTML = html;
+  const p = pct(done, total); $('readyPct').textContent = `${done}/${total} · ${p}%`; $('readyBar').style.width = p + '%';
+  return p;
+}
+function toggleCheck(k, on) { settings.checks[k] = on; saveSettings(); paint(); }
+
+function renderAlerts(s) {
+  const a = [];
+  if (!C.SHEET_ENDPOINT) a.push(['act', 'NO SHARED DATABASE. Online diagnostic, iPad and QR-stand runners won\'t meet here, and the booth can\'t find online reservations, until SHEET_ENDPOINT is set.']);
+  else if (LAST.authFail) a.push(['act', 'Sheet connected but ADMIN KEY missing/wrong. Enter it in the top bar.']);
+  else if (!LAST.remoteOk) a.push(['act', 'Sheet unreachable. Showing this device only.']);
+  if (!C.SITE_URL) a.push(['watch', 'SITE_URL not set. QR codes and PDF links point to this computer, not the internet.']);
+  if (!C.BUSINESS_WA) a.push(['watch', 'BUSINESS_WA not set. The "message us on WhatsApp" option for no-phone runners is hidden.']);
+  if (LAST.pending) a.push(['watch', `${LAST.pending} update(s) queued offline. They'll sync when back online.`]);
+  if (s.pdfTodo) a.push(['watch', `${s.pdfTodo} runner(s) still waiting for their Repair Manual. Filter: PDF TO SEND.`]);
+  if (s.reservedWaiting >= 5) a.push(['watch', `${s.reservedWaiting} online reservations haven't come to the booth. DM them before Saturday.`]);
+  if (s.left <= 10) a.push(['act', `Only ${s.left} units left.`]); else if (s.left <= 20) a.push(['watch', `${s.left} units left.`]);
+  if (s.total >= 5 && pct(s.shared, s.total) < 50) a.push(['watch', `Only ${pct(s.shared, s.total)}% share contact. Lean on the QR + member code; it still tracks cups.`]);
+  if (Object.values(C.PROTOCOLS).some(p => !p.price)) a.push(['watch', 'Some menu prices are TBC (e.g. The Flush). Set them in PROTOCOLS / ADDONS in recup-core.js.']);
+  if (!a.length) a.push(['good', 'All systems nominal.']);
+  $('alerts').innerHTML = a.map(([l, t]) => `<div class="alert ${l}"><b>${l === 'act' ? 'ACT NOW' : l === 'watch' ? 'WATCH' : 'OK'}</b> · ${t}</div>`).join('');
+}
+
+function renderBrief(s) {
+  const f = window.__fin || {};
+  $('brief').value =
+`# RECUP STATION SYSTEM BRIEF
+MISSION: Biological Integrity. ARCHITECT: Joey Tan.
+NODE: ${C.NODE_NAME} · ${$('countdown').textContent} · Readiness ${renderChecklist()}%
+STOCK: ${C.STOCK_UNITS} units · ${s.left} left
+MODEL: Phase 1 Awareness (The Diagnostic) -> Phase 2 Interception (roadside booth) -> Ascension ladder (5 cups)
+
+## LIVE
+Runners: ${s.total} (online ${s.online} / roadside ${s.roadside}) · capture ${s.capture}%
+Reserved, not yet at booth: ${s.reservedWaiting} · online→booth ${s.arrival}%
+Cup 1: ${s.cup1} · Cup 2+: ${s.cup2} (${s.returnRate}%) · Activated (4+): ${s.activated}
+Repair Manual sent: ${s.sent} · waiting: ${s.pdfTodo} · shared contact ${pct(s.shared, s.total)}%
+Real revenue: ${rm(s.revenue)}
+
+## UNIT ECONOMICS
+THE FLOW RM${v('a_price')} · cost ${rm(f.aCost || 0)} · margin ${rm(f.aMargin || 0)}
+THE BUILD RM${v('b_price')} · cost ${rm(f.bCost || 0)} · margin ${rm(f.bMargin || 0)}`;
+}
+
+/* ---------- pour modal ---------- */
+let pouring = null;
+function openPour(id) {
+  pouring = LEADS.find(l => l.id === id); const n = pouring.cups + 1; const rung = RECUP.tierOf(n);
+  $('mTitle').textContent = `${pouring.name} · ${pouring.code} · CUP ${n}`;
+  $('mReward').innerHTML = `<b>${rung.name}</b> → ${rung.reward}`;
+  $('mProduct').innerHTML = Object.entries(C.PROTOCOLS).map(([k, p]) => { const pr = RECUP.priceFor(k, n);
+    return `<option value="${k}" ${k === pouring.protocol ? 'selected' : ''}>${p.name} · ${p.price ? 'RM ' + pr.paid.toFixed(2) : 'TBC'}${pr.units > 1 ? ' (×2 BUDDY)' : ''}</option>`; }).join('');
+  const ask = n <= C.LADDER.length ? rung.ask : null;
+  $('mAsk').innerHTML = ask ? `<label>${ask.q}</label>` + (ask.type === 'text' ? `<input id="mAns">` : `<select id="mAns"><option value="">— skip —</option>${ask.options.map(o => `<option>${o}</option>`).join('')}</select>`) : '';
+  pouring.__ask = ask; $('modal').classList.add('open');
+}
+function closeModal() { $('modal').classList.remove('open'); }
+async function confirmPour() {
+  const answers = {}; if (pouring.__ask && $('mAns').value && $('mAns').value !== 'Skip') answers[pouring.__ask.key] = $('mAns').value;
+  delete pouring.__ask;
+  await RECUP.stampCup(pouring, { product: $('mProduct').value, answers });
+  closeModal(); paint();
+}
+
+async function markSent(id) { await RECUP.updateLead(id, { manualSent: 'YES' }); const l = LEADS.find(x => x.id === id); if (l) l.manualSent = 'YES'; setTimeout(paint, 300); }
+function setFilter(f) { FILTER = f; document.querySelectorAll('.filters .btn-t').forEach(b => b.classList.toggle('active', b.dataset.f === f)); renderFeed(); }
+function exportCSV() {
+  const cols = ['code','ts','source','name','contactMethod','phone','email','instagram','region','frequency','pain','archetype','squat','grade','protocol','fuel','status','cups','painFocus','referral','goal','wearable','manualSent','campaign','notes'];
+  const csv = [cols.join(',')].concat(LEADS.map(l => cols.map(c => `"${String(l[c] ?? '').replace(/"/g, '""')}"`).join(','))).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `recup-runners-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+}
+function copy(t) { navigator.clipboard?.writeText(t); }
+function demo() { RECUP.seedDemo(); refresh(); }
+function wipe() { if (confirm('Clear runners stored on THIS device? (Google Sheet is not touched)')) { RECUP.clearLocal(); refresh(); } }
+function saveKey() { RECUP.setAdminKey($('keyIn').value.trim()); refresh(); }
+
+function paint() { const s = stats(); renderKPIs(s); renderFeed(); renderRungs(s); renderMetrics(s); renderIntel(); calc(); renderAlerts(s); renderBrief(s); }
+async function refresh() {
+  $('syncTxt').textContent = 'SYNCING…';
+  await RECUP.flushQueue();
+  const r = await RECUP.loadLeads(); LEADS = r.leads; LAST = r;
+  const live = C.SHEET_ENDPOINT && r.remoteOk;
+  $('syncDot').className = 'dot ' + (live ? 'live' : r.authFail ? 'bad' : 'local');
+  $('syncTxt').textContent = (live ? 'LIVE · SHEET SYNCED ' : r.authFail ? 'LOCKED · ENTER ADMIN KEY ' : 'LOCAL DEVICE ONLY · ') + new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('keybar').classList.toggle('show', !!r.authFail);
+  paint();
+}
+function tick() {
+  const ms = new Date(C.LAUNCH_DATE) - new Date();
+  if (ms <= 0) { $('countdown').textContent = 'NODE LIVE'; $('countdown').style.color = 'var(--success)'; return; }
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60;
+  $('countdown').textContent = `T-MINUS ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M`;
+}
+Object.entries(settings.inputs || {}).forEach(([id, val]) => { const el = $(id); if (!el) return; if (el.type === 'checkbox') el.checked = val; else el.value = val; });
+document.querySelectorAll('.f, #headcount').forEach(el => el.addEventListener('input', paint));
+$('nodeName').textContent = C.NODE_NAME;
+try { const q = qrcode(0, 'M'); q.addData(RECUP.siteUrl('intake-ig.html') + '?utm_content=qr'); q.make(); $('qr').innerHTML = q.createImgTag(3, 0); } catch {}
+$('qrHint').textContent = C.SITE_URL ? 'QR → The Diagnostic. Use in stories / flyers.' : 'Set SITE_URL so this QR works on phones.';
+tick(); setInterval(tick, 30000);
+refresh(); setInterval(refresh, 30000);
+</script>
+</body>
+</html>

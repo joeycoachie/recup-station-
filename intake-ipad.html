@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Recup Station · Roadside Check-In</title>
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  .intake .card { max-width: 640px; }
+  .opt { padding: 20px 22px; font-size: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid2 .opt { margin: 0; }
+  @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+  .hook { text-align: center; font-family: var(--mono); font-size: 13px; letter-spacing: 1px; color: var(--accent); border: 1px dashed var(--accent); border-radius: 12px; padding: 12px; margin-bottom: 26px; }
+  .big-q { font-size: 26px; text-align: center; margin: 0 0 20px; }
+  .path { display: block; width: 100%; padding: 24px; border-radius: 14px; margin-bottom: 14px; font: 700 19px var(--sans); cursor: pointer; text-align: left; border: 1px solid #3a4250; background: var(--panel-2); color: var(--text); }
+  .path small { display: block; font: 400 14px var(--sans); color: var(--muted); margin-top: 4px; }
+  .path.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+  .path.primary small { color: #033; }
+  .code { font: 800 44px/1 var(--mono); letter-spacing: 4px; color: var(--accent); text-align: center; margin: 8px 0; }
+  .qrs { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
+  .qr { text-align: center; font: 11px var(--mono); color: var(--muted); letter-spacing: 1px; }
+  .qr img { display: block; background: #fff; padding: 8px; border-radius: 8px; width: 150px; height: 150px; margin: 0 auto 6px; image-rendering: pixelated; }
+  .privacy { font-size: 13px; color: var(--muted); background: var(--panel-2); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; line-height: 1.5; }
+  .ladder { display: flex; gap: 6px; margin: 14px 0; }
+  .ladder div { flex: 1; height: 10px; border-radius: 5px; background: #222; }
+  .ladder div.on { background: var(--accent); }
+  .result { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid #3a4250; border-radius: 12px; padding: 16px; margin-bottom: 10px; cursor: pointer; }
+  .result:hover { border-color: var(--accent); }
+  .tag { font: 700 11px var(--mono); padding: 3px 8px; border-radius: 4px; background: rgba(0,242,255,.15); color: var(--accent); }
+  .staffbar { display: flex; gap: 10px; }
+  .staffbar .btn { flex: 1; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid #3a4250; }
+  .btn.wa { background: #25d366; }
+  .reward { background: linear-gradient(135deg, rgba(0,242,255,.15), transparent); border: 1px solid var(--accent); border-radius: 14px; padding: 18px; margin: 14px 0; }
+  .reward b { font: 800 20px var(--sans); display: block; margin-top: 4px; }
+  .price { font: 700 16px var(--mono); margin-top: 8px; }
+  .price s { color: var(--muted); }
+  .staff { position: fixed; top: 0; right: 0; width: 60px; height: 60px; z-index: 5; }
+  .mode { position: fixed; bottom: 10px; left: 12px; font: 10px var(--mono); color: #444; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="staff" id="staffCorner"></div>
+<div class="mode" id="modeTag"></div>
+<main class="intake">
+<div class="card">
+  <div class="brand"><div class="logo">Recup Station</div><div class="badge">ROADSIDE CHECK-IN · GLENHILL SAUJANA</div></div>
+  <div class="progress"><div id="bar"></div></div>
+
+  <!-- HOME: the partner's first question -->
+  <section class="step active" id="s-home">
+    <div class="hook">SCAN FOR YOUR 10% DISCOUNT + FREE RECOVERY PDF</div>
+    <h1 class="big-q">Did you do the online diagnostic?</h1>
+    <button class="path primary" onclick="goLookup('reserved')">YES — I have my code<small>We'll pull up your reserved Protocol.</small></button>
+    <button class="path" onclick="startCheckin()">NO — check me in<small>5 taps. 60 seconds. Get your 10% + Repair Manual.</small></button>
+    <button class="path" onclick="goLookup('return')">I'M BACK — log my cup<small>Climb the Ascension ladder: rewards on every cup.</small></button>
+  </section>
+
+  <!-- LOOKUP -->
+  <section class="step" id="s-lookup">
+    <div class="phase" id="lookupPhase">FIND YOUR PROTOCOL</div>
+    <h3>Enter your member code, phone, or name</h3>
+    <input class="field" id="q" placeholder="e.g. RS-7Q4K · 012xxxxxxx · Aina" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')doLookup()">
+    <button class="btn" onclick="doLookup()">SEARCH</button>
+    <div id="results" style="margin-top:16px"></div>
+    <button class="back" onclick="home()">← BACK</button>
+  </section>
+
+  <!-- CHECK-IN (5 taps) -->
+  <section class="step" id="s-c1">
+    <div class="phase">01 / 05 · WHO ARE YOU</div>
+    <h3>What's your name?</h3>
+    <input class="field" id="name" placeholder="First name is fine" autocomplete="off">
+    <div class="err" id="e1"></div>
+    <button class="btn" onclick="c1()">NEXT</button>
+    <button class="back" onclick="home()">← BACK</button>
+  </section>
+
+  <section class="step" id="s-c2">
+    <div class="phase">02 / 05 · REGION</div>
+    <h3>Where do you usually run from?</h3>
+    <div class="grid2" id="regionOpts"></div>
+    <button class="back" onclick="show('s-c1',1)">← BACK</button>
+  </section>
+
+  <section class="step" id="s-c3">
+    <div class="phase">03 / 05 · FREQUENCY</div>
+    <h3>How often do you run?</h3>
+    <div class="grid2" id="freqOpts"></div>
+    <button class="back" onclick="show('s-c2',2)">← BACK</button>
+  </section>
+
+  <section class="step" id="s-c4">
+    <div class="phase">04 / 05 · THE LEAK</div>
+    <h3>What hurts most after a run?</h3>
+    <div class="grid2" id="painOpts"></div>
+    <input class="field" id="painOther" placeholder="Tell us (optional)" style="display:none;margin-top:12px">
+    <button class="btn" id="painOtherBtn" style="display:none" onclick="setPain(document.getElementById('painOther').value||'Other')">NEXT</button>
+    <button class="back" onclick="show('s-c3',3)">← BACK</button>
+  </section>
+
+  <section class="step" id="s-c5">
+    <div class="phase">05 / 05 · YOUR FREE REPAIR MANUAL</div>
+    <h3>Where should we send your Recovery PDF?</h3>
+    <div class="privacy">🔒 Your choice. Only used to send your guide and your cup rewards. Never shared or sold. Rather not share? Pick <b>"Just show me the QR"</b> — you still get the 10% and the PDF.</div>
+    <div class="grid2">
+      <button class="opt" onclick="setContact('WHATSAPP')"><strong>WhatsApp</strong><small>Fastest — sent right away</small></button>
+      <button class="opt" onclick="setContact('EMAIL')"><strong>Email</strong><small>Auto-sent to your inbox</small></button>
+      <button class="opt" onclick="setContact('INSTAGRAM')"><strong>Instagram DM</strong><small>Just your @handle</small></button>
+      <button class="opt" onclick="setContact('NONE')"><strong>Just show me the QR</strong><small>No contact details needed</small></button>
+    </div>
+    <div id="contactBox" style="display:none;margin-top:16px">
+      <input class="field" id="contact" autocomplete="off">
+      <div class="consent">I agree to receive my results and cup rewards from Recup Station on this channel.</div>
+      <div class="err" id="e5"></div>
+      <button class="btn" id="submitBtn" onclick="submitCheckin()">GET MY 10% + PDF</button>
+    </div>
+    <button class="back" onclick="show('s-c4',4)">← BACK</button>
+  </section>
+
+  <!-- RUNNER CARD (after check-in / found reservation / returning) -->
+  <section class="step" id="s-card">
+    <div class="phase" id="cardPhase">YOU'RE IN</div>
+    <h1 id="cardHello" style="text-align:center">Welcome.</h1>
+    <div class="code" id="cardCode">RS-····</div>
+    <div style="text-align:center;font:12px var(--mono);color:var(--muted);letter-spacing:1px">YOUR MEMBER CODE · SCREENSHOT IT</div>
+    <div class="result-box" id="cardBox"></div>
+    <div class="ladder" id="cardLadder"></div>
+    <div class="qrs" id="cardQRs"></div>
+    <div class="staffbar" id="cardStaff"></div>
+    <button class="back" onclick="home()">← DONE · NEXT RUNNER</button>
+  </section>
+
+  <!-- POUR A CUP (staff) -->
+  <section class="step" id="s-pour">
+    <div class="phase" id="pourPhase">CUP</div>
+    <h3 id="pourTitle">Pour</h3>
+    <div class="reward" id="pourReward"></div>
+    <div class="phase" style="margin-top:14px">WHICH PROTOCOL?</div>
+    <div class="grid2" id="productOpts"></div>
+    <div id="askBox" style="margin-top:16px"></div>
+    <div class="err" id="ePour"></div>
+    <button class="btn" onclick="confirmPour()">CONFIRM CUP</button>
+    <button class="back" onclick="show('s-card')">← BACK</button>
+  </section>
+
+  <!-- DONE -->
+  <section class="step" id="s-done">
+    <h1 style="text-align:center" id="doneTitle">CUP LOGGED</h1>
+    <div class="ladder" id="doneLadder"></div>
+    <div class="reward" id="doneReward"></div>
+    <div class="result-box" id="doneNext"></div>
+    <button class="btn" onclick="home()">NEXT RUNNER →</button>
+    <div class="kiosk-reset" style="text-align:center;font:12px var(--mono);color:var(--muted);margin-top:12px">Auto-reset in <span id="cd">60</span>s</div>
+  </section>
+</div>
+</main>
+
+<script src="assets/qrcode.js"></script>
+<script src="assets/recup-core.js"></script>
+<script>
+  const C = RECUP_CONFIG;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // ?src=qr → runner's own phone at the QR stand (self check-in, no staff buttons)
+  const SELF = new URLSearchParams(location.search).get('src') === 'qr';
+  const SOURCE = SELF ? 'QR_STAND' : 'ROADSIDE_IPAD';
+  $('modeTag').textContent = SELF ? 'QR STAND · SELF CHECK-IN' : 'IPAD · STAFF MODE';
+
+  let form = {}, current = null, lookupMode = 'reserved', pour = {}, timer;
+
+  function show(id, prog) {
+    document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', s.id === id));
+    if (prog !== undefined) $('bar').style.width = (prog / 5 * 100) + '%';
+    window.scrollTo(0, 0);
+  }
+  function home() { clearInterval(timer); form = {}; current = null; ['name','contact','q','painOther'].forEach(i => $(i).value = ''); $('results').innerHTML = ''; show('s-home', 0); }
+
+  function opts(el, list, fn) { $(el).innerHTML = list.map(v => `<button class="opt" onclick="${fn}('${v.replace(/'/g, "\\'")}')">${esc(v)}</button>`).join(''); }
+  opts('regionOpts', C.REGIONS, 'setRegion');
+  opts('freqOpts', C.FREQUENCY, 'setFreq');
+  opts('painOpts', C.PAINS, 'pickPain');
+
+  /* ---------- check-in ---------- */
+  function startCheckin() { form = {}; show('s-c1', 1); setTimeout(() => $('name').focus(), 100); }
+  function c1() { const n = $('name').value.trim(); if (!n) { $('e1').textContent = 'Just a first name is fine.'; return; } $('e1').textContent = ''; form.name = n; show('s-c2', 2); }
+  function setRegion(v) { form.region = v; show('s-c3', 3); }
+  function setFreq(v) { form.frequency = v; show('s-c4', 4); }
+  function pickPain(v) {
+    if (v === 'Other') { $('painOther').style.display = 'block'; $('painOtherBtn').style.display = 'block'; $('painOther').focus(); return; }
+    setPain(v);
+  }
+  function setPain(v) { form.pain = v; $('painOther').style.display = 'none'; $('painOtherBtn').style.display = 'none'; show('s-c5', 5); $('contactBox').style.display = 'none'; }
+  function setContact(m) {
+    form.contactMethod = m;
+    if (m === 'NONE') { form.contact = ''; submitCheckin(); return; }
+    const ph = { WHATSAPP: ['WhatsApp number (e.g. 012xxxxxxx)', 'tel'], EMAIL: ['Email address', 'email'], INSTAGRAM: ['@yourhandle', 'text'] }[m];
+    $('contact').placeholder = ph[0]; $('contact').type = ph[1]; $('contact').value = '';
+    $('contactBox').style.display = 'block'; $('contact').focus();
+  }
+  async function submitCheckin() {
+    if (form.contactMethod !== 'NONE') {
+      const v = $('contact').value.trim(); const m = form.contactMethod;
+      const bad = (m === 'WHATSAPP' && v.replace(/\D/g, '').length < 9) || (m === 'EMAIL' && !/^\S+@\S+\.\S+$/.test(v)) || (m === 'INSTAGRAM' && v.replace('@', '').length < 2);
+      if (bad) { $('e5').textContent = 'Please check that — or choose "Just show me the QR".'; return; }
+      form.contact = v;
+    }
+    $('e5').textContent = '';
+    const btn = $('submitBtn'); btn.disabled = true;
+    const lead = await RECUP.submitLead({ source: SOURCE, ...form });
+    btn.disabled = false;
+    current = lead; renderCard('new');
+  }
+
+  /* ---------- lookup (online diagnostic / returning) ---------- */
+  function goLookup(mode) {
+    lookupMode = mode;
+    $('lookupPhase').textContent = mode === 'reserved' ? 'ONLINE DIAGNOSTIC · FIND YOUR RESERVED PROTOCOL' : 'RETURNING RUNNER · LOG YOUR CUP';
+    $('results').innerHTML = ''; show('s-lookup', 0); setTimeout(() => $('q').focus(), 100);
+  }
+  async function doLookup() {
+    $('results').innerHTML = '<div class="muted">Searching…</div>';
+    const r = await RECUP.findRunner($('q').value);
+    window.__found = r;
+    if (!r.length) {
+      $('results').innerHTML = `<div class="privacy">No match${C.SHEET_ENDPOINT ? '' : ' on this iPad (shared database not connected yet)'}. No problem —<br><br><button class="btn" onclick="startCheckin()">CHECK IN NOW (60 SEC)</button></div>`;
+      return;
+    }
+    $('results').innerHTML = r.map((l, i) => `<div class="result" onclick="pickFound(${i})"><div><b>${esc((l.name || '').split(' ')[0])}</b> <span class="muted">${esc(l.code)}</span><br><small class="muted">${l.cups || 0} cup(s) · ${esc((C.PROTOCOLS[l.protocol] || {}).name || '')}</small></div><span class="tag">SELECT →</span></div>`).join('');
+  }
+  function pickFound(i) { current = window.__found[i]; renderCard(lookupMode); }
+
+  /* ---------- runner card ---------- */
+  function ladderHTML(cups) { return C.LADDER.map(r => `<div class="${cups >= r.cup ? 'on' : ''}" title="${r.name}"></div>`).join(''); }
+  function qrImg(text) { try { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createImgTag(4, 0); } catch { return ''; } }
+
+  function renderCard(mode) {
+    const l = current; const p = C.PROTOCOLS[l.protocol] || C.PROTOCOLS.N02; const cups = +l.cups || 0;
+    const first = (l.name || '').split(' ')[0] || 'Runner';
+    const next = RECUP.nextTier(cups);
+    $('cardPhase').textContent = mode === 'new' ? "YOU'RE IN · 10% OFF YOUR FIRST CUP" : mode === 'reserved' ? 'RESERVED PROTOCOL FOUND' : 'WELCOME BACK';
+    $('cardHello').textContent = mode === 'return' ? `Welcome back, ${first}.` : `${first}, you're calibrated.`;
+    $('cardCode').textContent = l.code;
+    $('cardBox').innerHTML =
+      `${mode === 'reserved' ? 'RESERVED' : 'RECOMMENDED'}: <span class="accent">${p.name}</span> · ${p.tag}${p.price ? ` · RM ${p.price}` : ''}<br>` +
+      (l.grade ? `DIAGNOSTIC GRADE: ${l.grade}<br>` : '') +
+      `CUPS: ${cups} / ${C.LADDER.length}${next ? ` · NEXT: ${next.name} → ${next.reward}` : ' · MILESTONE REACHED'}`;
+    $('cardLadder').innerHTML = ladderHTML(cups);
+
+    // QR: runner scans with their OWN phone → PDF + member card. No number needed.
+    let q = `<div class="qr">${qrImg(RECUP.manualUrl(l))}FREE REPAIR MANUAL</div><div class="qr">${qrImg(RECUP.memberUrl(l))}MY ASCENSION CARD</div>`;
+    if (C.BUSINESS_WA) q += `<div class="qr">${qrImg(RECUP.selfWaLink(l))}GET IT ON WHATSAPP</div>`;
+    $('cardQRs').innerHTML = q;
+
+    let staff = '';
+    if (!SELF) {
+      if (l.phone) staff += `<a class="btn wa" style="text-align:center;text-decoration:none" href="${RECUP.waLink(l)}" target="_blank" onclick="RECUP.updateLead('${l.id}',{manualSent:'YES'})">SEND PDF ON WHATSAPP</a>`;
+      staff += `<button class="btn" onclick="startPour()">POUR CUP ${cups + 1} →</button>`;
+    } else {
+      staff = `<div class="privacy" style="width:100%;text-align:center">Show this code at the Recup table to claim your cup.</div>`;
+    }
+    $('cardStaff').innerHTML = staff;
+    show('s-card', 5);
+  }
+
+  /* ---------- pour a cup ---------- */
+  function startPour() {
+    const l = current; const n = (+l.cups || 0) + 1; const rung = RECUP.tierOf(n);
+    pour = { product: l.protocol, answers: {} };
+    $('pourPhase').textContent = `CUP ${n} · ${rung.name}`;
+    $('pourTitle').textContent = `${(l.name || '').split(' ')[0]} · ${l.code}`;
+    $('pourReward').innerHTML = `<span class="muted" style="font:11px var(--mono);letter-spacing:1px">UNLOCKS</span><b>${rung.reward}</b>`;
+    renderProducts(n);
+    const ask = n <= C.LADDER.length ? rung.ask : null;
+    $('askBox').innerHTML = ask ? `<div class="phase">QUICK QUESTION · ${rung.data.toUpperCase()}</div><h3>${ask.q}</h3>` +
+      (ask.type === 'text' ? `<input class="field" id="askText" placeholder="Name or @handle">`
+        : `<div class="grid2">${ask.options.map(o => `<button class="opt" data-k="${ask.key}" data-v="${esc(o)}" onclick="answer(this)">${esc(o)}</button>`).join('')}</div>`) : '';
+    pour.ask = ask;
+    show('s-pour');
+  }
+  function renderProducts(n) {
+    $('productOpts').innerHTML = Object.entries(C.PROTOCOLS).map(([k, p]) => {
+      const pr = RECUP.priceFor(k, n);
+      const price = p.price ? (pr.discount ? `<s>RM ${p.price}</s> RM ${pr.paid.toFixed(2)}` : `RM ${p.price}`) : 'PRICE TBC';
+      return `<button class="opt ${k === pour.product ? 'sel' : ''}" style="${k === pour.product ? 'border-color:var(--accent);background:rgba(0,242,255,.08)' : ''}" onclick="pour.product='${k}';renderProducts(${n})"><strong>${p.name}</strong><small>${p.phase} · ${price}${pr.units > 1 ? ' · ×2 (BUDDY)' : ''}</small></button>`;
+    }).join('');
+  }
+  function answer(el) {
+    pour.answers[el.dataset.k] = el.dataset.v === 'Skip' ? '' : el.dataset.v;
+    el.parentElement.querySelectorAll('.opt').forEach(b => { b.style.borderColor = ''; b.style.background = ''; });
+    el.style.borderColor = 'var(--accent)'; el.style.background = 'rgba(0,242,255,.08)';
+  }
+  async function confirmPour() {
+    if (pour.ask && pour.ask.type === 'text') { const v = ($('askText') || {}).value; if (v) pour.answers[pour.ask.key] = v.trim(); }
+    const r = await RECUP.stampCup(current, { product: pour.product, answers: pour.answers });
+    const p = C.PROTOCOLS[pour.product];
+    $('doneTitle').textContent = `CUP ${r.cups} LOGGED`;
+    $('doneLadder').innerHTML = ladderHTML(r.cups);
+    $('doneReward').innerHTML = `<span class="muted" style="font:11px var(--mono);letter-spacing:1px">${r.rung.name} · UNLOCKED</span><b>${r.rung.reward}</b>` +
+      `<div class="price">${p.name} · ${p.price ? (r.discount ? `<s>RM ${p.price.toFixed(2)}</s> → ` : '') + `COLLECT RM ${r.paid.toFixed(2)}` : 'PRICE TBC'}${r.units > 1 ? ' · POUR 2 (BUDDY FREE)' : ''}</div>`;
+    $('doneNext').innerHTML = r.next ? `NEXT VISIT: <span class="accent">${r.next.name}</span><br>${r.next.reward}` : `MILESTONE HOLDER · 25% OFF EVERY CUP`;
+    show('s-done');
+    let s = 60; $('cd').textContent = s; clearInterval(timer);
+    timer = setInterval(() => { s--; $('cd').textContent = s; if (s <= 0) home(); }, 1000);
+  }
+
+  // Staff shortcut: tap top-right corner 5x → God Terminal
+  let taps = 0, tapT;
+  $('staffCorner').addEventListener('click', () => { taps++; clearTimeout(tapT); tapT = setTimeout(() => taps = 0, 1500); if (taps >= 5) location.href = 'terminal.html'; });
+  RECUP.flushQueue();
+</script>
+</body>
+</html>

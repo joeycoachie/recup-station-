@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recup Station: The Diagnostic</title>
+<meta name="description" content="The Invisible Energy Leak. 60-second runner diagnostic. Reserve your Protocol at Glenhill Saujana.">
+<meta property="og:title" content="Recup Station: The Diagnostic">
+<meta property="og:description" content="If you can't do this after your run, your metabolic engine is leaking. Scan for the diagnostic.">
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid2 .opt { margin: 0; }
+  @media (max-width: 420px) { .grid2 { grid-template-columns: 1fr; } }
+  .privacy { font-size: 13px; color: var(--muted); background: var(--panel-2); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; line-height: 1.5; }
+  .code { font: 800 40px/1 var(--mono); letter-spacing: 4px; color: var(--accent); text-align: center; margin: 6px 0; }
+  .links a { display: block; text-align: center; text-decoration: none; margin-top: 10px; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid #3a4250; }
+  .btn.wa { background: #25d366; }
+</style>
+</head>
+<body>
+<!-- PHASE 1 · THE AWARENESS — participation link for @recup.stn (source = DIAGNOSTIC_ONLINE)
+     Same core fields as the roadside iPad (name, contact, region, frequency, pain)
+     + the diagnostic (squat test, runner personality, fuel) → reserves a Protocol. -->
+<main class="intake">
+  <div class="card">
+    <div class="progress"><div id="bar"></div></div>
+
+    <section class="step active" data-step="0">
+      <div class="phase">RECUP STATION: THE DIAGNOSTIC</div>
+      <h1>The Invisible<br><span class="accent">Energy Leak.</span></h1>
+      <p>If you can't do a Patterson Squat after your run, your metabolic engine is leaking. You aren't recovering, you're just decaying.</p>
+      <p style="color:var(--text)">60 seconds → your Grade, a <b>reserved Protocol</b> at the Glenhill Saujana node, <b>10% off</b> and the free <b>Runner's Repair Manual</b>.</p>
+      <button class="btn" onclick="go(1)">START THE DIAGNOSTIC</button>
+    </section>
+
+    <section class="step" data-step="1">
+      <div class="phase">01 / 07 · THE CALIBRATION</div>
+      <h3>Can you do a Patterson Squat (single-leg, heel-touch) without your knee caving in?</h3>
+      <button class="opt" onclick="pick('squat','Yes',2)"><strong>Solid</strong><small>Full control. Stable chassis.</small></button>
+      <button class="opt" onclick="pick('squat','Struggle',2)"><strong>Shaky</strong><small>I feel the wobble.</small></button>
+      <button class="opt" onclick="pick('squat','No',2)"><strong>Collapse</strong><small>Can't hold form. Ankles/knees feel tight.</small></button>
+    </section>
+
+    <section class="step" data-step="2">
+      <div class="phase">02 / 07 · RUNNER PERSONALITY</div>
+      <h3>What does your running say about you?</h3>
+      <button class="opt" onclick="pick('archetype','The Sprinter',3)"><strong>The Sprinter</strong><small>I want speed now. Often "cooked" after 5km.</small></button>
+      <button class="opt" onclick="pick('archetype','The Tank',3)"><strong>The Tank</strong><small>I go far, but I get stiff.</small></button>
+      <button class="opt" onclick="pick('archetype','The Office Body',3)"><strong>The Office Body</strong><small>I run to escape the desk.</small></button>
+      <button class="back" onclick="go(1)">← BACK</button>
+    </section>
+
+    <section class="step" data-step="3">
+      <div class="phase">03 / 07 · THE LEAK</div>
+      <h3>What hurts most after a run?</h3>
+      <div class="grid2" id="painOpts"></div>
+      <button class="back" onclick="go(2)">← BACK</button>
+    </section>
+
+    <section class="step" data-step="4">
+      <div class="phase">04 / 07 · FREQUENCY</div>
+      <h3>How often do you run?</h3>
+      <div class="grid2" id="freqOpts"></div>
+      <button class="back" onclick="go(3)">← BACK</button>
+    </section>
+
+    <section class="step" data-step="5">
+      <div class="phase">05 / 07 · REGION</div>
+      <h3>Where do you usually run from?</h3>
+      <div class="grid2" id="regionOpts"></div>
+      <button class="back" onclick="go(4)">← BACK</button>
+    </section>
+
+    <section class="step" data-step="6">
+      <div class="phase">06 / 07 · CURRENT FUEL</div>
+      <h3>What do you drink after a run right now?</h3>
+      <button class="opt" onclick="pick('fuel','Water',7)">Mineral water</button>
+      <button class="opt" onclick="pick('fuel','Matcha / Coffee',7)">Matcha / coffee</button>
+      <button class="opt" onclick="pick('fuel','Isotonic / sports drink',7)">Isotonic / sports drink</button>
+      <button class="opt" onclick="pick('fuel','Nothing',7)">Nothing, honestly</button>
+      <button class="back" onclick="go(5)">← BACK</button>
+    </section>
+
+    <section class="step" data-step="7">
+      <div class="phase">07 / 07 · RESERVE YOUR PROTOCOL</div>
+      <h3>Your name + where to send your Repair Manual</h3>
+      <input class="field" id="name" placeholder="First name is fine" autocomplete="given-name">
+      <div class="privacy">🔒 Your choice. Only used to send your guide and cup rewards. Never shared. Rather not share? Pick <b>"No contact"</b> — you'll get your code and the PDF link right here.</div>
+      <div class="grid2">
+        <button class="opt" onclick="setContact('WHATSAPP')"><strong>WhatsApp</strong></button>
+        <button class="opt" onclick="setContact('EMAIL')"><strong>Email</strong></button>
+        <button class="opt" onclick="setContact('INSTAGRAM')"><strong>Instagram DM</strong></button>
+        <button class="opt" onclick="setContact('NONE')"><strong>No contact</strong></button>
+      </div>
+      <input class="field" id="contact" style="display:none;margin-top:14px">
+      <div class="consent" id="consent" style="display:none">I agree to receive my results and cup rewards from Recup Station on this channel.</div>
+      <div class="err" id="err"></div>
+      <button class="btn" id="submitBtn" onclick="finish()">RESERVE MY PROTOCOL</button>
+      <button class="back" onclick="go(6)">← BACK</button>
+    </section>
+
+    <section class="step" data-step="8" style="text-align:center">
+      <div class="phase">DIAGNOSTIC COMPLETE · PROTOCOL RESERVED</div>
+      <div class="grade-big" id="rGrade">B</div>
+      <div style="font-family:var(--mono);letter-spacing:2px" id="rLabel"></div>
+      <div class="result-box" id="rBox" style="text-align:left"></div>
+      <div style="font:11px var(--mono);color:var(--muted);letter-spacing:1px">YOUR MEMBER CODE · SCREENSHOT THIS</div>
+      <div class="code" id="rCode"></div>
+      <p>At the booth, say <b style="color:var(--text)">"I did the diagnostic"</b> and show this code. Your Protocol is waiting + <b style="color:var(--text)">10% off</b>.</p>
+      <div class="links" id="links"></div>
+    </section>
+  </div>
+</main>
+
+<script src="assets/recup-core.js"></script>
+<script>
+  const C = RECUP_CONFIG; const $ = id => document.getElementById(id);
+  const answers = {}; const TOTAL = 8;
+  const qs = new URLSearchParams(location.search);
+  const campaign = qs.get('utm_content') || qs.get('c') || '';
+
+  function go(n) { document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', +s.dataset.step === n)); $('bar').style.width = (n / TOTAL * 100) + '%'; window.scrollTo(0, 0); }
+  function pick(k, v, next) { answers[k] = v; go(next); }
+  function opts(el, list, key, next) { $(el).innerHTML = list.filter(v => v !== 'Other').map(v => `<button class="opt" onclick="pick('${key}','${v.replace(/'/g, "\\'")}',${next})">${v}</button>`).join(''); }
+  opts('painOpts', C.PAINS, 'pain', 4); opts('freqOpts', C.FREQUENCY, 'frequency', 5); opts('regionOpts', C.REGIONS, 'region', 6);
+
+  function setContact(m) {
+    answers.contactMethod = m;
+    document.querySelectorAll('[data-step="7"] .grid2 .opt').forEach(b => { const on = b.textContent.toUpperCase().includes({ WHATSAPP: 'WHATSAPP', EMAIL: 'EMAIL', INSTAGRAM: 'INSTAGRAM', NONE: 'NO CONTACT' }[m]); b.style.borderColor = on ? 'var(--accent)' : ''; b.style.background = on ? 'rgba(0,242,255,.08)' : ''; });
+    const f = $('contact');
+    if (m === 'NONE') { f.style.display = 'none'; $('consent').style.display = 'none'; return; }
+    const ph = { WHATSAPP: ['WhatsApp number (e.g. 012xxxxxxx)', 'tel'], EMAIL: ['Email address', 'email'], INSTAGRAM: ['@yourhandle', 'text'] }[m];
+    f.placeholder = ph[0]; f.type = ph[1]; f.style.display = 'block'; $('consent').style.display = 'block'; f.focus();
+  }
+
+  async function finish() {
+    const name = $('name').value.trim(); const m = answers.contactMethod; const v = $('contact').value.trim();
+    if (!name) return $('err').textContent = 'Add your first name.';
+    if (!m) return $('err').textContent = 'Choose how to get your Repair Manual (or "No contact").';
+    const bad = (m === 'WHATSAPP' && v.replace(/\D/g, '').length < 9) || (m === 'EMAIL' && !/^\S+@\S+\.\S+$/.test(v)) || (m === 'INSTAGRAM' && v.replace('@', '').length < 2);
+    if (bad) return $('err').textContent = 'Please check that — or pick "No contact".';
+    $('err').textContent = ''; $('submitBtn').disabled = true;
+    const lead = await RECUP.submitLead({ source: 'DIAGNOSTIC_ONLINE', name, contact: v, campaign, ...answers });
+    const p = C.PROTOCOLS[lead.protocol];
+    $('rGrade').textContent = lead.grade; $('rLabel').textContent = lead.gradeLabel; $('rCode').textContent = lead.code;
+    $('rBox').innerHTML = `<b>Runner:</b> ${name.replace(/[<>&]/g, '')} · ${lead.archetype}<br><b>Leak:</b> ${answers.pain}<br><b>Reserved:</b> <span class="accent">${p.name}</span> — ${p.tag}`;
+    let links = `<a class="btn" href="${RECUP.manualUrl(lead)}">OPEN MY REPAIR MANUAL</a><a class="btn ghost" href="${RECUP.memberUrl(lead)}">MY ASCENSION CARD</a>`;
+    if (C.BUSINESS_WA) links += `<a class="btn wa" href="${RECUP.selfWaLink(lead)}">SAVE IT TO MY WHATSAPP</a>`;
+    $('links').innerHTML = links;
+    go(8);
+  }
+  RECUP.flushQueue();
+</script>
+</body>
+</html>

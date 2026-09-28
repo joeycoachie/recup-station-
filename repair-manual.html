@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Runner's Repair Manual · Recup Station</title>
+<link rel="stylesheet" href="assets/recup.css">
+<style>
+  body { font-family: var(--sans); line-height: 1.6; }
+  .doc { max-width: 760px; margin: 0 auto; padding: 32px 18px 60px; }
+  .cover { border: 1px solid var(--accent); border-radius: 18px; padding: 34px 26px; background: linear-gradient(160deg, rgba(0,242,255,.12), transparent 60%); margin-bottom: 26px; }
+  .kicker { font: 11px var(--mono); letter-spacing: 2px; color: var(--accent); }
+  .cover h1 { font: 800 36px/1.05 var(--mono); letter-spacing: 1px; margin: 10px 0 12px; text-transform: uppercase; }
+  .cover p { color: var(--muted); margin: 0; }
+  .for { margin-top: 18px; font: 13px var(--mono); color: var(--text); }
+  .sec { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 18px; break-inside: avoid; }
+  .sec .n { font: 800 13px var(--mono); color: var(--accent); letter-spacing: 2px; }
+  .sec h2 { margin: 4px 0 14px; font-size: 22px; }
+  .sec p { color: #c9d1d9; margin: 0 0 12px; }
+  ol.big { list-style: none; counter-reset: s; padding: 0; margin: 0; }
+  ol.big li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+  ol.big li:first-child { border-top: none; }
+  ol.big li::before { content: counter(s); width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #000; font: 800 16px var(--mono); display: grid; place-items: center; }
+  ol.big b { display: block; }
+  ol.big span { color: var(--muted); font-size: 14px; }
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 14px; }
+  .why div { background: var(--panel-2); border-radius: 10px; padding: 12px; font-size: 14px; }
+  .why b { display: block; color: var(--accent); font: 700 12px var(--mono); letter-spacing: 1px; margin-bottom: 4px; }
+  .stretch { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stretch div { background: var(--panel-2); border-radius: 12px; padding: 16px; }
+  .stretch h3 { margin: 0 0 6px; font: 700 14px var(--mono); letter-spacing: 1px; color: var(--accent); }
+  .stretch p { font-size: 14px; margin: 0; }
+  .menu { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .menu td { padding: 10px 6px; border-top: 1px solid var(--border); vertical-align: top; }
+  .menu .ph { font: 700 10px var(--mono); letter-spacing: 1px; color: var(--accent); white-space: nowrap; }
+  .menu .nm { font: 800 14px var(--mono); }
+  .menu .pr { text-align: right; font: 700 14px var(--mono); white-space: nowrap; }
+  .menu tr.locked { opacity: .55; }
+  .lock { font: 700 10px var(--mono); background: #222; padding: 2px 6px; border-radius: 3px; margin-left: 4px; }
+  .callout { border-left: 3px solid var(--accent); padding: 8px 14px; background: var(--panel-2); border-radius: 0 10px 10px 0; font-size: 14px; }
+  .disclaimer { font-size: 11px; color: var(--muted); text-align: center; margin-top: 24px; }
+  .dl { display: flex; gap: 10px; margin-bottom: 20px; }
+  .dl .btn { margin: 0; }
+  @media (max-width: 560px) { .why, .stretch { grid-template-columns: 1fr; } .cover h1 { font-size: 28px; } }
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    html, body { background: #05070a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .doc { padding: 0; } .dl { display: none; } .sec { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="dl"><button class="btn" onclick="window.print()">SAVE AS PDF / PRINT</button></div>
+
+  <div class="cover">
+    <div class="kicker">RECUP STATION · BODY SCIENCE SPECIALIST</div>
+    <h1>The Runner's<br>Repair Manual</h1>
+    <p>Your engine doesn't get stronger during the run. It gets stronger in the repair after it. Four quick hits to stop the leak.</p>
+    <div class="for" id="forLine"></div>
+  </div>
+
+  <div class="sec">
+    <div class="n">01</div>
+    <h2>3 things to do in the first 30 minutes after a run</h2>
+    <ol class="big">
+      <li><div><b>Replace what you sweated out.</b><span>In Malaysian heat you lose salt, not just water. Sip fluids with electrolytes. Plain water alone can leave you flat and crampy.</span></div></li>
+      <li><div><b>Feed the repair window.</b><span>Get protein in (around 20–30 g) with some carbs. This is when muscle breakdown turns into rebuilding. Skip it and you're just decaying.</span></div></li>
+      <li><div><b>Walk it down, don't sit it down.</b><span>5 minutes of easy walking plus light mobility before you get in the car. Going straight from running to sitting is how hips and knees stiffen up.</span></div></li>
+    </ol>
+  </div>
+
+  <div class="sec">
+    <div class="n">02</div>
+    <h2>Why your knees hurt (and where collagen comes in)</h2>
+    <p>Knee pain in runners usually isn't about the knee alone. It's the chassis around it leaking energy:</p>
+    <div class="why">
+      <div><b>TOO MUCH, TOO SOON</b>A sudden jump in distance or pace. Tendons adapt slower than lungs.</div>
+      <div><b>WEAK HIPS</b>If your knee caves in on the Patterson Squat, your hips aren't holding the line.</div>
+      <div><b>DEAD SHOES</b>Worn cushioning passes more impact up to the joint.</div>
+      <div><b>NO REPAIR</b>Running again before the tissue has rebuilt from the last run.</div>
+    </div>
+    <p><b>Where collagen fits:</b> collagen is the main building block of your tendons, ligaments and cartilage. Research suggests collagen with vitamin C, taken before loading exercise, may help support tendon and joint comfort. It works <i>with</i> strength work, not instead of it. That's why it sits in THE FLOW and THE BUILD.</p>
+    <div class="callout">Sharp pain, swelling, or pain that lasts more than 1–2 weeks is not a "leak". See a physio or doctor.</div>
+  </div>
+
+  <div class="sec">
+    <div class="n">03</div>
+    <h2>The "Office Body" fix: 2 stretches for desk workers who run</h2>
+    <p>8 hours sitting shortens your hip flexors and switches off your glutes. Then you ask them to run. Do these daily, and before every run.</p>
+    <div class="stretch">
+      <div><h3>① KNEELING HIP-FLEXOR OPENER</h3><p>Half-kneel, back knee on a cushion. Squeeze the back-side glute and shift your hips forward until you feel the front of the hip stretch. Keep your ribs down. <b>30 sec × 2 each side.</b></p></div>
+      <div><h3>② SEATED FIGURE-4</h3><p>Sitting at your desk, cross your right ankle over your left knee. Sit tall and hinge forward from the hips until you feel it in the right glute. <b>30 sec × 2 each side.</b> You can do it between meetings.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="n">04</div>
+    <h2>Recup Station menu &amp; weekly schedule</h2>
+    <table class="menu" id="menu"></table>
+    <p style="margin-top:14px" class="callout" id="sched"></p>
+  </div>
+
+  <div class="sec" style="text-align:center">
+    <div class="n">YOUR NEXT CUP</div>
+    <h2 style="margin-bottom:6px">Climb the Ascension ladder</h2>
+    <p id="ladderLine">Every cup unlocks something: 10% → Nitric Boost → Buddy Free → 20% + Activation → 25% + Member Kit.</p>
+    <a class="btn" id="cardBtn" href="member.html" style="text-decoration:none;display:inline-block;width:auto;padding:14px 28px">VIEW MY ASCENSION CARD</a>
+  </div>
+
+  <p class="disclaimer">General wellness information for healthy adult runners. Not medical advice. If you have a medical condition, are pregnant, or take medication, check with your doctor before using supplements.<br>Recup Station · Scan. Identify the Leak. Calibrate your Repair.</p>
+</div>
+
+<script src="assets/recup-core.js"></script>
+<script>
+  const C = RECUP_CONFIG; const $ = id => document.getElementById(id);
+  const price = p => p.locked ? '<span class="lock">🔒 COMING SOON</span>' : (p.price ? 'RM ' + p.price : 'ASK');
+  const rows = [
+    C.ADDONS.NITRIC,
+    C.PROTOCOLS.N01,
+    C.PROTOCOLS.FLUSH,
+    C.PROTOCOLS.N02,
+    C.ADDONS.ACAI,
+    C.ADDONS.NIGHT,
+  ];
+  $('menu').innerHTML = rows.map(p => `<tr class="${p.locked ? 'locked' : ''}"><td class="ph">${p.phase}</td><td><div class="nm">${p.name}</div><div class="muted" style="font-size:13px">${p.tag}${p.locked ? ' · unlocked for members at your 2nd cup' : ''}</div></td><td class="pr">${price(p)}</td></tr>`).join('');
+  $('sched').textContent = C.SCHEDULE;
+  const code = new URLSearchParams(location.search).get('c');
+  if (code) {
+    $('cardBtn').href = 'member.html?c=' + encodeURIComponent(code);
+    RECUP.getByCode(code).then(l => {
+      const p = l && C.PROTOCOLS[l.protocol];
+      $('forLine').innerHTML = l ? `PREPARED FOR ${String(l.name || '').split(' ')[0].toUpperCase()} · ${l.code}${p ? ` · YOUR PROTOCOL: <span class="accent">${p.name}</span>` : ''}` : `MEMBER CODE ${code}`;
+    });
+  }
+</script>
+</body>
+</html>
