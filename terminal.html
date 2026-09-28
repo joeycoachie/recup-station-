@@ -178,9 +178,10 @@
 
   <!-- 06 READINESS -->
   <div class="panel s4">
-    <h2>06_LAUNCH_READINESS <small id="readyPct"></small></h2>
-    <div class="meter"><div id="readyBar" style="width:0"></div></div>
-    <div id="checklist" style="max-height:420px;overflow:auto"></div>
+    <h2>06_LAUNCH_READINESS</h2>
+    <div class="arc-box" style="margin-bottom:12px">One checklist, saved across all your devices, lives on your <b>Recup Founder Command</b> page: Foundation · Operational · Knowledge · Marketing · Launch.</div>
+    <a class="btn-t primary" href="https://claude.ai/artifact/8uKpPyAphr7jCHRf6kyHyk#readiness" target="_blank" rel="noopener">OPEN LAUNCH READINESS →</a>
+    <p class="muted" style="font-size:11px;text-transform:none;margin-top:12px">Private to you: it opens when you're signed in to Claude.</p>
   </div>
 
   <!-- 07 CHANNELS & MATERIALS -->
@@ -439,7 +440,7 @@ function renderBrief(s) {
   $('brief').value =
 `# RECUP STATION SYSTEM BRIEF
 MISSION: Biological Integrity. ARCHITECT: Joey Tan.
-NODE: ${C.NODE_NAME} · ${$('countdown').textContent} · Readiness ${renderChecklist()}%
+NODE: ${C.NODE_NAME} · ${$('countdown').textContent}
 STOCK: ${C.STOCK_UNITS} units · ${s.left} left
 MODEL: Phase 1 Awareness (The Diagnostic) -> Phase 2 Interception (roadside booth) -> Ascension ladder (5 cups)
 
