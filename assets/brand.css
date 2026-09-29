@@ -1,0 +1,30 @@
+/* RECUP.STN // client-facing brand (warm daylight palette)
+   Loaded AFTER recup.css on every page runners see: The Diagnostic, the iPad /
+   QR check-in, the member card, the Repair Manual and the Story builder.
+   The God Terminal doesn't load this file, so it keeps its dark staff look. */
+:root {
+  --bg: #F1EEE6;          /* stone */
+  --panel: #FFFFFF;
+  --panel-2: #F7F4EE;
+  --accent: #C1592E;      /* rust */
+  --accent-rgb: 193,89,46;
+  --on-accent: #FFFFFF;
+  --text: #20211D;        /* ink */
+  --text-2: #3A3A33;
+  --muted: #7A766A;
+  --border: #DEDACD;
+  --line-2: #DEDACD;
+  --track: #E6E1D5;
+  --success: #4F6B4C;     /* sage */
+  --success-rgb: 79,107,76;
+  --warn: #B8860B;        /* gold */
+  --danger: #B3261E;
+  --btn-bg: #20211D;
+  --btn-fg: #FFFFFF;
+  --shadow: 0 6px 24px rgba(32,33,29,.08);
+}
+body { -webkit-font-smoothing: antialiased; }
+.opt { background: var(--panel); }
+.intake .badge { background: rgba(var(--accent-rgb), .06); }
+.grade-big { color: var(--text); }
+.btn.wa { color: #FFFFFF; }

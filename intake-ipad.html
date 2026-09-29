@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Recup Station · Roadside Check-In</title>
+<title>RECUP.STN · Roadside Check-In</title>
 <link rel="stylesheet" href="assets/recup.css">
+<link rel="stylesheet" href="assets/brand.css">
 <style>
   .intake .card { max-width: 640px; }
   .opt { padding: 20px 22px; font-size: 18px; }
@@ -15,31 +16,35 @@
   @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
   .hook { text-align: center; font-family: var(--mono); font-size: 13px; letter-spacing: 1px; color: var(--accent); border: 1px dashed var(--accent); border-radius: 12px; padding: 12px; margin-bottom: 26px; }
   .big-q { font-size: 26px; text-align: center; margin: 0 0 20px; }
-  .path { display: block; width: 100%; padding: 24px; border-radius: 14px; margin-bottom: 14px; font: 700 19px var(--sans); cursor: pointer; text-align: left; border: 1px solid #3a4250; background: var(--panel-2); color: var(--text); }
+  .path { display: block; width: 100%; padding: 24px; border-radius: 14px; margin-bottom: 14px; font: 700 19px var(--sans); cursor: pointer; text-align: left; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text); }
   .path small { display: block; font: 400 14px var(--sans); color: var(--muted); margin-top: 4px; }
-  .path.primary { background: var(--accent); color: #000; border-color: var(--accent); }
-  .path.primary small { color: #033; }
+  .path.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .path.primary small { color: var(--on-accent); opacity: .8; }
   .code { font: 800 44px/1 var(--mono); letter-spacing: 4px; color: var(--accent); text-align: center; margin: 8px 0; }
   .qrs { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
   .qr { text-align: center; font: 11px var(--mono); color: var(--muted); letter-spacing: 1px; }
   .qr img { display: block; background: #fff; padding: 8px; border-radius: 8px; width: 150px; height: 150px; margin: 0 auto 6px; image-rendering: pixelated; }
   .privacy { font-size: 13px; color: var(--muted); background: var(--panel-2); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; line-height: 1.5; }
   .ladder { display: flex; gap: 6px; margin: 14px 0; }
-  .ladder div { flex: 1; height: 10px; border-radius: 5px; background: #222; }
+  .ladder div { flex: 1; height: 10px; border-radius: 5px; background: var(--track); }
   .ladder div.on { background: var(--accent); }
-  .result { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid #3a4250; border-radius: 12px; padding: 16px; margin-bottom: 10px; cursor: pointer; }
+  .result { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 16px; margin-bottom: 10px; cursor: pointer; }
   .result:hover { border-color: var(--accent); }
-  .tag { font: 700 11px var(--mono); padding: 3px 8px; border-radius: 4px; background: rgba(0,242,255,.15); color: var(--accent); }
+  .tag { font: 700 11px var(--mono); padding: 3px 8px; border-radius: 4px; background: rgba(var(--accent-rgb),.15); color: var(--accent); }
   .staffbar { display: flex; gap: 10px; }
   .staffbar .btn { flex: 1; }
-  .btn.ghost { background: transparent; color: var(--text); border: 1px solid #3a4250; }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line-2); }
   .btn.wa { background: #25d366; }
-  .reward { background: linear-gradient(135deg, rgba(0,242,255,.15), transparent); border: 1px solid var(--accent); border-radius: 14px; padding: 18px; margin: 14px 0; }
+  .reward { background: linear-gradient(135deg, rgba(var(--accent-rgb),.15), transparent); border: 1px solid var(--accent); border-radius: 14px; padding: 18px; margin: 14px 0; }
   .reward b { font: 800 20px var(--sans); display: block; margin-top: 4px; }
   .price { font: 700 16px var(--mono); margin-top: 8px; }
   .price s { color: var(--muted); }
   .staff { position: fixed; top: 0; right: 0; width: 60px; height: 60px; z-index: 5; }
-  .mode { position: fixed; bottom: 10px; left: 12px; font: 10px var(--mono); color: #444; letter-spacing: 1px; }
+  .stafflogin { margin-top: 22px; padding: 14px; border: 1px dashed var(--border); border-radius: 12px; }
+  .stafflogin .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stafflogin .field { margin: 0; flex: 1; min-width: 160px; font-size: 15px; padding: 12px; }
+  .stafflogin .btn { width: auto; margin: 0; padding: 12px 18px; }
+  .mode { position: fixed; bottom: 10px; left: 12px; font: 10px var(--mono); color: var(--muted); opacity: .5; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -47,7 +52,7 @@
 <div class="mode" id="modeTag"></div>
 <main class="intake">
 <div class="card">
-  <div class="brand"><div class="logo">Recup Station</div><div class="badge">ROADSIDE CHECK-IN · GLENHILL SAUJANA</div></div>
+  <div class="brand"><div class="logo">RECUP.STN</div><div class="badge">ROADSIDE CHECK-IN · PHB SAUJANA</div></div>
   <div class="progress"><div id="bar"></div></div>
 
   <!-- HOME: the partner's first question -->
@@ -57,6 +62,11 @@
     <button class="path primary" onclick="goLookup('reserved')">YES — I have my code<small>We'll pull up your reserved Protocol.</small></button>
     <button class="path" onclick="startCheckin()">NO — check me in<small>5 taps. 60 seconds. Get your 10% + Repair Manual.</small></button>
     <button class="path" onclick="goLookup('return')">I'M BACK — log my cup<small>Climb the Ascension ladder: rewards on every cup.</small></button>
+    <form class="stafflogin" id="staffLogin" style="display:none" onsubmit="staffLoginSubmit(event)">
+      <div class="consent" style="margin-top:0"><b>Staff, once per iPad:</b> log in so this iPad can search runners by name/phone and log cups to the shared database.</div>
+      <div class="row"><input class="field" id="sEmail" type="email" placeholder="staff email" autocomplete="username"><input class="field" id="sPass" type="password" placeholder="password" autocomplete="current-password"><button class="btn">LOG IN</button></div>
+      <div class="err" id="sErr"></div>
+    </form>
   </section>
 
   <!-- LOOKUP -->
@@ -108,13 +118,12 @@
     <div class="privacy">🔒 Your choice. Only used to send your guide and your cup rewards. Never shared or sold. Rather not share? Pick <b>"Just show me the QR"</b> — you still get the 10% and the PDF.</div>
     <div class="grid2">
       <button class="opt" onclick="setContact('WHATSAPP')"><strong>WhatsApp</strong><small>Fastest — sent right away</small></button>
-      <button class="opt" onclick="setContact('EMAIL')"><strong>Email</strong><small>Auto-sent to your inbox</small></button>
       <button class="opt" onclick="setContact('INSTAGRAM')"><strong>Instagram DM</strong><small>Just your @handle</small></button>
       <button class="opt" onclick="setContact('NONE')"><strong>Just show me the QR</strong><small>No contact details needed</small></button>
     </div>
     <div id="contactBox" style="display:none;margin-top:16px">
       <input class="field" id="contact" autocomplete="off">
-      <div class="consent">I agree to receive my results and cup rewards from Recup Station on this channel.</div>
+      <div class="consent">I agree to receive my results and cup rewards from RECUP.STN on this channel.</div>
       <div class="err" id="e5"></div>
       <button class="btn" id="submitBtn" onclick="submitCheckin()">GET MY 10% + PDF</button>
     </div>
@@ -197,14 +206,14 @@
   function setContact(m) {
     form.contactMethod = m;
     if (m === 'NONE') { form.contact = ''; submitCheckin(); return; }
-    const ph = { WHATSAPP: ['WhatsApp number (e.g. 012xxxxxxx)', 'tel'], EMAIL: ['Email address', 'email'], INSTAGRAM: ['@yourhandle', 'text'] }[m];
+    const ph = { WHATSAPP: ['WhatsApp number (e.g. 012xxxxxxx)', 'tel'], INSTAGRAM: ['@yourhandle', 'text'] }[m];
     $('contact').placeholder = ph[0]; $('contact').type = ph[1]; $('contact').value = '';
     $('contactBox').style.display = 'block'; $('contact').focus();
   }
   async function submitCheckin() {
     if (form.contactMethod !== 'NONE') {
       const v = $('contact').value.trim(); const m = form.contactMethod;
-      const bad = (m === 'WHATSAPP' && v.replace(/\D/g, '').length < 9) || (m === 'EMAIL' && !/^\S+@\S+\.\S+$/.test(v)) || (m === 'INSTAGRAM' && v.replace('@', '').length < 2);
+      const bad = (m === 'WHATSAPP' && !/^\d{9,12}$/.test(v.replace(/\D/g, ''))) || (m === 'INSTAGRAM' && v.replace('@', '').length < 2);
       if (bad) { $('e5').textContent = 'Please check that — or choose "Just show me the QR".'; return; }
       form.contact = v;
     }
@@ -226,7 +235,7 @@
     const r = await RECUP.findRunner($('q').value);
     window.__found = r;
     if (!r.length) {
-      $('results').innerHTML = `<div class="privacy">No match${C.SHEET_ENDPOINT ? '' : ' on this iPad (shared database not connected yet)'}. No problem —<br><br><button class="btn" onclick="startCheckin()">CHECK IN NOW (60 SEC)</button></div>`;
+      $('results').innerHTML = `<div class="privacy">No match${RECUP.session() ? '' : ' (this iPad can only find exact member codes until staff log in)'}. No problem —<br><br><button class="btn" onclick="startCheckin()">CHECK IN NOW (60 SEC)</button></div>`;
       return;
     }
     $('results').innerHTML = r.map((l, i) => `<div class="result" onclick="pickFound(${i})"><div><b>${esc((l.name || '').split(' ')[0])}</b> <span class="muted">${esc(l.code)}</span><br><small class="muted">${l.cups || 0} cup(s) · ${esc((C.PROTOCOLS[l.protocol] || {}).name || '')}</small></div><span class="tag">SELECT →</span></div>`).join('');
@@ -252,6 +261,7 @@
 
     // QR: runner scans with their OWN phone → PDF + member card. No number needed.
     let q = `<div class="qr">${qrImg(RECUP.manualUrl(l))}FREE REPAIR MANUAL</div><div class="qr">${qrImg(RECUP.memberUrl(l))}MY ASCENSION CARD</div>`;
+    if (l.grade) q += `<div class="qr">${qrImg(RECUP.storyUrl(l))}SHARE TO MY STORY</div>`;
     if (C.BUSINESS_WA) q += `<div class="qr">${qrImg(RECUP.selfWaLink(l))}GET IT ON WHATSAPP</div>`;
     $('cardQRs').innerHTML = q;
 
@@ -285,13 +295,13 @@
     $('productOpts').innerHTML = Object.entries(C.PROTOCOLS).map(([k, p]) => {
       const pr = RECUP.priceFor(k, n);
       const price = p.price ? (pr.discount ? `<s>RM ${p.price}</s> RM ${pr.paid.toFixed(2)}` : `RM ${p.price}`) : 'PRICE TBC';
-      return `<button class="opt ${k === pour.product ? 'sel' : ''}" style="${k === pour.product ? 'border-color:var(--accent);background:rgba(0,242,255,.08)' : ''}" onclick="pour.product='${k}';renderProducts(${n})"><strong>${p.name}</strong><small>${p.phase} · ${price}${pr.units > 1 ? ' · ×2 (BUDDY)' : ''}</small></button>`;
+      return `<button class="opt ${k === pour.product ? 'sel' : ''}" style="${k === pour.product ? 'border-color:var(--accent);background:rgba(var(--accent-rgb),.08)' : ''}" onclick="pour.product='${k}';renderProducts(${n})"><strong>${p.name}</strong><small>${p.phase} · ${price}${pr.units > 1 ? ' · ×2 (BUDDY)' : ''}</small></button>`;
     }).join('');
   }
   function answer(el) {
     pour.answers[el.dataset.k] = el.dataset.v === 'Skip' ? '' : el.dataset.v;
     el.parentElement.querySelectorAll('.opt').forEach(b => { b.style.borderColor = ''; b.style.background = ''; });
-    el.style.borderColor = 'var(--accent)'; el.style.background = 'rgba(0,242,255,.08)';
+    el.style.borderColor = 'var(--accent)'; el.style.background = 'rgba(var(--accent-rgb),.08)';
   }
   async function confirmPour() {
     if (pour.ask && pour.ask.type === 'text') { const v = ($('askText') || {}).value; if (v) pour.answers[pour.ask.key] = v.trim(); }
@@ -310,6 +320,14 @@
   // Staff shortcut: tap top-right corner 5x → God Terminal
   let taps = 0, tapT;
   $('staffCorner').addEventListener('click', () => { taps++; clearTimeout(tapT); tapT = setTimeout(() => taps = 0, 1500); if (taps >= 5) location.href = 'terminal.html'; });
+  // Staff mode: one-time login so this iPad can search + log cups
+  function showStaffLogin() { $('staffLogin').style.display = !SELF && !RECUP.session() ? 'block' : 'none'; }
+  async function staffLoginSubmit(e) {
+    e.preventDefault(); $('sErr').textContent = '';
+    try { await RECUP.login($('sEmail').value.trim(), $('sPass').value); $('sPass').value = ''; await RECUP.flushQueue(); showStaffLogin(); }
+    catch (err) { $('sErr').textContent = err.message; }
+  }
+  showStaffLogin();
   RECUP.flushQueue();
 </script>
 </body>

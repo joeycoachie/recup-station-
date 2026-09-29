@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 236" role="img" aria-labelledby="t d">
+  <title id="t">How to do a Patterson Squat</title>
+  <desc id="d">Stand on one leg on a step. Slowly bend that knee until the heel of your free leg taps the floor, keeping the knee over your toes, then stand back up. Front view: the knee should stay over the toes, not cave inwards.</desc>
+  <style>
+    .body { fill: none; stroke: #20211D; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+    .free { stroke: #7A766A; }
+    .box { fill: #DEDACD; }
+    .floor { stroke: #B8B4A6; stroke-width: 2; }
+    .guide { stroke: #C1592E; stroke-width: 2; stroke-dasharray: 4 5; }
+    .lbl { font: 600 11px -apple-system, system-ui, sans-serif; fill: #20211D; }
+    .good { fill: #4F6B4C; } .bad { fill: #C1592E; }
+    .thin { stroke-width: 5; }
+  </style>
+
+  <!-- ===== SIDE VIEW (animated): step down, heel taps, stand up ===== -->
+  <line class="floor" x1="10" y1="200" x2="200" y2="200"/>
+  <rect class="box" x="40" y="160" width="82" height="40" rx="4"/>
+  <line class="guide" x1="124" y1="106" x2="124" y2="158"/>
+
+  <g>
+    <!-- free (hanging) leg -->
+    <polyline class="body free" points="100,72 116,112 128,150">
+      <animate attributeName="points" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="100,72 116,112 128,150;82,122 106,161 130,200;82,122 106,161 130,200;100,72 116,112 128,150"/>
+    </polyline>
+    <polyline class="body free" points="128,150 146,146">
+      <animate attributeName="points" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="128,150 146,146;130,200 148,196;130,200 148,196;128,150 146,146"/>
+    </polyline>
+    <!-- arms (reach forward for balance) -->
+    <polyline class="body thin" points="100,30 102,56 106,80">
+      <animate attributeName="points" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="100,30 102,56 106,80;111,84 136,90 160,90;111,84 136,90 160,90;100,30 102,56 106,80"/>
+    </polyline>
+    <!-- torso -->
+    <polyline class="body" points="100,72 100,24">
+      <animate attributeName="points" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="100,72 100,24;82,122 112,80;82,122 112,80;100,72 100,24"/>
+    </polyline>
+    <circle cx="100" cy="11" r="11" fill="#20211D">
+      <animate attributeName="cx" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="100;120;120;100"/>
+      <animate attributeName="cy" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="11;68;68;11"/>
+    </circle>
+    <!-- standing leg (on the step) -->
+    <polyline class="body" points="100,72 100,116 100,160">
+      <animate attributeName="points" dur="3.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.42;0.58;1"
+        keySplines=".45 0 .55 1;0 0 1 1;.45 0 .55 1" values="100,72 100,116 100,160;82,122 124,122 100,160;82,122 124,122 100,160;100,72 100,116 100,160"/>
+    </polyline>
+    <line class="body" x1="96" y1="160" x2="122" y2="160"/>
+    <!-- heel tap flash -->
+    <circle cx="130" cy="200" r="7" fill="#C1592E" opacity="0">
+      <animate attributeName="opacity" dur="3.2s" repeatCount="indefinite" keyTimes="0;0.42;0.46;0.58;0.62;1" values="0;0;1;1;0;0"/>
+      <animate attributeName="r" dur="3.2s" repeatCount="indefinite" keyTimes="0;0.42;0.5;0.58;1" values="4;4;10;6;4"/>
+    </circle>
+  </g>
+  <text class="lbl" x="10" y="222">Heel taps the floor, knee over toes</text>
+
+  <!-- ===== FRONT VIEW: knee tracking ===== -->
+  <line class="floor" x1="222" y1="200" x2="352" y2="200"/>
+  <!-- good -->
+  <g>
+    <polyline class="body thin" points="256,112 256,72"/>
+    <circle cx="256" cy="60" r="9" fill="#20211D"/>
+    <polyline class="body thin" points="242,112 270,112"/>
+    <polyline class="body thin free" points="243,112 240,150 243,176"/>
+    <polyline class="body thin" points="268,112 270,156 268,198"/>
+    <text class="lbl good" x="236" y="222">✓ Good</text>
+  </g>
+  <!-- bad: knee caves inward -->
+  <g>
+    <polyline class="body thin" points="322,112 322,72"/>
+    <circle cx="322" cy="60" r="9" fill="#20211D"/>
+    <polyline class="body thin" points="308,112 336,112"/>
+    <polyline class="body thin free" points="309,112 306,150 309,176"/>
+    <polyline class="body thin" points="334,112 318,156 334,198"/>
+    <circle cx="318" cy="156" r="10" fill="none" stroke="#C1592E" stroke-width="2"/>
+    <text class="lbl bad" x="296" y="222">✗ Caves in</text>
+  </g>
+</svg>

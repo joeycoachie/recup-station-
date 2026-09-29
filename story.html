@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Share My Grade · RECUP.STN</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/recup.css">
+<link rel="stylesheet" href="assets/brand.css">
+<style>
+  body { font-family: var(--sans); }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 22px 16px 48px; }
+  .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .logo { font: 800 16px var(--mono); letter-spacing: 2px; color: var(--accent); }
+  .top span { font-size: 13px; color: var(--muted); }
+  h1 { font-size: 24px; line-height: 1.2; margin: 0 0 16px; }
+  .preview { display: flex; justify-content: center; margin-bottom: 16px; }
+  canvas { width: 62%; max-width: 300px; aspect-ratio: 9 / 16; border-radius: 16px; box-shadow: var(--shadow); background: var(--panel-2); }
+  .label { font: 600 12px var(--mono); letter-spacing: 1px; color: var(--muted); margin: 14px 0 8px; }
+  .layouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .layouts button { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 6px; font: 600 14px var(--sans); color: var(--text); cursor: pointer; }
+  .layouts button.on { border-color: var(--accent); background: rgba(var(--accent-rgb), .08); color: var(--accent); }
+  .photo { display: flex; gap: 8px; }
+  .photo label, .photo button { flex: 1; text-align: center; background: var(--panel); border: 1.5px dashed var(--border); border-radius: 12px; padding: 14px 8px; font: 600 14px var(--sans); color: var(--text); cursor: pointer; }
+  .photo button { flex: 0 0 auto; border-style: solid; color: var(--muted); display: none; }
+  .share { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 20px; padding: 20px; border: none; border-radius: 14px; font: 700 18px var(--sans); color: #fff; cursor: pointer;
+           background: linear-gradient(90deg, #C1592E, #D9467A 55%, #8A3AB9); }
+  .share svg { width: 22px; height: 22px; }
+  .hint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.55; margin-top: 10px; }
+  .hint b { color: var(--text); }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: .25s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .ghostlink { display: block; text-align: center; margin-top: 16px; font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="logo">RECUP.STN</div><span>Share your grade</span></div>
+  <h1>Your grade is too good to keep to yourself.</h1>
+
+  <div class="preview"><canvas id="cv" width="1080" height="1920"></canvas></div>
+
+  <div class="label">1 · PICK A LAYOUT</div>
+  <div class="layouts" id="layouts">
+    <button data-l="bold" class="on">Bold</button>
+    <button data-l="card">Card</button>
+    <button data-l="photo">Photo</button>
+  </div>
+
+  <div class="label">2 · ADD YOUR PHOTO (OPTIONAL)</div>
+  <div class="photo">
+    <label>📷 Choose or take a photo<input type="file" id="file" accept="image/*" hidden></label>
+    <button id="clearPhoto" type="button">Remove</button>
+  </div>
+
+  <button class="share" id="shareBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff"/></svg>
+    Share to Instagram Story
+  </button>
+  <div class="hint" id="hint">Opens your share sheet → tap <b>Instagram</b> → <b>Story</b>. Your challenge link is copied too: add a <b>Link sticker</b> and paste it.</div>
+  <a class="ghostlink" id="back" href="intake-ig.html">Not your grade? Take the diagnostic →</a>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="assets/recup-core.js"></script>
+<script>
+  const C = RECUP_CONFIG; const $ = id => document.getElementById(id);
+  const INK = '#20211D', RUST = '#C1592E', STONE = '#F1EEE6', SAGE = '#4F6B4C', MUTED = '#B8B4A6';
+  const GRADES = { A: ['STABLE CHASSIS', 'My mechanics hold.'], B: ['ENERGY LEAK', "I'm losing power through the wobble."], C: ['STRUCTURAL REPAIR', 'Rebuilding my chassis.'] };
+  const ARCH = { SPRINTER: 'The Sprinter', DIESEL: 'The Diesel', TANK: 'The Tank', 'SOUL RUNNER': 'The Soul Runner', 'OFFICE BODY': 'The Office Body' };
+  const qs = new URLSearchParams(location.search);
+  let runner = { grade: qs.get('g') || 'B', archetype: qs.get('a') || '', protocol: qs.get('p') || 'N02', cups: 0 };
+  let layout = 'bold', photo = null;
+  const challengeLink = RECUP.siteUrl('intake-ig.html') + '?utm_content=story_share';
+
+  /* ---------- drawing ---------- */
+  const cv = $('cv'), ctx = cv.getContext('2d'), W = 1080, H = 1920;
+  const DISPLAY = "'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif";
+  const SANS = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+
+  function cover(img, x, y, w, h) {
+    const r = Math.max(w / img.width, h / img.height), iw = img.width * r, ih = img.height * r;
+    ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+  }
+  function text(t, x, y, font, color, align = 'center') { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align; ctx.fillText(t, x, y); }
+  function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  function cta(dark) {
+    roundRect(90, 1640, W - 180, 180, 28); ctx.fillStyle = dark ? 'rgba(255,255,255,.1)' : '#fff'; ctx.fill();
+    ctx.strokeStyle = RUST; ctx.lineWidth = 4; ctx.stroke();
+    text("WHAT'S YOUR GRADE?", W / 2, 1722, `800 58px ${DISPLAY}`, dark ? '#fff' : INK);
+    text('Take the diagnostic · @recup.stn', W / 2, 1782, `500 34px ${SANS}`, RUST);
+  }
+  function brand(color) { text('RECUP.STN', W / 2, 150, `800 54px ${DISPLAY}`, color); }
+  function bg(dark) {
+    if (photo) { cover(photo, 0, 0, W, H); ctx.fillStyle = dark ? 'rgba(20,20,18,.55)' : 'rgba(241,238,230,.35)'; ctx.fillRect(0, 0, W, H); return; }
+    if (dark) { const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, INK); g.addColorStop(1, '#3A2A20'); ctx.fillStyle = g; }
+    else ctx.fillStyle = STONE;
+    ctx.fillRect(0, 0, W, H);
+  }
+  const g = () => GRADES[runner.grade] || GRADES.B;
+  const proto = () => (C.PROTOCOLS[runner.protocol] || C.PROTOCOLS.N02).name;
+
+  function drawBold() {
+    bg(true); brand(RUST);
+    text('MY KINETIC GRADE', W / 2, 430, `600 44px ${SANS}`, MUTED);
+    text(runner.grade, W / 2, 1000, `800 620px ${DISPLAY}`, '#fff');
+    text(g()[0], W / 2, 1130, `800 96px ${DISPLAY}`, RUST);
+    text(g()[1], W / 2, 1210, `400 40px ${SANS}`, '#DEDACD');
+    if (runner.archetype) text(ARCH[runner.archetype] || runner.archetype, W / 2, 1360, `700 52px ${SANS}`, '#fff');
+    text(`Protocol: ${proto()}`, W / 2, 1430, `500 36px ${SANS}`, MUTED);
+    cta(true);
+  }
+  function drawCard() {
+    bg(false); brand(RUST);
+    roundRect(110, 330, W - 220, 1150, 44); ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(32,33,29,.18)'; ctx.shadowBlur = 50; ctx.fill(); ctx.shadowBlur = 0;
+    text('KINETIC DIAGNOSTIC', W / 2, 460, `600 38px ${SANS}`, '#7A766A');
+    text(runner.grade, W / 2, 900, `800 460px ${DISPLAY}`, INK);
+    text(g()[0], W / 2, 1020, `800 84px ${DISPLAY}`, RUST);
+    if (runner.archetype) text(ARCH[runner.archetype] || runner.archetype, W / 2, 1120, `700 48px ${SANS}`, INK);
+    text(`Protocol: ${proto()}`, W / 2, 1185, `500 34px ${SANS}`, '#7A766A');
+    // ascension ladder
+    const n = C.LADDER.length, sz = 96, gap = 34, x0 = W / 2 - (n * sz + (n - 1) * gap) / 2;
+    for (let i = 0; i < n; i++) {
+      const done = runner.cups > i; ctx.beginPath(); ctx.arc(x0 + i * (sz + gap) + sz / 2, 1330, sz / 2, 0, Math.PI * 2);
+      ctx.fillStyle = done ? SAGE : '#fff'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = done ? SAGE : '#DEDACD'; ctx.stroke();
+      text(i === n - 1 ? '★' : String(i + 1), x0 + i * (sz + gap) + sz / 2, 1346, `700 40px ${SANS}`, done ? '#fff' : '#7A766A');
+    }
+    text(runner.cups ? `${runner.cups} cup${runner.cups > 1 ? 's' : ''} up the ladder` : 'Day one. Climbing the ladder.', W / 2, 1430, `500 32px ${SANS}`, '#7A766A');
+    cta(false);
+  }
+  function drawPhoto() {
+    if (photo) cover(photo, 0, 0, W, H);
+    else { ctx.fillStyle = '#DEDACD'; ctx.fillRect(0, 0, W, H); text('Add your photo ↓', W / 2, 900, `700 64px ${SANS}`, '#7A766A'); text('post-run selfie · your crew · the finish', W / 2, 980, `400 38px ${SANS}`, '#7A766A'); }
+    const grad = ctx.createLinearGradient(0, 900, 0, H); grad.addColorStop(0, 'rgba(20,20,18,0)'); grad.addColorStop(.55, 'rgba(20,20,18,.82)'); grad.addColorStop(1, 'rgba(20,20,18,.95)');
+    ctx.fillStyle = grad; ctx.fillRect(0, 900, W, H - 900);
+    // grade badge
+    ctx.beginPath(); ctx.arc(W - 200, 240, 130, 0, Math.PI * 2); ctx.fillStyle = RUST; ctx.fill();
+    text(runner.grade, W - 200, 318, `800 220px ${DISPLAY}`, '#fff');
+    text('RECUP.STN', 90, 150, `800 54px ${DISPLAY}`, '#fff', 'left');
+    text(`GRADE ${runner.grade} · ${g()[0]}`, 90, 1360, `800 88px ${DISPLAY}`, '#fff', 'left');
+    if (runner.archetype) text(`${ARCH[runner.archetype] || runner.archetype} · Protocol: ${proto()}`, 90, 1430, `500 38px ${SANS}`, '#DEDACD', 'left');
+    cta(true);
+  }
+  // The image file is prepared after every redraw, so tapping Share can open the
+  // share sheet instantly (iPhones only allow it straight after a tap).
+  let shareFile = null;
+  function draw() {
+    ctx.clearRect(0, 0, W, H); ({ bold: drawBold, card: drawCard, photo: drawPhoto })[layout]();
+    shareFile = null; cv.toBlob(b => { shareFile = new File([b], 'recupstn-grade.png', { type: 'image/png' }); }, 'image/png');
+  }
+
+  /* ---------- controls ---------- */
+  $('layouts').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    layout = b.dataset.l; document.querySelectorAll('#layouts button').forEach(x => x.classList.toggle('on', x === b));
+    draw(); if (layout === 'photo' && !photo) $('file').click();
+  });
+  $('file').addEventListener('change', () => {
+    const f = $('file').files[0]; if (!f) return;
+    const img = new Image(); img.onload = () => { photo = img; $('clearPhoto').style.display = 'block'; draw(); };
+    img.src = URL.createObjectURL(f);
+  });
+  $('clearPhoto').addEventListener('click', () => { photo = null; $('file').value = ''; $('clearPhoto').style.display = 'none'; draw(); });
+
+  function toast(t) { $('toast').textContent = t; $('toast').classList.add('show'); setTimeout(() => $('toast').classList.remove('show'), 2600); }
+
+  $('shareBtn').addEventListener('click', async () => {
+    const file = shareFile; if (!file) return toast('One sec, preparing your image…');
+    navigator.clipboard && navigator.clipboard.writeText(challengeLink).catch(() => {});
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    // Desktop / unsupported browser: save the image instead
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+    toast('Saved! Open Instagram → Story → pick this image. Link copied for the sticker.');
+  });
+
+  /* ---------- load the runner (member code → real grade + cups) ---------- */
+  (async () => {
+    try { await document.fonts.load(`800 100px 'Barlow Condensed'`); } catch {}
+    draw();
+    const code = qs.get('c');
+    if (code) {
+      const l = await RECUP.getByCode(code);
+      if (l && l.grade) { runner = { grade: l.grade, archetype: l.archetype, protocol: l.protocol, cups: +l.cups || 0 }; $('back').href = RECUP.memberUrl(l); $('back').textContent = '← Back to my Ascension card'; draw(); }
+    }
+  })();
+</script>
+</body>
+</html>

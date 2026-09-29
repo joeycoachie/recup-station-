@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recup Station · My Ascension Card</title>
+<title>RECUP.STN · My Ascension Card</title>
 <link rel="stylesheet" href="assets/recup.css">
+<link rel="stylesheet" href="assets/brand.css">
 <style>
   body { font-family: var(--sans); }
   .wrap { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
@@ -16,25 +17,25 @@
   .who h1 { margin: 0; font-size: 26px; }
   .code { font: 800 26px var(--mono); letter-spacing: 3px; color: var(--accent); }
   .status { display: inline-block; margin-top: 10px; font: 700 11px var(--mono); letter-spacing: 1px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); }
-  .status.active { background: var(--success); color: #000; border-color: var(--success); }
+  .status.active { background: var(--success); color: var(--on-accent); border-color: var(--success); }
   .meter { display: flex; gap: 6px; margin-top: 16px; }
-  .meter div { flex: 1; height: 10px; border-radius: 5px; background: #222; }
+  .meter div { flex: 1; height: 10px; border-radius: 5px; background: var(--track); }
   .meter div.on { background: var(--accent); }
   h2 { font-size: 15px; letter-spacing: 1px; margin: 0 0 4px; font-family: var(--mono); }
   .sub { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
   .rung { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
   .rung:first-of-type { border-top: none; }
-  .num { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #3a4250; display: grid; place-items: center; font: 800 16px var(--mono); color: var(--muted); }
-  .rung.done .num { background: var(--accent); border-color: var(--accent); color: #000; }
-  .rung.next .num { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px rgba(0,242,255,.4); }
+  .num { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; font: 800 16px var(--mono); color: var(--muted); }
+  .rung.done .num { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .rung.next .num { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px rgba(var(--accent-rgb),.4); }
   .rung h3 { margin: 0; font: 700 15px var(--mono); letter-spacing: 1px; }
   .rung .step { color: var(--muted); font-size: 13px; margin-top: 2px; }
   .benefit { margin-top: 8px; font-weight: 700; }
   .rung.done .benefit { color: var(--success); }
   .data { margin-top: 6px; font-size: 12px; color: var(--muted); }
   .pill { font: 700 10px var(--mono); letter-spacing: 1px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
-  .pill.now { background: var(--accent); color: #000; }
-  .pill.ok { background: rgba(0,255,136,.15); color: var(--success); }
+  .pill.now { background: var(--accent); color: var(--on-accent); }
+  .pill.ok { background: rgba(var(--success-rgb, 0,255,136),.15); color: var(--success); }
   .find { display: flex; gap: 8px; }
   .find .field { margin: 0; }
   .find .btn { width: auto; margin: 0; padding: 0 20px; }
@@ -44,7 +45,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="logo">RECUP STATION</div><div class="kicker">GLENHILL SAUJANA · THE ASCENSION MODEL</div></div>
+  <div class="top"><div class="logo">RECUP.STN</div><div class="kicker">PHB SAUJANA · THE ASCENSION MODEL</div></div>
 
   <div class="card" id="me" style="display:none">
     <div class="who">
@@ -69,6 +70,7 @@
     <div id="ladder"></div>
   </div>
 
+  <a class="btn" id="storyBtn" href="story.html" style="display:none;background:var(--accent);color:var(--on-accent);margin-bottom:10px">SHARE MY GRADE TO MY STORY</a>
   <a class="btn" id="manualBtn" href="repair-manual.html">OPEN MY RUNNER'S REPAIR MANUAL</a>
   <p class="note" style="margin-top:18px">Your details are only used for your guide and rewards. Never shared or sold.<br>Want your data removed? Tell us at the booth or reply "DELETE" to our WhatsApp.</p>
 </div>
@@ -97,6 +99,7 @@
     const next = RECUP.nextTier(cups);
     $('mNext').textContent = next ? `${cups} cup${cups === 1 ? '' : 's'} logged. Next: ${next.name} → ${next.reward}` : 'You hold the Milestone: 25% off every cup.';
     $('manualBtn').href = RECUP.manualUrl(l);
+    if (l.grade) { $('storyBtn').href = RECUP.storyUrl(l); $('storyBtn').style.display = 'block'; }
   }
   async function lookup(code) {
     code = (code || $('q').value).trim().toUpperCase(); if (!code) return;

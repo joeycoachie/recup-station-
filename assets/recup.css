@@ -12,6 +12,15 @@
   --danger: #ff0055;
   --mono: 'SF Mono', 'JetBrains Mono', Menlo, 'Courier New', monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  /* extra tokens so client pages can re-theme via assets/brand.css */
+  --accent-rgb: 0,242,255;
+  --on-accent: #000;
+  --line-2: #3a4250;
+  --track: #222;
+  --text-2: #c9d1d9;
+  --btn-bg: var(--accent);
+  --btn-fg: #000;
+  --shadow: 0 10px 40px rgba(0,0,0,.5);
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -26,7 +35,7 @@ button { font-family: inherit; }
 
 /* ---------- intake forms (shared) ---------- */
 .intake { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 24px 16px; font-family: var(--sans); }
-.intake .card { width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.intake .card { width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; box-shadow: var(--shadow); }
 .intake .brand { text-align: center; margin-bottom: 28px; }
 .intake .logo { font-family: var(--mono); font-weight: 800; letter-spacing: 2px; font-size: 22px; text-transform: uppercase; }
 .intake .badge { display: inline-block; margin-top: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 4px 10px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; }
@@ -37,14 +46,14 @@ button { font-family: inherit; }
 .step { display: none; animation: fadeIn .35s ease; }
 .step.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.opt { display: block; width: 100%; text-align: left; background: transparent; color: var(--text); border: 1px solid #3a4250; border-radius: 12px; padding: 18px; margin-bottom: 12px; cursor: pointer; font: inherit; font-size: 16px; transition: .2s; }
+.opt { display: block; width: 100%; text-align: left; background: transparent; color: var(--text); border: 1px solid var(--line-2); border-radius: 12px; padding: 18px; margin-bottom: 12px; cursor: pointer; font: inherit; font-size: 16px; transition: .2s; }
 .opt small { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
-.opt:hover, .opt:focus-visible { border-color: var(--accent); background: rgba(0,242,255,.06); outline: none; }
-.btn { display: block; width: 100%; background: var(--accent); color: #000; border: none; border-radius: 12px; padding: 18px; font: 700 16px var(--mono); letter-spacing: 1px; cursor: pointer; margin-top: 8px; }
+.opt:hover, .opt:focus-visible { border-color: var(--accent); background: rgba(var(--accent-rgb),.06); outline: none; }
+.btn { display: block; width: 100%; background: var(--btn-bg); color: var(--btn-fg); border: none; border-radius: 12px; padding: 18px; font: 700 16px var(--mono); letter-spacing: 1px; cursor: pointer; margin-top: 8px; }
 .btn:disabled { opacity: .5; cursor: wait; }
-.field { width: 100%; background: var(--panel-2); border: 1px solid #3a4250; color: var(--text); padding: 16px; border-radius: 12px; font-size: 17px; margin-bottom: 14px; font-family: var(--sans); }
+.field { width: 100%; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--text); padding: 16px; border-radius: 12px; font-size: 17px; margin-bottom: 14px; font-family: var(--sans); }
 .field:focus { outline: none; border-color: var(--accent); }
-.progress { height: 4px; background: #222; border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
+.progress { height: 4px; background: var(--track); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
 .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 .consent { font-size: 12px; color: var(--muted); margin: 4px 0 8px; line-height: 1.5; }
 .err { color: var(--danger); font-size: 14px; min-height: 20px; margin-bottom: 6px; }

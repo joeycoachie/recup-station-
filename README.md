@@ -12,7 +12,10 @@ Runners-Repair-Manual.pdf  Same manual as a PDF file
 playbook.html         Partner training guide (INTERNAL: booth script, protocols, jugs)
 poster.html           Poster A (menu, A3) + Poster B (QR stand)
 assets/recup-core.js  ALL SETTINGS: prices, ladder, regions, questions, links
-apps-script/Code.gs   Google Sheet backend (shared database + email auto-send)
+supabase/recup_station.sql  Shared database (Supabase): one table + security rules
+story.html            Story builder: layouts + own photo → Instagram Story
+assets/brand.css      Warm RECUP.STN colours for every page runners see
+assets/squat-demo.svg Animated Patterson Squat demo (The Diagnostic, step 1)
 ```
 
 ## The flow
@@ -28,22 +31,28 @@ Core (both): name · contact (optional) · region · running frequency · what h
 The Diagnostic also asks: squat test · runner personality · current fuel (→ Grade).
 
 ## Phone number is optional
-Runners pick WhatsApp, Email (auto-sent), Instagram DM, or **"Just show me the QR"**.
+The Diagnostic asks for WhatsApp or Instagram DM. At the booth iPad, runners can also pick **"Just show me the QR"**.
 Everyone gets a member code (RS-XXXX), which is what tracks their cups.
 
 ## Getting the PDF to runners
 Nothing is sent automatically on WhatsApp; that needs the paid WhatsApp Business API.
 - **WhatsApp:** the partner taps SEND PDF ON WHATSAPP. The message with the manual link is pre-written; press send.
-- **Email:** sent automatically by the Apps Script.
-- **No contact:** they scan the QR on the iPad and the manual opens on their phone.
+- **Instagram:** the partner taps DM LINK in the terminal (copies the manual link) and sends it as a DM.
+- **QR only (iPad):** they scan the QR on the iPad and the manual opens on their phone.
 - **Free automation:** set `BUSINESS_WA`, and put the manual link in your WhatsApp Business **Greeting message**.
   Runners who tap "Get it on WhatsApp" then get the link back automatically.
 
 ## To go live
-1. Deploy `apps-script/Code.gs` (steps at the top of the file). Change `ADMIN_KEY`.
-2. In `assets/recup-core.js` set `SHEET_ENDPOINT`, `SITE_URL`, `BUSINESS_WA`, `DISCOUNT_CODE`, `LAUNCH_DATE`, and any TBC prices.
-3. Host the folder: drag it onto app.netlify.com/drop.
-4. Print `poster.html` only after `SITE_URL` is set, so the QR codes work.
+1. Supabase → SQL Editor → run `supabase/recup_station.sql` (safe to re-run).
+2. Supabase → Authentication → Users → **Add user** with your email + password, tick **Auto Confirm**.
+   The email must be in `recup_staff` (joeytqw@gmail.com already is).
+3. Log in once on the God Terminal and once on the booth iPad (staff mode). Both stay logged in.
+4. In `assets/recup-core.js` set `BUSINESS_WA`, `DISCOUNT_CODE` and any TBC prices.
+5. Push to GitHub: the site at `SITE_URL` updates in about a minute.
+
+## Who can see what
+- Public pages (anon key) can only **add** a runner and open **one** member card by its exact code (first name, cups, grade; never contact details).
+- Only staff emails in `recup_staff`, logged in, can list, search and update runners.
 
 ## Preview without installing anything
 Double-click `index.html`. For the terminal, click LOAD DEMO DATA, then CLEAR LOCAL when you're done.

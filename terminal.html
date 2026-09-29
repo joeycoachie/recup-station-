@@ -80,7 +80,9 @@
   .modal.open { display: flex; }
   .modal .box { background: var(--panel); border: 1px solid var(--accent); max-width: 480px; width: 100%; padding: 20px; border-radius: 6px; }
   .modal select, .modal input { width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font: 12px var(--mono); padding: 8px; margin: 6px 0 12px; }
-  .keybar { display: none; gap: 6px; align-items: center; } .keybar.show { display: flex; }
+  .login { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .login input { background: var(--bg); border: 1px solid var(--border); color: var(--text); font: 12px var(--mono); padding: 8px; min-width: 220px; text-transform: none; }
+  .login input:focus { outline: none; border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -90,11 +92,21 @@
     <div class="topbar">
       <div class="title">RECUP STATION <span>// GOD TERMINAL</span></div>
       <span class="pill"><span class="dot" id="syncDot"></span><span id="syncTxt">CONNECTING…</span></span>
-      <span class="keybar" id="keybar"><input class="search" id="keyIn" type="password" placeholder="ADMIN KEY"><button class="btn-t" onclick="saveKey()">UNLOCK</button></span>
       <span class="countdown" id="countdown">T-MINUS —</span>
       <span class="muted" id="nodeName"></span>
-      <div class="btn-row"><button class="btn-t" onclick="refresh()">⟳ SYNC</button><a class="btn-t" href="index.html">⌂ HUB</a></div>
+      <div class="btn-row"><button class="btn-t" onclick="refresh()">⟳ SYNC</button><button class="btn-t" id="logoutBtn" onclick="doLogout()" style="display:none">LOGOUT</button><a class="btn-t" href="index.html">⌂ HUB</a></div>
     </div>
+  </div>
+
+  <!-- STAFF LOGIN (shown until signed in; stays signed in on this device) -->
+  <div class="panel s12" id="loginPanel" style="display:none">
+    <h2>STAFF_LOGIN <small>sign in once to see every runner from every phone and iPad</small></h2>
+    <form class="login" onsubmit="doLogin(event)">
+      <input id="lEmail" type="email" placeholder="email" autocomplete="username" required>
+      <input id="lPass" type="password" placeholder="password" autocomplete="current-password" required>
+      <button class="btn-t primary" id="lBtn">LOGIN</button>
+      <span class="bad" id="lErr" style="text-transform:none"></span>
+    </form>
   </div>
 
   <div class="panel s12"><div class="kpis" id="kpis"></div></div>
@@ -343,7 +355,7 @@ function bars(el, counts) {
 const countBy = f => LEADS.reduce((a, l) => { const k = f(l); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
 function renderIntel() {
   bars('bPain', countBy(l => l.pain)); bars('bRegion', countBy(l => l.region)); bars('bFreq', countBy(l => l.frequency));
-  bars('bContact', countBy(l => ({ WHATSAPP: 'WHATSAPP', EMAIL: 'EMAIL', INSTAGRAM: 'INSTAGRAM', NONE: 'QR ONLY (NO CONTACT)' })[l.contactMethod]));
+  bars('bContact', countBy(l => ({ WHATSAPP: 'WHATSAPP', EMAIL: 'EMAIL (OLD)', INSTAGRAM: 'INSTAGRAM', NONE: 'QR ONLY (iPAD)' })[l.contactMethod]));
   bars('bSource', countBy(l => SRC[l.source])); bars('bGoal', countBy(l => l.goal));
 }
 
@@ -368,7 +380,7 @@ const CHECKLIST = [
   ['PHASE 1 · FOUNDATION', [
     'The Diagnostic (IG link) live + in @recup.stn bio',
     'Roadside iPad check-in tested: YES / NO / I\'M BACK paths',
-    'Google Sheet connected (terminal shows LIVE) + admin key set',
+    'Supabase connected (terminal shows LIVE) + booth iPad logged in as staff',
     'SITE_URL + BUSINESS_WA set so QR codes & WhatsApp links work',
     'Menu prices locked (Flush / Flow / Build / Acai / Night Shift)',
     'Intro offer + discount code set · Ascension rewards agreed',
@@ -379,7 +391,7 @@ const CHECKLIST = [
     'QR Code Stand (data collection) — poster B printed',
     'Cooler Box / Ice (for the Fuel Protocols)',
     'Printed Posters (The Protocols menu) — poster A',
-    'PDF Delivery: email auto-send tested + WhatsApp link tested',
+    'PDF Delivery: WhatsApp link + Instagram DM link tested',
     'Big jugs, no labels · 10 cups of The Flush pre-poured',
     'iPad charged + power bank · check-in added to Home Screen',
   ]],
@@ -402,7 +414,7 @@ const CHECKLIST = [
     'Soft test: 3 friends do roadside NO path + 1 returning cup',
     'IG post: Invisible Energy Leak hook + run club tagged',
     'Partner in "Repair Specialist" gear. No selling — just diagnosing',
-    'Open day at Glenhill Saujana',
+    'Open day at PHB Saujana',
   ]],
 ];
 function renderChecklist() {
@@ -420,9 +432,10 @@ function toggleCheck(k, on) { settings.checks[k] = on; saveSettings(); paint(); 
 
 function renderAlerts(s) {
   const a = [];
-  if (!C.SHEET_ENDPOINT) a.push(['act', 'NO SHARED DATABASE. Online diagnostic, iPad and QR-stand runners won\'t meet here, and the booth can\'t find online reservations, until SHEET_ENDPOINT is set.']);
-  else if (LAST.authFail) a.push(['act', 'Sheet connected but ADMIN KEY missing/wrong. Enter it in the top bar.']);
-  else if (!LAST.remoteOk) a.push(['act', 'Sheet unreachable. Showing this device only.']);
+  if (!LAST.loggedIn) a.push(['act', 'NOT LOGGED IN. Showing this device only. Log in above to see every runner.']);
+  else if (!LAST.remoteOk) a.push(['act', /runners|schema cache/.test(LAST.error || '')
+    ? 'Database not set up yet. Run supabase/recup_station.sql in Supabase → SQL Editor.'
+    : `Can't read runners (${esc(LAST.error || 'offline')}). Check the connection, or that this email is in recup_staff.`]);
   if (!C.SITE_URL) a.push(['watch', 'SITE_URL not set. QR codes and PDF links point to this computer, not the internet.']);
   if (!C.BUSINESS_WA) a.push(['watch', 'BUSINESS_WA not set. The "message us on WhatsApp" option for no-phone runners is hidden.']);
   if (LAST.pending) a.push(['watch', `${LAST.pending} update(s) queued offline. They'll sync when back online.`]);
@@ -485,18 +498,25 @@ function exportCSV() {
 }
 function copy(t) { navigator.clipboard?.writeText(t); }
 function demo() { RECUP.seedDemo(); refresh(); }
-function wipe() { if (confirm('Clear runners stored on THIS device? (Google Sheet is not touched)')) { RECUP.clearLocal(); refresh(); } }
-function saveKey() { RECUP.setAdminKey($('keyIn').value.trim()); refresh(); }
+function wipe() { if (confirm('Clear runners stored on THIS device? (The database is not touched)')) { RECUP.clearLocal(); refresh(); } }
+async function doLogin(e) {
+  e.preventDefault(); $('lErr').textContent = ''; $('lBtn').textContent = '…';
+  try { await RECUP.login($('lEmail').value.trim(), $('lPass').value); $('lPass').value = ''; await refresh(); }
+  catch (err) { $('lErr').textContent = err.message; }
+  $('lBtn').textContent = 'LOGIN';
+}
+function doLogout() { RECUP.logout(); refresh(); }
 
 function paint() { const s = stats(); renderKPIs(s); renderFeed(); renderRungs(s); renderMetrics(s); renderIntel(); calc(); renderAlerts(s); renderBrief(s); }
 async function refresh() {
   $('syncTxt').textContent = 'SYNCING…';
   await RECUP.flushQueue();
   const r = await RECUP.loadLeads(); LEADS = r.leads; LAST = r;
-  const live = C.SHEET_ENDPOINT && r.remoteOk;
-  $('syncDot').className = 'dot ' + (live ? 'live' : r.authFail ? 'bad' : 'local');
-  $('syncTxt').textContent = (live ? 'LIVE · SHEET SYNCED ' : r.authFail ? 'LOCKED · ENTER ADMIN KEY ' : 'LOCAL DEVICE ONLY · ') + new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
-  $('keybar').classList.toggle('show', !!r.authFail);
+  const live = r.remoteOk;
+  $('syncDot').className = 'dot ' + (live ? 'live' : r.loggedIn ? 'bad' : 'local');
+  $('syncTxt').textContent = (live ? 'LIVE · SYNCED ' : r.loggedIn ? 'LOGGED IN · NOT SYNCING ' : 'LOCAL DEVICE ONLY · ') + new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('loginPanel').style.display = r.loggedIn ? 'none' : '';
+  $('logoutBtn').style.display = r.loggedIn ? '' : 'none';
   paint();
 }
 function tick() {

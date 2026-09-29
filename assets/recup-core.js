@@ -1,15 +1,20 @@
 /* =====================================================================
-   RECUP STATION // CORE DATA LAYER  (v2 · Ascension Model)
+   RECUP STATION // CORE DATA LAYER  (v3 · Supabase)
    Shared by: roadside check-in (iPad / QR stand) · The Diagnostic (IG link)
-              · member page · God Terminal
+              · member page · story builder · God Terminal
    ---------------------------------------------------------------------
    Every runner = one record with a short MEMBER CODE (e.g. RS-7Q4K).
-   Phone is OPTIONAL. The code is what tracks cups up the Ascension ladder.
+   All devices write to ONE Supabase database (supabase/recup_station.sql):
+   - public pages can only add a runner and open one card by its exact code
+   - the God Terminal and the booth iPad log in once as staff to see/edit all
+   Offline? New runners and cup logs wait on the device and sync when back.
    ===================================================================== */
 
 const RECUP_CONFIG = {
-  // 1) Paste your Apps Script "/exec" URL (see apps-script/Code.gs)
-  SHEET_ENDPOINT: '',
+  // 1) Supabase project (Settings → API). The anon key is public by design:
+  //    it can only add runners and open a card by its exact code.
+  SUPABASE_URL: 'https://bjpekyumhgyssvmhwiyz.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqcGVreXVtaGd5c3N2bWh3aXl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODg0NzQsImV4cCI6MjEwNjE2NDQ3NH0.mnRgRp5Z2Pab2buzj_k9V3zwM2TOxsxJTJVEH4YMphA',
 
   // 2) Once hosted (Netlify / GitHub Pages), paste your site root, e.g. 'https://recupstn.netlify.app/'
   //    Used for QR codes, WhatsApp messages and the member page link.
@@ -20,7 +25,7 @@ const RECUP_CONFIG = {
   BUSINESS_WA: '',
 
   LAUNCH_DATE: '2026-10-03T07:00:00+08:00',   // edit to your real open day
-  NODE_NAME: 'NODE_001 · GLENHILL SAUJANA',
+  NODE_NAME: 'NODE_001 · PHB SAUJANA',
   STOCK_UNITS: 55,
   DISCOUNT_CODE: 'RECUP10',                    // placeholder – change to your real code
   WHATSAPP_FOLLOWUP_TARGET: 20,
@@ -38,9 +43,9 @@ const RECUP_CONFIG = {
     NIGHT:  { name: 'THE NIGHT SHIFT', phase: 'TAKE-HOME · BEFORE BED', tag: 'Overnight heart & recovery support', price: null },
     NITRIC: { name: 'NITRIC PRIME', phase: 'PRE-RUN', tag: 'Opens the pipes · 15 min before flag-off', price: null, locked: true },
   },
-  SCHEDULE: 'Every Saturday · Glenhill Saujana run club · from flag-off until 55 cups are gone',
+  SCHEDULE: 'Every Saturday · PHB Saujana run club · from flag-off until 55 cups are gone',
 
-  REGIONS: ['Glenhill Saujana', 'Saujana (other)', 'Subang', 'Shah Alam', 'Kota Damansara', 'Other'],
+  REGIONS: ['PHB Saujana', 'Saujana (other)', 'Subang', 'Shah Alam', 'Kota Damansara', 'Other'],
   FREQUENCY: ['Just starting', '1x a week', '2–3x a week', '4+ a week'],
   PAINS: ['Knees / joints', 'Breath / lungs', 'Energy crash', 'Muscle soreness', 'Cramps', 'Lower back', 'Nothing — just here for the vibe', 'Other'],
 
@@ -66,7 +71,6 @@ const RECUP_CONFIG = {
 const RECUP = (() => {
   const K_LEADS = 'recup_leads_v2';
   const K_QUEUE = 'recup_queue_v2';
-  const K_ADMIN = 'recup_admin_key';
   const C = RECUP_CONFIG;
 
   const store = {
@@ -101,19 +105,78 @@ const RECUP = (() => {
   function tierOf(cups) { const c = Math.min(cups || 0, C.LADDER.length); return c ? C.LADDER[c - 1] : null; }
   function nextTier(cups) { return C.LADDER[Math.min(cups || 0, C.LADDER.length - 1)] && (cups || 0) < C.LADDER.length ? C.LADDER[cups || 0] : null; }
 
-  /* ---------- remote ---------- */
-  async function post(payload) {
-    if (!C.SHEET_ENDPOINT) return false;
+  /* ---------- Supabase: staff session ---------- */
+  const K_SESSION = 'recup_staff_session_v1';
+  const session = () => store.get(K_SESSION, null);
+  async function auth(grant, body) {
+    const r = await fetch(`${C.SUPABASE_URL}/auth/v1/token?grant_type=${grant}`, {
+      method: 'POST', headers: { apikey: C.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const m = j.error_description || j.msg || j.message || 'Login failed';
+      throw new Error(/not confirmed/i.test(m) ? 'Email not confirmed yet. In Supabase → Authentication → Users, confirm this user (or add it again with "Auto Confirm").'
+        : /invalid/i.test(m) ? 'Wrong email or password. No login yet? Supabase → Authentication → Users → Add user (tick Auto Confirm).' : m);
+    }
+    store.set(K_SESSION, { access: j.access_token, refresh: j.refresh_token, email: j.user && j.user.email, exp: Date.now() + (j.expires_in - 60) * 1000 });
+  }
+  async function login(email, password) { await auth('password', { email, password }); }
+  function logout() { try { localStorage.removeItem(K_SESSION); } catch {} }
+  async function staffToken() {
+    const s = session(); if (!s) return null;
+    if (Date.now() < s.exp) return s.access;
+    try { await auth('refresh_token', { refresh_token: s.refresh }); return session().access; } catch { logout(); return null; }
+  }
+
+  async function rest(path, { method = 'GET', body, token, prefer } = {}) {
+    const headers = { apikey: C.SUPABASE_ANON_KEY, Authorization: `Bearer ${token || C.SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' };
+    if (prefer) headers.Prefer = prefer;
+    const r = await fetch(`${C.SUPABASE_URL}/rest/v1/${path}`, { method, headers, body: body && JSON.stringify(body) });
+    const text = await r.text(); let json = null; try { json = text ? JSON.parse(text) : null; } catch {}
+    if (!r.ok) throw Object.assign(new Error((json && json.message) || `Supabase ${r.status}`), { status: r.status });
+    return json;
+  }
+
+  /* database rows (snake_case) <-> lead objects (camelCase, as every page uses them) */
+  const COLS = { contactMethod: 'contact_method', painFocus: 'pain_focus', manualSent: 'manual_sent', updatedAt: 'updated_at' };
+  const LOCAL_ONLY = ['gradeLabel'];
+  function toRow(o) {
+    const r = {};
+    for (const [k, v] of Object.entries(o)) if (!LOCAL_ONLY.includes(k)) r[COLS[k] || k] = k === 'history' ? safeJSON(v, []) : v;
+    return r;
+  }
+  function fromRow(r) {
+    const l = {};
+    for (const [k, v] of Object.entries(r)) { const camel = Object.keys(COLS).find(c => COLS[c] === k); l[camel || k] = v; }
+    l.history = typeof l.history === 'string' ? l.history : JSON.stringify(l.history || []);
+    l.cups = +l.cups || 0;
+    if (l.ts) l.ts = new Date(l.ts).toISOString();
+    if (l.updatedAt) l.updatedAt = new Date(l.updatedAt).toISOString();
+    return l;
+  }
+
+  /* ---------- writes (queued when offline) ---------- */
+  // true = done, or permanently rejected (bad data) so it's not retried forever
+  async function post(p) {
     try {
-      await fetch(C.SHEET_ENDPOINT, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-      return true;
-    } catch { return false; }
+      if (p.action === 'create') {
+        const r = await rest('rpc/create_runner', { method: 'POST', body: { p: p.lead } });
+        if (r && r.code && r.code !== p.lead.code) { const all = store.get(K_LEADS, []); const l = all.find(x => x.id === p.lead.id); if (l) { l.code = r.code; store.set(K_LEADS, all); } p.lead.code = r.code; }
+        return true;
+      }
+      if (p.action === 'update') {
+        const token = await staffToken(); if (!token) return false;       // waits until staff log in on this device
+        await rest(`runners?id=eq.${encodeURIComponent(p.id)}`, { method: 'PATCH', body: toRow(p.patch), token, prefer: 'return=minimal' });
+        return true;
+      }
+    } catch (e) { return e.status === 400; }
+    return false;
   }
   function enqueue(p) { const q = store.get(K_QUEUE, []); q.push(p); store.set(K_QUEUE, q); }
-  async function send(p) { if (C.SHEET_ENDPOINT && !(await post(p))) enqueue(p); }
+  async function send(p) { if (!(await post(p))) enqueue(p); }
   async function flushQueue() {
     const q = store.get(K_QUEUE, []);
-    if (!q.length || !C.SHEET_ENDPOINT) return q.length;
+    if (!q.length) return 0;
     const left = []; for (const p of q) if (!(await post(p))) left.push(p);
     store.set(K_QUEUE, left); return left.length;
   }
@@ -136,9 +199,8 @@ const RECUP = (() => {
       ts: new Date().toISOString(),
       source: raw.source,                 // DIAGNOSTIC_ONLINE | ROADSIDE_IPAD | QR_STAND
       name: (raw.name || '').trim(),
-      contactMethod: raw.contactMethod || 'NONE',   // WHATSAPP | EMAIL | INSTAGRAM | NONE
+      contactMethod: raw.contactMethod || 'NONE',   // WHATSAPP | INSTAGRAM | NONE
       phone,
-      email: raw.contactMethod === 'EMAIL' ? (raw.contact || '').trim() : '',
       instagram: raw.contactMethod === 'INSTAGRAM' ? (raw.contact || '').trim().replace(/^@?/, '@') : '',
       region: raw.region || '', frequency: raw.frequency || '', pain: raw.pain || '',
       archetype: normArchetype(raw.archetype), knowledge: raw.knowledge || '', fuel: raw.fuel || '',
@@ -151,14 +213,17 @@ const RECUP = (() => {
       updatedAt: new Date().toISOString(),
     };
     saveLocal(lead);
-    await send({ action: 'create', lead });
-    return { ...lead, gradeLabel: g ? g.label : '' };
+    const p = { action: 'create', lead };
+    const ok = await post(p);        // the database may hand back a different code if this one was taken
+    if (!ok) enqueue(p);
+    return { ...lead, code: p.lead.code, gradeLabel: g ? g.label : '', synced: ok };
   }
 
   async function updateLead(id, patch) {
     patch = { ...patch, updatedAt: new Date().toISOString() };
     const all = store.get(K_LEADS, []); const i = all.findIndex(l => l.id === id);
     if (i >= 0) { all[i] = { ...all[i], ...patch }; store.set(K_LEADS, all); }
+    if (String(id).startsWith('DEMO')) return;
     await send({ action: 'update', id, patch });
   }
 
@@ -176,65 +241,80 @@ const RECUP = (() => {
     hist.push({ n: cups, ts: new Date().toISOString(), product, paid: pr.paid, units: pr.units });
     const patch = { cups, history: JSON.stringify(hist), status: 'CHECKED_IN', ...answers };
     Object.assign(lead, patch);
+    saveLocal(lead);
     await updateLead(lead.id, patch);
     return { cups, rung: tierOf(cups), next: nextTier(cups), ...pr };
   }
 
   /* ---------- reading ---------- */
-  function adminKey() { return store.get(K_ADMIN, ''); }
-  function setAdminKey(k) { store.set(K_ADMIN, k); }
-
-  async function loadLeads() {           // God Terminal (needs admin key when Sheet is on)
-    const local = store.get(K_LEADS, []);
-    let remote = [], remoteOk = false, authFail = false;
-    if (C.SHEET_ENDPOINT) {
-      try {
-        const r = await fetch(`${C.SHEET_ENDPOINT}?mode=all&key=${encodeURIComponent(adminKey())}&t=${Date.now()}`);
-        const j = await r.json();
-        if (j.ok) { remote = j.leads || []; remoteOk = true; } else authFail = true;
-      } catch {}
-    }
+  function mergeById(lists) {
     const map = new Map();
-    for (const l of [...remote, ...local]) {
+    for (const l of lists.flat()) {
       if (!l || !l.id) continue;
       const prev = map.get(l.id);
       if (!prev || (l.updatedAt || '') >= (prev.updatedAt || '')) map.set(l.id, { ...prev, ...l });
     }
-    const leads = [...map.values()].filter(l => l.ts).map(l => ({ ...l, cups: +l.cups || 0 })).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
-    return { leads, remoteOk, authFail, pending: store.get(K_QUEUE, []).length };
+    return [...map.values()].map(l => ({ ...l, cups: +l.cups || 0 }));
   }
 
-  // Booth lookup: by member code, phone, email/IG or name. Returns minimal records.
+  async function loadLeads() {           // God Terminal (staff login)
+    const local = store.get(K_LEADS, []);
+    let remote = [], remoteOk = false, error = '';
+    const token = await staffToken();
+    if (token) {
+      try { remote = (await rest('runners?select=*&order=ts.desc&limit=5000', { token })).map(fromRow); remoteOk = true; }
+      catch (e) { error = e.message; }
+    }
+    const leads = mergeById([remote, local]).filter(l => l.ts).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+    return { leads, remoteOk, loggedIn: !!token, error, pending: store.get(K_QUEUE, []).length };
+  }
+
+  // Booth lookup. Staff (logged in): code, phone, @handle or name. Otherwise: exact member code only.
   async function findRunner(q) {
     q = (q || '').trim(); if (!q) return [];
     const needle = q.toLowerCase(); const digits = q.replace(/\D/g, '');
-    const match = l => (l.code || '').toLowerCase() === needle || (l.code || '').toLowerCase() === 'rs-' + needle
+    const code = /^rs-/i.test(q) ? q.toUpperCase() : 'RS-' + q.toUpperCase();
+    const match = l => (l.code || '').toUpperCase() === code
       || (digits.length >= 6 && (l.phone || '').endsWith(digits.replace(/^0/, '')))
-      || (l.email || '').toLowerCase() === needle || (l.instagram || '').toLowerCase() === '@' + needle.replace(/^@/, '')
+      || (l.instagram || '').toLowerCase() === '@' + needle.replace(/^@/, '')
       || (needle.length >= 3 && (l.name || '').toLowerCase().includes(needle));
     const local = store.get(K_LEADS, []).filter(match);
     let remote = [];
-    if (C.SHEET_ENDPOINT) {
-      try { const r = await fetch(`${C.SHEET_ENDPOINT}?mode=find&q=${encodeURIComponent(q)}&t=${Date.now()}`); const j = await r.json(); remote = j.leads || []; } catch {}
-    }
-    const map = new Map(); [...remote, ...local].forEach(l => map.set(l.id, { ...map.get(l.id), ...l }));
-    return [...map.values()].map(l => ({ ...l, cups: +l.cups || 0 })).slice(0, 8);
+    const token = await staffToken();
+    try {
+      if (token) {
+        const quote = v => '"' + v.replace(/"/g, '') + '"';
+        const ors = [`code.eq.${quote(code)}`];
+        if (needle.length >= 3) ors.push(`name.ilike.${quote('*' + q + '*')}`);
+        if (digits.length >= 6) ors.push(`phone.like.${quote('*' + digits.replace(/^0/, ''))}`);
+        if (/^@?[\w.]{2,}$/.test(q)) ors.push(`instagram.ilike.${quote('@' + q.replace(/^@/, ''))}`);
+        remote = (await rest(`runners?select=*&or=${encodeURIComponent('(' + ors.join(',') + ')')}&limit=8`, { token })).map(fromRow);
+      } else {
+        const m = await rest('rpc/get_member', { method: 'POST', body: { p_code: code } });
+        if (m) remote = [fromRow(m)];
+      }
+    } catch {}
+    return mergeById([remote, local]).slice(0, 8);
   }
 
   async function getByCode(code) {
-    const r = await findRunner(code);
-    return r.find(l => (l.code || '').toUpperCase() === String(code).toUpperCase()) || null;
+    code = String(code || '').trim().toUpperCase(); if (!code) return null;
+    const local = store.get(K_LEADS, []).find(l => (l.code || '').toUpperCase() === code);
+    let remote = null;
+    try { const m = await rest('rpc/get_member', { method: 'POST', body: { p_code: code } }); if (m) remote = fromRow(m); } catch {}
+    return remote || local || null;
   }
 
   /* ---------- links ---------- */
   function siteUrl(path) { try { return new URL(path, C.SITE_URL || location.href).href; } catch { return path; } }
   function manualUrl(lead) { return siteUrl('repair-manual.html') + (lead ? `?c=${encodeURIComponent(lead.code)}` : ''); }
   function memberUrl(lead) { return siteUrl('member.html') + `?c=${encodeURIComponent(lead.code)}`; }
+  function storyUrl(lead) { return siteUrl('story.html') + `?c=${encodeURIComponent(lead.code)}`; }
   function waLink(lead) {
     const p = C.PROTOCOLS[lead.protocol] || C.PROTOCOLS.N02;
     const first = (lead.name || '').split(' ')[0] || 'Runner';
     const msg =
-`Hi ${first}, Recup Station here.
+`Hi ${first}, RECUP.STN here.
 
 Your member code: ${lead.code}
 Reserved protocol: ${p.name}${lead.grade ? ` (Grade ${lead.grade})` : ''}
@@ -252,7 +332,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
   // For runners who don't want to type a number: they message US (they choose to share)
   function selfWaLink(lead) {
     if (!C.BUSINESS_WA) return '';
-    return `https://wa.me/${C.BUSINESS_WA}?text=${encodeURIComponent(`Hi Recup Station, send my Repair Manual. Code ${lead.code}`)}`;
+    return `https://wa.me/${C.BUSINESS_WA}?text=${encodeURIComponent(`Hi RECUP.STN, send my Repair Manual. Code ${lead.code}`)}`;
   }
 
   function safeJSON(s, d) { try { return typeof s === 'string' ? JSON.parse(s || 'null') ?? d : (s ?? d); } catch { return d; } }
@@ -261,7 +341,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
   function seedDemo(n = 30) {
     const names = ['Aina', 'Jason', 'Mei Ling', 'Hafiz', 'Priya', 'Daniel', 'Siti', 'Kelvin', 'Nurul', 'Arjun', 'Chloe', 'Irfan'];
     const src = ['ROADSIDE_IPAD', 'ROADSIDE_IPAD', 'DIAGNOSTIC_ONLINE', 'QR_STAND'];
-    const cm = ['WHATSAPP', 'WHATSAPP', 'WHATSAPP', 'EMAIL', 'INSTAGRAM', 'NONE'];
+    const cm = ['WHATSAPP', 'WHATSAPP', 'WHATSAPP', 'INSTAGRAM', 'INSTAGRAM', 'NONE'];
     const all = store.get(K_LEADS, []);
     for (let i = 0; i < n; i++) {
       const s = src[i % src.length]; const squat = s === 'DIAGNOSTIC_ONLINE' ? ['SOLID', 'SHAKY', 'COLLAPSE'][i % 3] : '';
@@ -272,7 +352,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
       all.push({
         id: 'DEMO' + i + Math.random().toString(36).slice(2, 5), code: newCode(), ts: new Date(Date.now() - i * 41 * 60000).toISOString(),
         source: s, name: names[i % names.length] + ' (demo)', contactMethod: method,
-        phone: method === 'WHATSAPP' ? '6012000' + (1000 + i) : '', email: method === 'EMAIL' ? `demo${i}@mail.com` : '', instagram: method === 'INSTAGRAM' ? '@demo' + i : '',
+        phone: method === 'WHATSAPP' ? '6012000' + (1000 + i) : '', instagram: method === 'INSTAGRAM' ? '@demo' + i : '',
         region: C.REGIONS[i % 5], frequency: C.FREQUENCY[i % 4], pain, archetype: s === 'DIAGNOSTIC_ONLINE' ? ['SPRINTER', 'TANK', 'OFFICE BODY'][i % 3] : '',
         squat, grade: squat ? GRADE[squat].grade : '', protocol, fuel: '',
         status: s === 'DIAGNOSTIC_ONLINE' && cups === 0 ? 'RESERVED' : 'CHECKED_IN', cups, history: JSON.stringify(hist),
@@ -283,6 +363,6 @@ Scan. Identify the Leak. Calibrate your Repair.`;
     store.set(K_LEADS, all);
   }
 
-  return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, manualUrl, memberUrl, siteUrl,
-           tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, adminKey, setAdminKey, GRADE, store };
+  return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
+           tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, login, logout, session, GRADE, store };
 })();

@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Runner's Repair Manual · Recup Station</title>
+<title>The Runner's Repair Manual · RECUP.STN</title>
 <link rel="stylesheet" href="assets/recup.css">
+<link rel="stylesheet" href="assets/brand.css">
 <style>
   body { font-family: var(--sans); line-height: 1.6; }
   .doc { max-width: 760px; margin: 0 auto; padding: 32px 18px 60px; }
-  .cover { border: 1px solid var(--accent); border-radius: 18px; padding: 34px 26px; background: linear-gradient(160deg, rgba(0,242,255,.12), transparent 60%); margin-bottom: 26px; }
+  .cover { border: 1px solid var(--accent); border-radius: 18px; padding: 34px 26px; background: linear-gradient(160deg, rgba(var(--accent-rgb),.12), transparent 60%); margin-bottom: 26px; }
   .kicker { font: 11px var(--mono); letter-spacing: 2px; color: var(--accent); }
   .cover h1 { font: 800 36px/1.05 var(--mono); letter-spacing: 1px; margin: 10px 0 12px; text-transform: uppercase; }
   .cover p { color: var(--muted); margin: 0; }
@@ -16,11 +17,11 @@
   .sec { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 18px; break-inside: avoid; }
   .sec .n { font: 800 13px var(--mono); color: var(--accent); letter-spacing: 2px; }
   .sec h2 { margin: 4px 0 14px; font-size: 22px; }
-  .sec p { color: #c9d1d9; margin: 0 0 12px; }
+  .sec p { color: var(--text-2); margin: 0 0 12px; }
   ol.big { list-style: none; counter-reset: s; padding: 0; margin: 0; }
   ol.big li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
   ol.big li:first-child { border-top: none; }
-  ol.big li::before { content: counter(s); width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #000; font: 800 16px var(--mono); display: grid; place-items: center; }
+  ol.big li::before { content: counter(s); width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font: 800 16px var(--mono); display: grid; place-items: center; }
   ol.big b { display: block; }
   ol.big span { color: var(--muted); font-size: 14px; }
   .why { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 14px; }
@@ -36,7 +37,7 @@
   .menu .nm { font: 800 14px var(--mono); }
   .menu .pr { text-align: right; font: 700 14px var(--mono); white-space: nowrap; }
   .menu tr.locked { opacity: .55; }
-  .lock { font: 700 10px var(--mono); background: #222; padding: 2px 6px; border-radius: 3px; margin-left: 4px; }
+  .lock { font: 700 10px var(--mono); background: var(--track); padding: 2px 6px; border-radius: 3px; margin-left: 4px; }
   .callout { border-left: 3px solid var(--accent); padding: 8px 14px; background: var(--panel-2); border-radius: 0 10px 10px 0; font-size: 14px; }
   .disclaimer { font-size: 11px; color: var(--muted); text-align: center; margin-top: 24px; }
   .dl { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -44,7 +45,7 @@
   @media (max-width: 560px) { .why, .stretch { grid-template-columns: 1fr; } .cover h1 { font-size: 28px; } }
   @media print {
     @page { size: A4; margin: 12mm; }
-    html, body { background: #05070a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { background: var(--bg) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .doc { padding: 0; } .dl { display: none; } .sec { page-break-inside: avoid; }
   }
 </style>
@@ -54,7 +55,7 @@
   <div class="dl"><button class="btn" onclick="window.print()">SAVE AS PDF / PRINT</button></div>
 
   <div class="cover">
-    <div class="kicker">RECUP STATION · BODY SCIENCE SPECIALIST</div>
+    <div class="kicker">RECUP.STN · BODY SCIENCE SPECIALIST</div>
     <h1>The Runner's<br>Repair Manual</h1>
     <p>Your engine doesn't get stronger during the run. It gets stronger in the repair after it. Four quick hits to stop the leak.</p>
     <div class="for" id="forLine"></div>
@@ -96,7 +97,7 @@
 
   <div class="sec">
     <div class="n">04</div>
-    <h2>Recup Station menu &amp; weekly schedule</h2>
+    <h2>RECUP.STN menu &amp; weekly schedule</h2>
     <table class="menu" id="menu"></table>
     <p style="margin-top:14px" class="callout" id="sched"></p>
   </div>
@@ -108,7 +109,7 @@
     <a class="btn" id="cardBtn" href="member.html" style="text-decoration:none;display:inline-block;width:auto;padding:14px 28px">VIEW MY ASCENSION CARD</a>
   </div>
 
-  <p class="disclaimer">General wellness information for healthy adult runners. Not medical advice. If you have a medical condition, are pregnant, or take medication, check with your doctor before using supplements.<br>Recup Station · Scan. Identify the Leak. Calibrate your Repair.</p>
+  <p class="disclaimer">General wellness information for healthy adult runners. Not medical advice. If you have a medical condition, are pregnant, or take medication, check with your doctor before using supplements.<br>RECUP.STN · Scan. Identify the Leak. Calibrate your Repair.</p>
 </div>
 
 <script src="assets/recup-core.js"></script>
