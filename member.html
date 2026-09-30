@@ -41,6 +41,22 @@
   .find .btn { width: auto; margin: 0; padding: 0 20px; }
   .note { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
   a.btn { text-decoration: none; text-align: center; }
+  /* claim a cup */
+  .claim { border: 2px solid var(--accent); }
+  .claim h2 { color: var(--accent); }
+  .claim .opt { margin-bottom: 8px; }
+  .claim .opt.sel { border-color: var(--accent); background: rgba(var(--accent-rgb), .08); }
+  .claim .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .claim .grid2 .opt { margin: 0; padding: 12px; font-size: 14px; }
+  .claim .q { font-weight: 700; margin: 14px 0 8px; }
+  .wait { text-align: center; }
+  .wait .big { font: 800 44px var(--mono); letter-spacing: 3px; color: var(--accent); margin: 6px 0; }
+  .wait .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 8px; animation: pulse 1.2s infinite; vertical-align: middle; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.7); } }
+  .won { text-align: center; background: rgba(var(--success-rgb), .08); border-color: var(--success); }
+  .won b { display: block; font-size: 20px; margin-top: 6px; color: var(--success); }
+  .linkbtn { background: none; border: none; color: var(--muted); font: 13px var(--sans); text-decoration: underline; cursor: pointer; padding: 8px; }
+  .homehint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.55; margin: -6px 0 18px; }
 </style>
 </head>
 <body>
@@ -57,16 +73,20 @@
     <p class="sub" style="margin:12px 0 0" id="mNext"></p>
   </div>
 
+  <!-- CLAIM THE NEXT CUP (runner) → staff tap ✓ at the table -->
+  <div class="card claim" id="claimCard" style="display:none"></div>
+  <p class="homehint" id="homeHint" style="display:none">📌 Keep this card: tap <b>Share → Add to Home Screen</b> so it's one tap away next Saturday.</p>
+
   <div class="card" id="findCard" style="display:none">
     <h2>FIND MY CARD</h2>
-    <p class="sub">Enter the member code you got at check-in (e.g. RS-7Q4K).</p>
+    <p class="sub">Enter the member code you got at check-in (e.g. RS-7Q4K). Forgot it? Ask at the Recup table: we can find you by your WhatsApp number or @handle.</p>
     <div class="find"><input class="field" id="q" placeholder="RS-····" autocapitalize="characters"><button class="btn" onclick="lookup()">GO</button></div>
     <div class="err" id="err" style="margin-top:8px"></div>
   </div>
 
   <div class="card">
     <h2>FROM "THIRSTY" TO ACTIVATED PERFORMANCE PARTNER</h2>
-    <p class="sub">Every cup moves you up. Show your code at the Recup table to log it.</p>
+    <p class="sub">Every cup moves you up. At the Recup table, tap <b>Claim</b> on this card and show the screen.</p>
     <div id="ladder"></div>
   </div>
 
@@ -100,6 +120,64 @@
     $('mNext').textContent = next ? `${cups} cup${cups === 1 ? '' : 's'} logged. Next: ${next.name} → ${next.reward}` : 'You hold the Milestone: 25% off every cup.';
     $('manualBtn').href = RECUP.manualUrl(l);
     if (l.grade) { $('storyBtn').href = RECUP.storyUrl(l); $('storyBtn').style.display = 'block'; }
+    me = l; renderClaim();
+    $('homeHint').style.display = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'none' : 'block';
+  }
+
+  /* ---------- claim the next cup ---------- */
+  let me = null, claimForm = null, poll = null, seenApproved = RECUP.store.get('recup_seen_claim', '');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function priceLine(k, n) { const p = C.PROTOCOLS[k], pr = RECUP.priceFor(k, n); if (!p.price) return 'price at the table';
+    return (pr.discount ? `<s>RM ${p.price}</s> RM ${pr.paid.toFixed(2)}` : `RM ${p.price}`) + (pr.units > 1 ? ' · 2 cups (bring a buddy)' : ''); }
+
+  function renderClaim() {
+    const box = $('claimCard'); const cups = +me.cups || 0; const n = cups + 1; const c = me.claim;
+    box.style.display = 'block'; box.classList.remove('won');
+    clearInterval(poll);
+    if (c && c.status === 'PENDING') {
+      const p = C.PROTOCOLS[c.product] || {};
+      box.innerHTML = `<div class="wait"><div class="sub" style="margin:0"><span class="pulse"></span>SHOW THIS SCREEN AT THE TABLE</div>
+        <div class="big">${esc(me.code)}</div><h2>CUP ${c.cup_no} · ${esc(p.name || '')}</h2>
+        <p class="sub" style="margin:6px 0 0">Waiting for the Recup team to tap ✓. This updates by itself.</p>
+        <button class="linkbtn" onclick="changeClaim()">Change drink</button><button class="linkbtn" onclick="cancel()">Cancel</button></div>`;
+      poll = setInterval(refreshMe, 4000);
+      return;
+    }
+    if (c && c.status === 'APPROVED' && c.id !== seenApproved && c.cup_no === cups) {
+      const rung = RECUP.tierOf(cups);
+      box.classList.add('won');
+      box.innerHTML = `<h2 style="color:var(--success)">✓ CUP ${cups} LOGGED</h2>${rung ? `<b>Unlocked: ${esc(rung.reward)}</b>` : ''}
+        <p class="sub" style="margin:10px 0 0">${RECUP.nextTier(cups) ? `Next time: ${esc(RECUP.nextTier(cups).reward)}` : 'Milestone member: 25% off every cup.'}</p>
+        <button class="linkbtn" onclick="dismissWon('${c.id}')">OK</button>`;
+      return;
+    }
+    if (!claimForm) {
+      box.innerHTML = `<h2>AT THE RECUP TABLE?</h2><p class="sub">Claim your cup here, then show the screen. We tap ✓ when it's poured.</p>
+        <button class="btn" onclick="startClaim()">CLAIM CUP ${n} →</button>`;
+      return;
+    }
+    const rung = RECUP.tierOf(Math.min(n, C.LADDER.length)); const ask = n <= C.LADDER.length ? rung.ask : null;
+    box.innerHTML = `<h2>CUP ${n} · ${esc(rung.name)}</h2><p class="sub">Unlocks: <b>${esc(rung.reward)}</b></p>
+      <div class="q">Which drink?</div>` +
+      Object.entries(C.PROTOCOLS).map(([k, p]) => `<button class="opt ${claimForm.product === k ? 'sel' : ''}" onclick="claimForm.product='${k}';renderClaim()"><strong>${p.name}</strong><small>${esc(p.phase)} · ${priceLine(k, n)}</small></button>`).join('') +
+      (ask ? `<div class="q">${esc(ask.q)} <span class="sub">(optional)</span></div>` + (ask.type === 'text'
+        ? `<input class="field" id="askText" placeholder="Name or @handle" value="${esc(claimForm.answers[ask.key] || '')}" oninput="claimForm.answers['${ask.key}']=this.value">`
+        : `<div class="grid2">${ask.options.map(o => `<button class="opt ${claimForm.answers[ask.key] === o ? 'sel' : ''}" onclick="claimForm.answers['${ask.key}']='${o.replace(/'/g, "\\'")}';renderClaim()">${esc(o)}</button>`).join('')}</div>`) : '') +
+      `<div class="err" id="claimErr"></div><button class="btn" id="claimBtn" onclick="submitClaim()">CLAIM CUP ${n}</button>
+       <button class="linkbtn" onclick="claimForm=null;renderClaim()">Not now</button>`;
+  }
+  function startClaim() { claimForm = { product: me.protocol || 'N02', answers: {} }; renderClaim(); }
+  function changeClaim() { claimForm = { product: me.claim.product, answers: {} }; me.claim = null; renderClaim(); }
+  async function submitClaim() {
+    $('claimBtn').disabled = true; $('claimBtn').textContent = 'CLAIMING…';
+    try { const c = await RECUP.claimCup(me.code, claimForm.product, claimForm.answers); me.claim = { ...c, status: 'PENDING' }; claimForm = null; renderClaim(); }
+    catch (e) { $('claimErr').textContent = navigator.onLine ? 'Could not claim: ' + e.message : 'No signal. Try again, or show your code to the team.'; $('claimBtn').disabled = false; $('claimBtn').textContent = 'TRY AGAIN'; }
+  }
+  async function cancel() { try { await RECUP.cancelClaim(me.code); } catch {} me.claim = null; renderClaim(); }
+  function dismissWon(id) { seenApproved = id; RECUP.store.set('recup_seen_claim', id); renderClaim(); }
+  async function refreshMe() {
+    const l = await RECUP.getByCode(me.code);
+    if (l && (!l.claim || l.claim.status !== 'PENDING' || +l.cups !== +me.cups)) render(l);
   }
   async function lookup(code) {
     code = (code || $('q').value).trim().toUpperCase(); if (!code) return;

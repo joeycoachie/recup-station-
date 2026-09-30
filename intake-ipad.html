@@ -40,11 +40,23 @@
   .price { font: 700 16px var(--mono); margin-top: 8px; }
   .price s { color: var(--muted); }
   .staff { position: fixed; top: 0; right: 0; width: 60px; height: 60px; z-index: 5; }
+  .claimq { display: none; margin-bottom: 18px; padding: 14px; border: 2px solid var(--accent); border-radius: 14px; background: rgba(var(--accent-rgb), .05); }
+  .claimq .phase { margin-bottom: 8px; }
+  .cq { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+  .cq:first-of-type { border-top: none; }
+  .cq b { font-size: 18px; } .cq small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .cq select { margin-top: 6px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font: 14px var(--sans); }
+  .cq .btn { width: auto; margin: 0; padding: 14px 16px; font-size: 14px; }
+  .cq .x { background: none; border: none; color: var(--muted); font-size: 13px; text-decoration: underline; display: block; margin: 4px auto 0; cursor: pointer; }
   .stafflogin { margin-top: 22px; padding: 14px; border: 1px dashed var(--border); border-radius: 12px; }
   .stafflogin .row { display: flex; gap: 8px; flex-wrap: wrap; }
   .stafflogin .field { margin: 0; flex: 1; min-width: 160px; font-size: 15px; padding: 12px; }
   .stafflogin .btn { width: auto; margin: 0; padding: 12px 18px; }
   .mode { position: fixed; bottom: 10px; left: 12px; font: 10px var(--mono); color: var(--muted); opacity: .5; letter-spacing: 1px; }
+  .areas h4 { font: 600 11px var(--mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin: 14px 0 6px; }
+  .areas h4:first-child { margin-top: 0; }
+  .areas .grid2 { gap: 8px; }
+  .areas .opt { padding: 12px 14px; font-size: 15px; margin: 0; }
 </style>
 </head>
 <body>
@@ -57,6 +69,7 @@
 
   <!-- HOME: the partner's first question -->
   <section class="step active" id="s-home">
+    <div class="claimq" id="claimQ"></div>
     <div class="hook">SCAN FOR YOUR 10% DISCOUNT + FREE RECOVERY PDF</div>
     <h1 class="big-q">Did you do the online diagnostic?</h1>
     <button class="path primary" onclick="goLookup('reserved')">YES — I have my code<small>We'll pull up your reserved Protocol.</small></button>
@@ -72,8 +85,8 @@
   <!-- LOOKUP -->
   <section class="step" id="s-lookup">
     <div class="phase" id="lookupPhase">FIND YOUR PROTOCOL</div>
-    <h3>Enter your member code, phone, or name</h3>
-    <input class="field" id="q" placeholder="e.g. RS-7Q4K · 012xxxxxxx · Aina" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')doLookup()">
+    <h3>Enter your member code, WhatsApp number, @handle or name</h3>
+    <input class="field" id="q" placeholder="e.g. RS-7Q4K · 012xxxxxxx · @aina · Aina" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')doLookup()">
     <button class="btn" onclick="doLookup()">SEARCH</button>
     <div id="results" style="margin-top:16px"></div>
     <button class="back" onclick="home()">← BACK</button>
@@ -92,7 +105,7 @@
   <section class="step" id="s-c2">
     <div class="phase">02 / 05 · REGION</div>
     <h3>Where do you usually run from?</h3>
-    <div class="grid2" id="regionOpts"></div>
+    <div class="areas" id="regionOpts"></div>
     <button class="back" onclick="show('s-c1',1)">← BACK</button>
   </section>
 
@@ -189,7 +202,13 @@
   function home() { clearInterval(timer); form = {}; current = null; ['name','contact','q','painOther'].forEach(i => $(i).value = ''); $('results').innerHTML = ''; show('s-home', 0); }
 
   function opts(el, list, fn) { $(el).innerHTML = list.map(v => `<button class="opt" onclick="${fn}('${v.replace(/'/g, "\\'")}')">${esc(v)}</button>`).join(''); }
-  opts('regionOpts', C.REGIONS, 'setRegion');
+  // Areas grouped by zone (RECUP_CONFIG.AREAS) + Other
+  function areaOpts(el, onPick) {
+    const btn = v => `<button class="opt" onclick="${onPick}('${v.replace(/'/g, "\\'")}')">${v}</button>`;
+    $(el).innerHTML = C.AREAS.map(([zone, list]) => `<h4>${zone}</h4><div class="grid2">${list.map(btn).join('')}</div>`).join('') +
+      `<h4>Somewhere else</h4><div class="grid2">${btn('Other')}</div>`;
+  }
+  areaOpts('regionOpts', 'setRegion');
   opts('freqOpts', C.FREQUENCY, 'setFreq');
   opts('painOpts', C.PAINS, 'pickPain');
 
@@ -324,10 +343,34 @@
   function showStaffLogin() { $('staffLogin').style.display = !SELF && !RECUP.session() ? 'block' : 'none'; }
   async function staffLoginSubmit(e) {
     e.preventDefault(); $('sErr').textContent = '';
-    try { await RECUP.login($('sEmail').value.trim(), $('sPass').value); $('sPass').value = ''; await RECUP.flushQueue(); showStaffLogin(); }
+    try { await RECUP.login($('sEmail').value.trim(), $('sPass').value); $('sPass').value = ''; await RECUP.flushQueue(); showStaffLogin(); pollClaims(); }
     catch (err) { $('sErr').textContent = err.message; }
   }
   showStaffLogin();
+
+  /* ---------- staff: cups runners claimed on their own card ---------- */
+  let CLAIMS = [];
+  async function pollClaims() {
+    if (SELF || !RECUP.session()) return;
+    CLAIMS = await RECUP.loadClaims();
+    const box = $('claimQ'); box.style.display = CLAIMS.length ? 'block' : 'none';
+    if (!CLAIMS.length) return;
+    box.innerHTML = `<div class="phase">WAITING TO BE POURED · ${CLAIMS.length}</div>` + CLAIMS.map(c => {
+      const rung = RECUP.tierOf(c.cup_no);
+      const opts = Object.entries(C.PROTOCOLS).map(([k, p]) => { const pr = RECUP.priceFor(k, c.cup_no);
+        return `<option value="${k}" ${k === c.product ? 'selected' : ''}>${p.name} · ${p.price ? 'RM ' + pr.paid.toFixed(2) : 'price TBC'}${pr.units > 1 ? ' · pour 2' : ''}</option>`; }).join('');
+      return `<div class="cq"><div><b>${esc(c.code)} · CUP ${c.cup_no}</b><small>${rung ? esc(rung.reward) : ''}</small><select id="cq-${c.id}">${opts}</select></div>
+        <div><button class="btn" onclick="approveClaim('${c.id}')">✓ POURED + PAID</button><button class="x" onclick="rejectClaim('${c.id}')">remove</button></div></div>`;
+    }).join('');
+  }
+  async function approveClaim(id) {
+    const c = CLAIMS.find(x => x.id === id); if (!c) return;
+    try { const r = await RECUP.approveClaim(c, $('cq-' + id).value); alert(`Cup ${r.cups} logged for ${(r.lead.name || '').split(' ')[0]}.\nCollect RM ${r.paid.toFixed(2)}${r.units > 1 ? ' · pour 2 (buddy free)' : ''}.\nUnlocked: ${r.rung.reward}`); }
+    catch (e) { alert('Could not log the cup: ' + e.message); }
+    pollClaims();
+  }
+  async function rejectClaim(id) { if (!confirm('Remove this claim? No cup is logged.')) return; try { await RECUP.rejectClaim(id); } catch {} pollClaims(); }
+  pollClaims(); setInterval(pollClaims, 5000);
   RECUP.flushQueue();
 </script>
 </body>

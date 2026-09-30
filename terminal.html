@@ -72,6 +72,14 @@
   .links a:hover { border-color: var(--accent); }
   .links a span { color: var(--muted); text-transform: none; }
   #qr img { background: #fff; padding: 6px; width: 110px; height: 110px; }
+  .claims { display: grid; gap: 8px; }
+  .claim-row { display: grid; grid-template-columns: 1.4fr 1.2fr 1.4fr auto; gap: 12px; align-items: center; background: var(--panel-2); border: 1px solid var(--accent); padding: 10px 12px; border-radius: 4px; }
+  @media (max-width: 900px) { .claim-row { grid-template-columns: 1fr; } }
+  .claim-row b { font-size: 14px; } .claim-row small { display: block; color: var(--muted); text-transform: none; font-size: 11px; margin-top: 2px; }
+  .claim-row select { background: var(--bg); color: var(--text); border: 1px solid var(--border); font: 12px var(--mono); padding: 6px; width: 100%; }
+  .claim-row .collect { font-size: 16px; font-weight: 800; color: var(--success); }
+  #claimsPanel.has h2 { color: var(--warn); }
+  .ig { color: #d9467a; border-color: #d9467a; }
   .empty { color: var(--muted); padding: 24px; text-align: center; text-transform: none; }
   .filters .btn-t.active { border-color: var(--accent); color: var(--accent); }
   .search { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font: 11px var(--mono); padding: 5px 8px; width: 160px; }
@@ -109,13 +117,19 @@
     </form>
   </div>
 
+  <!-- CUP CLAIMS: runners tap CLAIM on their card; tap ✓ once poured + paid -->
+  <div class="panel s12" id="claimsPanel">
+    <h2>00_CUP_CLAIMS <small id="claimsSub">runners claim on their phone → you tap ✓ after pouring</small></h2>
+    <div class="claims" id="claims"><div class="empty" style="padding:8px">No one waiting.</div></div>
+  </div>
+
   <div class="panel s12"><div class="kpis" id="kpis"></div></div>
 
   <!-- 01 FEED -->
   <div class="panel s8">
     <h2>01_RUNNER_FEED <small>diagnostic + roadside + QR stand → one list</small>
       <span class="btn-row">
-        <input class="search" id="search" placeholder="SEARCH NAME / CODE" oninput="renderFeed()">
+        <input class="search" id="search" placeholder="NAME / CODE / PHONE / @IG" oninput="renderFeed()">
         <span class="filters btn-row">
           <button class="btn-t active" data-f="ALL" onclick="setFilter('ALL')">ALL</button>
           <button class="btn-t" data-f="DIAGNOSTIC_ONLINE" onclick="setFilter('DIAGNOSTIC_ONLINE')">ONLINE</button>
@@ -296,21 +310,30 @@ function renderKPIs(s) {
   ].map(([l, v, sub]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="sub">${sub}</span></div>`).join('');
 }
 
+// Search by name, member code, WhatsApp number (any format: 012-345 6789, +6012…) or @handle
+function matches(l, q) {
+  if (!q) return true;
+  const d = q.replace(/\D/g, '').replace(/^60|^0/, ''), ig = q.replace(/^@/, '');
+  return (l.name || '').toLowerCase().includes(q) || (l.code || '').toLowerCase().includes(q)
+    || (d.length >= 4 && (l.phone || '').includes(d))
+    || (ig.length >= 2 && (l.instagram || '').toLowerCase().replace(/^@/, '').includes(ig));
+}
 function renderFeed() {
   const q = $('search').value.trim().toLowerCase();
   const rows = LEADS.filter(l =>
     (FILTER === 'ALL' || l.source === FILTER || (FILTER === 'ROADSIDE' && l.source !== 'DIAGNOSTIC_ONLINE')
       || (FILTER === 'RESERVED' && l.status === 'RESERVED' && !l.cups) || (FILTER === 'TODO' && (l.phone || l.instagram) && !l.manualSent))
-    && (!q || (l.name || '').toLowerCase().includes(q) || (l.code || '').toLowerCase().includes(q)));
+    && matches(l, q));
   if (!rows.length) { $('feed').innerHTML = `<tr><td colspan="9" class="empty">No runners here yet. Open a check-in channel, or load demo data to preview.</td></tr>`; return; }
   $('feed').innerHTML = rows.map(l => {
     const p = C.PROTOCOLS[l.protocol] || C.PROTOCOLS.N02; const t = new Date(l.ts);
     const time = t.toLocaleDateString('en-MY', { day: '2-digit', month: 'short' }) + ' ' + t.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
     const dots = C.LADDER.map(r => `<i class="${l.cups >= r.cup ? 'on' : ''}"></i>`).join('');
-    const via = { WHATSAPP: 'WA', EMAIL: 'EMAIL (AUTO)', INSTAGRAM: esc(l.instagram), NONE: 'QR ONLY' }[l.contactMethod] || '—';
+    const via = l.contactMethod === 'INSTAGRAM' && l.instagram ? `<a href="${RECUP.igProfileUrl(l)}" target="_blank" rel="noopener" style="color:inherit">${esc(l.instagram)} ↗</a>`
+      : { WHATSAPP: 'WA', EMAIL: 'EMAIL (OLD)', NONE: 'QR ONLY' }[l.contactMethod] || '—';
     let act = `<button class="btn-t sm primary" onclick="openPour('${l.id}')">+CUP</button> `;
     if (l.phone) act += `<a class="btn-t sm wa" href="${RECUP.waLink(l)}" target="_blank" onclick="markSent('${l.id}')">WA${l.manualSent ? ' ✓' : ''}</a> `;
-    if (l.instagram) act += `<button class="btn-t sm" onclick="copy('${RECUP.manualUrl(l)}');markSent('${l.id}')">DM LINK${l.manualSent ? ' ✓' : ''}</button>`;
+    if (l.instagram) act += `<button class="btn-t sm ig" onclick="igDM('${l.id}')" title="Copies the message, opens their Instagram DM: paste + send">IG DM${l.manualSent ? ' ✓' : ''}</button>`;
     return `<tr>
       <td class="muted">${time}</td>
       <td><span class="tag t-${l.source}">${SRC[l.source] || l.source}</span></td>
@@ -497,6 +520,47 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `recup-runners-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
 }
 function copy(t) { navigator.clipboard?.writeText(t); }
+// Instagram can't pre-fill a DM, so: copy the message, open the DM, staff paste + send
+function igDM(id) {
+  const l = LEADS.find(x => x.id === id); if (!l) return;
+  copy(RECUP.igMessage(l));
+  window.open(RECUP.igDmUrl(l), '_blank');
+  markSent(id);
+  toast('Message copied. In the Instagram DM: paste + send.');
+}
+function toast(t) { let el = $('toast'); if (!el) { el = document.createElement('div'); el.id = 'toast'; el.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:10px 16px;font:700 12px var(--mono);border-radius:4px;z-index:20;transition:opacity .3s'; document.body.appendChild(el); }
+  el.textContent = t; el.style.opacity = 1; clearTimeout(el._t); el._t = setTimeout(() => el.style.opacity = 0, 3000); }
+
+/* ---------- cup claims queue ---------- */
+let CLAIMS = [];
+async function pollClaims() {
+  if (!RECUP.session()) { $('claimsPanel').style.display = 'none'; return; }
+  $('claimsPanel').style.display = '';
+  CLAIMS = await RECUP.loadClaims(); renderClaims();
+}
+function renderClaims() {
+  $('claimsPanel').classList.toggle('has', CLAIMS.length > 0);
+  $('claimsSub').textContent = CLAIMS.length ? `${CLAIMS.length} WAITING · tap ✓ once poured + paid` : 'runners claim on their phone → you tap ✓ after pouring';
+  if (!CLAIMS.length) { $('claims').innerHTML = '<div class="empty" style="padding:8px">No one waiting.</div>'; return; }
+  $('claims').innerHTML = CLAIMS.map(c => {
+    const l = LEADS.find(x => x.id === c.runner_id) || {}; const rung = RECUP.tierOf(c.cup_no);
+    const ans = Object.values(c.answers || {}).filter(Boolean).join(' · ');
+    const wait = Math.max(0, Math.round((Date.now() - new Date(c.created_at)) / 60000));
+    const opts = Object.entries(C.PROTOCOLS).map(([k, p]) => { const pr = RECUP.priceFor(k, c.cup_no);
+      return `<option value="${k}" ${k === c.product ? 'selected' : ''}>${p.name} · ${p.price ? 'RM ' + pr.paid.toFixed(2) : 'TBC'}${pr.units > 1 ? ' ×2' : ''}</option>`; }).join('');
+    return `<div class="claim-row"><div><b style="text-transform:none">${esc((l.name || '').split(' ')[0] || c.code)}</b> <span class="muted">${esc(c.code)}</span><small>${wait ? wait + ' min ago' : 'just now'}${ans ? ' · ' + esc(ans) : ''}</small></div>
+      <div><b>CUP ${c.cup_no}</b><small>${rung ? esc(rung.reward) : ''}</small></div>
+      <div><select id="cp-${c.id}">${opts}</select></div>
+      <div class="btn-row"><button class="btn-t primary" onclick="approve('${c.id}')">✓ POURED + PAID</button><button class="btn-t sm" onclick="reject('${c.id}')">✗</button></div></div>`;
+  }).join('');
+}
+async function approve(id) {
+  const c = CLAIMS.find(x => x.id === id); if (!c) return;
+  try { const r = await RECUP.approveClaim(c, $('cp-' + id).value); toast(`CUP ${r.cups} LOGGED · COLLECT RM ${r.paid.toFixed(2)}${r.units > 1 ? ' · POUR 2' : ''}`); }
+  catch (e) { alert('Could not log the cup: ' + e.message); }
+  await pollClaims(); refresh();
+}
+async function reject(id) { if (!confirm('Remove this claim? (No cup is logged.)')) return; try { await RECUP.rejectClaim(id); } catch (e) { alert(e.message); } pollClaims(); }
 function demo() { RECUP.seedDemo(); refresh(); }
 function wipe() { if (confirm('Clear runners stored on THIS device? (The database is not touched)')) { RECUP.clearLocal(); refresh(); } }
 async function doLogin(e) {
@@ -531,7 +595,7 @@ $('nodeName').textContent = C.NODE_NAME;
 try { const q = qrcode(0, 'M'); q.addData(RECUP.siteUrl('intake-ig.html') + '?utm_content=qr'); q.make(); $('qr').innerHTML = q.createImgTag(3, 0); } catch {}
 $('qrHint').textContent = C.SITE_URL ? 'QR → The Diagnostic. Use in stories / flyers.' : 'Set SITE_URL so this QR works on phones.';
 tick(); setInterval(tick, 30000);
-refresh(); setInterval(refresh, 30000);
+refresh().then(pollClaims); setInterval(refresh, 30000); setInterval(pollClaims, 5000);
 </script>
 </body>
 </html>

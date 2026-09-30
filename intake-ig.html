@@ -23,6 +23,10 @@
   .demo figcaption { font-size: 13px; color: var(--muted); line-height: 1.5; padding: 8px 4px 6px; }
   .demo figcaption b { color: var(--text); }
   .btn.story { background: var(--accent); color: var(--on-accent); }
+  .areas h4 { font: 600 11px var(--mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin: 14px 0 6px; }
+  .areas h4:first-child { margin-top: 0; }
+  .areas .grid2 { gap: 8px; }
+  .areas .opt { padding: 12px 14px; font-size: 15px; margin: 0; }
 </style>
 </head>
 <body>
@@ -36,7 +40,7 @@
     <section class="step active" data-step="0">
       <div class="phase">RECUP.STN: THE DIAGNOSTIC</div>
       <h1>The Invisible<br><span class="accent">Energy Leak.</span></h1>
-      <p>If you can't do a Patterson Squat after your run, your metabolic engine is leaking. You aren't recovering, you're just decaying.</p>
+      <p>If you can't do the movement on the next screen after your run, your metabolic engine is leaking. You aren't recovering, you're just decaying.</p>
       <p style="color:var(--text)">60 seconds → your Grade, a <b>reserved Protocol</b> at the PHB Saujana node, <b>10% off</b> and the free <b>Runner's Repair Manual</b>.</p>
       <button class="btn" onclick="go(1)">START THE DIAGNOSTIC</button>
     </section>
@@ -79,7 +83,7 @@
     <section class="step" data-step="5">
       <div class="phase">05 / 07 · REGION</div>
       <h3>Where do you usually run from?</h3>
-      <div class="grid2" id="regionOpts"></div>
+      <div class="areas" id="regionOpts"></div>
       <button class="back" onclick="go(4)">← BACK</button>
     </section>
 
@@ -132,7 +136,15 @@
   function go(n) { document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', +s.dataset.step === n)); $('bar').style.width = (n / TOTAL * 100) + '%'; window.scrollTo(0, 0); }
   function pick(k, v, next) { answers[k] = v; go(next); }
   function opts(el, list, key, next) { $(el).innerHTML = list.filter(v => v !== 'Other').map(v => `<button class="opt" onclick="pick('${key}','${v.replace(/'/g, "\\'")}',${next})">${v}</button>`).join(''); }
-  opts('painOpts', C.PAINS, 'pain', 4); opts('freqOpts', C.FREQUENCY, 'frequency', 5); opts('regionOpts', C.REGIONS, 'region', 6);
+  opts('painOpts', C.PAINS, 'pain', 4); opts('freqOpts', C.FREQUENCY, 'frequency', 5); areaOpts('regionOpts', 'pickRegion');
+  function pickRegion(v) { pick('region', v, 6); }
+  // Areas grouped by zone (RECUP_CONFIG.AREAS) + Other
+  function areaOpts(el, onPick) {
+    const btn = v => `<button class="opt" onclick="${onPick}('${v.replace(/'/g, "\\'")}')">${v}</button>`;
+    $(el).innerHTML = C.AREAS.map(([zone, list]) => `<h4>${zone}</h4><div class="grid2">${list.map(btn).join('')}</div>`).join('') +
+      `<h4>Somewhere else</h4><div class="grid2">${btn('Other')}</div>`;
+  }
+
 
   function setContact(m) {
     answers.contactMethod = m;

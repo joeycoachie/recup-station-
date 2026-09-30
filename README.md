@@ -50,6 +50,16 @@ Nothing is sent automatically on WhatsApp; that needs the paid WhatsApp Business
 4. In `assets/recup-core.js` set `BUSINESS_WA`, `DISCOUNT_CODE` and any TBC prices.
 5. Push to GitHub: the site at `SITE_URL` updates in about a minute.
 
+## Cup 2 onwards: runner claims, staff ✓
+1. Runner opens their Ascension card (`member.html?c=RS-XXXX`, saved to their Home Screen) and taps **CLAIM CUP N**,
+   picks a drink and answers that cup's question on their own phone.
+2. The claim appears at the top of the God Terminal (**00_CUP_CLAIMS**) and on the booth iPad home screen within ~5 s.
+3. Staff pour, take payment, tap **✓ POURED + PAID**. The cup, discount and reward are logged; the runner's card updates by itself.
+Forgot their code? Staff search their WhatsApp number (any format) or @handle on the iPad or terminal.
+
+## Instagram DM
+Instagram can't pre-fill a DM. **IG DM** in the terminal copies the message (code + manual + card links) and opens a DM with that runner: paste, send.
+
 ## Who can see what
 - Public pages (anon key) can only **add** a runner and open **one** member card by its exact code (first name, cups, grade; never contact details).
 - Only staff emails in `recup_staff`, logged in, can list, search and update runners.

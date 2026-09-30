@@ -17,10 +17,16 @@
   .preview { display: flex; justify-content: center; margin-bottom: 16px; }
   canvas { width: 62%; max-width: 300px; aspect-ratio: 9 / 16; border-radius: 16px; box-shadow: var(--shadow); background: var(--panel-2); }
   .label { font: 600 12px var(--mono); letter-spacing: 1px; color: var(--muted); margin: 14px 0 8px; }
-  .layouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .layouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .layouts button { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 6px; font: 600 14px var(--sans); color: var(--text); cursor: pointer; }
   .layouts button.on { border-color: var(--accent); background: rgba(var(--accent-rgb), .08); color: var(--accent); }
   .photo { display: flex; gap: 8px; }
+  .runin { display: none; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .runin.show { display: grid; }
+  .runin label { display: grid; gap: 4px; font: 600 11px var(--mono); letter-spacing: 1px; color: var(--muted); }
+  .runin input { width: 100%; padding: 12px 10px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--panel); color: var(--text); font: 600 17px var(--sans); }
+  .runin input:focus { outline: none; border-color: var(--accent); }
+  .runin .tip { grid-column: 1 / -1; font-size: 12px; color: var(--muted); line-height: 1.5; }
   .photo label, .photo button { flex: 1; text-align: center; background: var(--panel); border: 1.5px dashed var(--border); border-radius: 12px; padding: 14px 8px; font: 600 14px var(--sans); color: var(--text); cursor: pointer; }
   .photo button { flex: 0 0 auto; border-style: solid; color: var(--muted); display: none; }
   .share { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 20px; padding: 20px; border: none; border-radius: 14px; font: 700 18px var(--sans); color: #fff; cursor: pointer;
@@ -45,12 +51,19 @@
     <button data-l="bold" class="on">Bold</button>
     <button data-l="card">Card</button>
     <button data-l="photo">Photo</button>
+    <button data-l="run">My run</button>
   </div>
 
   <div class="label">2 · ADD YOUR PHOTO (OPTIONAL)</div>
   <div class="photo">
     <label>📷 Choose or take a photo<input type="file" id="file" accept="image/*" hidden></label>
     <button id="clearPhoto" type="button">Remove</button>
+  </div>
+  <div class="runin" id="runIn">
+    <label>KM<input id="rKm" inputmode="decimal" placeholder="8.4"></label>
+    <label>TIME<input id="rTime" inputmode="numeric" placeholder="48:30"></label>
+    <label>PACE<input id="rPace" readonly placeholder="auto"></label>
+    <div class="tip">Type today's run: the pace fills itself in. Tip: add your <b>Strava screenshot</b> (or route map) as the photo for the Strava look.</div>
   </div>
 
   <button class="share" id="shareBtn" type="button">
@@ -141,11 +154,35 @@
     if (runner.archetype) text(`${ARCH[runner.archetype] || runner.archetype} · Protocol: ${proto()}`, 90, 1430, `500 38px ${SANS}`, '#DEDACD', 'left');
     cta(true);
   }
+  /* ---------- "My run": Strava-style stats card ---------- */
+  function secs(t) { const p = String(t || '').split(':').map(Number); if (p.some(isNaN) || !p.length) return 0; return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : p[0] * 60; }
+  function fmt(sec) { sec = Math.round(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); }
+  function run() { const km = parseFloat($('rKm').value) || 0, t = secs($('rTime').value); return { km, t, pace: km && t ? fmt(t / km) : '' }; }
+  function drawRun() {
+    const r = run();
+    if (photo) { cover(photo, 0, 0, W, H); ctx.fillStyle = 'rgba(20,20,18,.45)'; ctx.fillRect(0, 0, W, H); }
+    else { const gr = ctx.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#2A2B25'); gr.addColorStop(1, '#4A2C1E'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+      // stylised route line
+      ctx.strokeStyle = 'rgba(193,89,46,.55)'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+      [[180, 700], [320, 520], [520, 560], [640, 420], [860, 480], [900, 700], [760, 860], [520, 820], [360, 960], [220, 880], [180, 700]].forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); }
+    text('RECUP.STN', 90, 150, `800 54px ${DISPLAY}`, '#fff', 'left');
+    ctx.beginPath(); ctx.arc(W - 170, 150, 90, 0, Math.PI * 2); ctx.fillStyle = RUST; ctx.fill();
+    text(runner.grade, W - 170, 205, `800 150px ${DISPLAY}`, '#fff');
+    // stat block, Strava-style
+    const y0 = 1110; roundRect(70, y0, W - 140, 420, 32); ctx.fillStyle = 'rgba(20,20,18,.72)'; ctx.fill();
+    const col = (x, label, val) => { text(label, x, y0 + 90, `600 34px ${SANS}`, MUTED, 'left'); text(val, x, y0 + 190, `800 104px ${DISPLAY}`, '#fff', 'left'); };
+    col(120, 'Distance', r.km ? r.km + ' km' : '— km'); col(560, 'Pace', r.pace ? r.pace + ' /km' : '—');
+    text('Time', 120, y0 + 270, `600 34px ${SANS}`, MUTED, 'left'); text(r.t ? fmt(r.t) : '—', 120, y0 + 370, `800 104px ${DISPLAY}`, '#fff', 'left');
+    text('Recovery', 560, y0 + 270, `600 34px ${SANS}`, MUTED, 'left'); text(`${proto()}`, 560, y0 + 360, `800 76px ${DISPLAY}`, RUST, 'left');
+    cta(true);
+  }
+  ['rKm', 'rTime'].forEach(id => $(id).addEventListener('input', () => { $('rPace').value = run().pace ? run().pace + ' /km' : ''; draw(); }));
+
   // The image file is prepared after every redraw, so tapping Share can open the
   // share sheet instantly (iPhones only allow it straight after a tap).
   let shareFile = null;
   function draw() {
-    ctx.clearRect(0, 0, W, H); ({ bold: drawBold, card: drawCard, photo: drawPhoto })[layout]();
+    ctx.clearRect(0, 0, W, H); ({ bold: drawBold, card: drawCard, photo: drawPhoto, run: drawRun })[layout]();
     shareFile = null; cv.toBlob(b => { shareFile = new File([b], 'recupstn-grade.png', { type: 'image/png' }); }, 'image/png');
   }
 
@@ -153,6 +190,7 @@
   $('layouts').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     layout = b.dataset.l; document.querySelectorAll('#layouts button').forEach(x => x.classList.toggle('on', x === b));
+    $('runIn').classList.toggle('show', layout === 'run');
     draw(); if (layout === 'photo' && !photo) $('file').click();
   });
   $('file').addEventListener('change', () => {

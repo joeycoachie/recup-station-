@@ -45,7 +45,15 @@ const RECUP_CONFIG = {
   },
   SCHEDULE: 'Every Saturday · PHB Saujana run club · from flag-off until 55 cups are gone',
 
-  REGIONS: ['PHB Saujana', 'Saujana (other)', 'Subang', 'Shah Alam', 'Kota Damansara', 'Other'],
+  // Where runners usually run, grouped by zone (Klang Valley run clubs + parks).
+  AREAS: [
+    ['Saujana & Shah Alam', ['PHB Saujana', 'Glenhill / Saujana (other)', 'Shah Alam Lake Gardens', 'Setia Alam / Eco Ardence']],
+    ['PJ & Subang', ['Subang Jaya / USJ', 'Sunway / Bandar Sunway', 'Kelana Jaya Lake / Ara Damansara', 'Bukit Gasing / PJ']],
+    ['Damansara & Kiara', ['Kota Damansara', 'Bandar Utama / Mutiara Damansara', 'Bukit Kiara / TTDI', 'Mont Kiara / Hartamas', 'Bangsar / Damansara Heights']],
+    ['KL City', ['KLCC Park', 'Perdana Botanical Gardens', 'KL Forest Eco Park', 'Titiwangsa Lake']],
+    ['North KL', ['Desa ParkCity', 'Kepong Metropolitan Park / FRIM']],
+    ['South & East', ['Bukit Jalil', 'Cheras / Ampang', 'Putrajaya / Cyberjaya']],
+  ],
   FREQUENCY: ['Just starting', '1x a week', '2–3x a week', '4+ a week'],
   PAINS: ['Knees / joints', 'Breath / lungs', 'Energy crash', 'Muscle soreness', 'Cramps', 'Lower back', 'Nothing — just here for the vibe', 'Other'],
 
@@ -67,6 +75,8 @@ const RECUP_CONFIG = {
       ask: { key: 'wearable', q: 'Do you track with a wearable? (optional)', options: ['Garmin', 'Apple Watch', 'Coros', 'Strava only', 'None', 'Skip'] } },
   ],
 };
+
+RECUP_CONFIG.REGIONS = RECUP_CONFIG.AREAS.flatMap(([, list]) => list).concat('Other');
 
 const RECUP = (() => {
   const K_LEADS = 'recup_leads_v2';
@@ -305,6 +315,41 @@ const RECUP = (() => {
     return remote || local || null;
   }
 
+  /* ---------- cup claims: runner taps CLAIM on their card, staff ✓ ---------- */
+  async function claimCup(code, product, answers = {}) {
+    return rest('rpc/claim_cup', { method: 'POST', body: { p_code: code, p_product: product, p_answers: answers } });
+  }
+  async function cancelClaim(code) { await rest('rpc/cancel_claim', { method: 'POST', body: { p_code: code } }); }
+  async function loadClaims() {
+    const token = await staffToken(); if (!token) return [];
+    try { return await rest(`cup_claims?select=*&status=eq.PENDING&order=created_at.asc`, { token }); } catch { return []; }
+  }
+  // Approve = the cup was poured and paid. Uses the runner's latest row so two devices can't double-count.
+  async function approveClaim(claim, product) {
+    const token = await staffToken(); if (!token) throw new Error('Log in first');
+    const rows = await rest(`runners?select=*&id=eq.${encodeURIComponent(claim.runner_id)}`, { token });
+    if (!rows.length) throw new Error('Runner not found');
+    const lead = fromRow(rows[0]);
+    const answers = {}; for (const [k, v] of Object.entries(claim.answers || {})) if (v && ['painFocus', 'referral', 'goal', 'wearable'].includes(k)) answers[k] = v;
+    const r = await stampCup(lead, { product: product || claim.product, answers });
+    await rest(`cup_claims?id=eq.${claim.id}`, { method: 'PATCH', token, prefer: 'return=minimal',
+      body: { status: 'APPROVED', paid: r.paid, product: product || claim.product, cup_no: r.cups, decided_at: new Date().toISOString(), staff_email: (session() || {}).email } });
+    return { ...r, lead };
+  }
+  async function rejectClaim(id) {
+    const token = await staffToken(); if (!token) throw new Error('Log in first');
+    await rest(`cup_claims?id=eq.${id}`, { method: 'PATCH', token, prefer: 'return=minimal', body: { status: 'REJECTED', decided_at: new Date().toISOString(), staff_email: (session() || {}).email } });
+  }
+
+  /* ---------- Instagram: open a DM with the runner ---------- */
+  const igHandle = l => (l.instagram || '').replace(/^@/, '').trim();
+  function igDmUrl(l) { return igHandle(l) ? `https://ig.me/m/${encodeURIComponent(igHandle(l))}` : ''; }
+  function igProfileUrl(l) { return igHandle(l) ? `https://instagram.com/${encodeURIComponent(igHandle(l))}` : ''; }
+  function igMessage(lead) {
+    const first = (lead.name || '').split(' ')[0] || 'Runner';
+    return `Hi ${first}, RECUP.STN here 👋 Your member code: ${lead.code}\n\nYour free Runner's Repair Manual: ${manualUrl(lead)}\nYour Ascension card (cups + rewards): ${memberUrl(lead)}\n\nShow code ${C.DISCOUNT_CODE} for 10% off your first cup at ${C.NODE_NAME}.`;
+  }
+
   /* ---------- links ---------- */
   function siteUrl(path) { try { return new URL(path, C.SITE_URL || location.href).href; } catch { return path; } }
   function manualUrl(lead) { return siteUrl('repair-manual.html') + (lead ? `?c=${encodeURIComponent(lead.code)}` : ''); }
@@ -364,5 +409,6 @@ Scan. Identify the Leak. Calibrate your Repair.`;
   }
 
   return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
+           claimCup, cancelClaim, loadClaims, approveClaim, rejectClaim, igDmUrl, igProfileUrl, igMessage,
            tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, login, logout, session, GRADE, store };
 })();
