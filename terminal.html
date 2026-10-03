@@ -188,7 +188,7 @@
   <!-- 04 FINANCIALS + SMART RECIPE CALCULATOR -->
   <div class="panel s6" id="finPanel">
     <h2>04_RECIPE_&amp;_MARGIN_CALCULATOR <small id="lockSub">edit any cyan field · 🔒 to lock it in</small>
-      <span class="btn-row"><button class="btn-t sm" onclick="lockAll(true)">🔒 LOCK ALL</button><button class="btn-t sm" onclick="lockAll(false)">🔓 UNLOCK ALL</button></span></h2>
+      <span class="btn-row"><button class="btn-t sm" onclick="lockAll(true)">🔒 LOCK ALL</button><button class="btn-t sm" onclick="lockAll(false)">🔓 UNLOCK ALL</button><button class="btn-t sm" onclick="resetCalc()">↺ DEFAULTS</button></span></h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="recipes"></div>
     <h3>SHARED COSTS</h3>
     <div class="metric-row"><span>8OZ CUPS: PACK PRICE / PACK SIZE</span><span><input class="calc-input f2" id="c_cupPack" value="59.60"> / <input class="calc-input f2" id="c_cupQty" value="48"></span></div>
@@ -431,9 +431,14 @@ function calc() {
   const R = {};
   RECIPES.forEach(r => {
     const x = R[r.k] = recipe(r);
+    const cupIce = (v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0) + v('c_ice');
+    const parts = r.ing.map(([id, n]) => [n.replace(/ \(per batch\)| \d+g$/g, ''), RV(r, 's_' + id) * (RV(r, 'n_' + id) ? RV(r, 't_' + id) / RV(r, 'n_' + id) : 0) / x.cups])
+      .concat([['Cup', v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0], ['Ice', v('c_ice')]]);
+    const breakdown = parts.map(([n, c]) => `${n} ${rm(c)}`).join(' + ');
     const per = r.ing.map(([id, n]) => `${(RV(r, 's_' + id) / x.cups).toFixed(2).replace(/\.?0+$/, '')} ${n.replace(/ \(per batch\)/, '')}`).join(' · ');
     $(`r${r.k}_out`).innerHTML = `<b>POUR ${Math.round(x.pourMl)} ML</b> into each ${RV(r, 'oz')}oz (${Math.round(x.cupMl)} ml) cup, ${r.iceNote}.<br>
       Per cup: ${per}${x.pourMl > x.cupMl ? ' <span class="bad">· more liquid than the cup holds</span>' : ''}<br>
+      <span class="muted">Cost per cup = ${breakdown}</span><br>
       Batch ${rm(x.batch)} · <b>cost ${rm(x.cost)}/cup</b> · retail ${rm(x.price)} · <span class="hl">margin ${rm(x.margin)} (${x.price ? Math.round(x.margin / x.price * 100) : 0}%)</span>`;
   });
   const A = v('sFlow'), B = v('sBuild'), fa = R.a, fb = R.b;
@@ -713,6 +718,12 @@ function refreshLocks() {
 async function saveLocks() { settings.locks = LOCKS; saveSettings(); refreshLocks(); paint(); const ok = await RECUP.setSetting('calc_locks', LOCKS); if (!ok && RECUP.session()) toast('Locked on this device only. Run supabase/recup_station.sql to share locks.'); }
 function toggleLock(id) { const el = $(id); if (LOCKS[id] !== undefined) delete LOCKS[id]; else LOCKS[id] = el.value; saveLocks(); }
 function lockAll(on) { if (!on && !confirm('Unlock every field?')) return; LOCKS = on ? Object.fromEntries(finInputs().map(el => [el.id, el.value])) : {}; saveLocks(); }
+// Put every calculator field back to the agreed defaults (clears this device's edits + all locks)
+function resetCalc() {
+  if (!confirm('Reset every calculator field to the default recipe and prices, and remove all locks?')) return;
+  Object.keys(settings.inputs || {}).forEach(k => { if (/^r[ab]_|^c_|^o_|^s(Flow|Build)$|^sats$|^nodes$/.test(k)) delete settings.inputs[k]; });
+  LOCKS = {}; settings.locks = {}; saveSettings(); RECUP.setSetting('calc_locks', {}); location.reload();
+}
 async function pullLocks() { const v = await RECUP.getSetting('calc_locks'); if (v && typeof v === 'object' && Object.keys(v).length) { LOCKS = v; settings.locks = v; saveSettings(); refreshLocks(); paint(); } }
 
 // Recipe defaults changed: drop recipe values saved on this device once, so everyone sees the new numbers
