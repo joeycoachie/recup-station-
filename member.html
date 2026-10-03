@@ -64,10 +64,45 @@
   .hb .slot { font: 800 24px var(--mono); color: #fff; margin: 6px 0 2px; }
   .hb .tag { display: inline-block; font: 700 10px var(--mono); letter-spacing: 1px; padding: 3px 8px; border-radius: 999px; background: var(--warn); color: #fff; margin-bottom: 8px; }
   .hb .tag.ok { background: var(--success); }
+  .hbk { font: 700 10px var(--mono); letter-spacing: 2px; color: #D9A066; }
+  .hbwhere { display: grid; gap: 4px; margin: 12px 0 0; font-size: 13px; color: #DEDACD; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+  .tags span, .tags button { font: 600 12px var(--sans); padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); color: #DEDACD; background: transparent; }
+  .tags .on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tags.pick button { cursor: pointer; padding: 9px 12px; font-size: 13px; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .seg button { padding: 12px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: #fff; font: 600 14px var(--sans); cursor: pointer; }
+  .seg button.on { background: #fff; color: var(--text); }
+  .hb textarea.field { font-family: var(--sans); resize: vertical; }
+  /* side menu */
+  .menubtn { position: absolute; top: 22px; left: 14px; z-index: 30; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border); background: var(--panel); font-size: 20px; cursor: pointer; box-shadow: var(--shadow); color: var(--text); }
+  .scrim { position: fixed; inset: 0; background: rgba(20,20,18,.4); opacity: 0; pointer-events: none; transition: .2s; z-index: 39; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .menu { position: fixed; top: 0; bottom: 0; left: 0; width: min(320px, 86vw); background: var(--panel); z-index: 40; transform: translateX(-102%); transition: transform .25s; overflow-y: auto; padding: 22px 20px 40px; box-shadow: 8px 0 30px rgba(0,0,0,.15); }
+  .menu.open { transform: none; }
+  .menu .logo { text-align: left; margin-bottom: 18px; }
+  .menu a, .menu .mi { display: block; padding: 13px 4px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none; font-weight: 600; cursor: pointer; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; text-align: left; font-size: 15px; font-family: var(--sans); }
+  .menu h4 { font: 700 11px var(--mono); letter-spacing: 2px; color: var(--accent); margin: 22px 0 4px; }
+  .menu details { border-bottom: 1px solid var(--border); padding: 10px 4px; }
+  .menu summary { font-weight: 600; cursor: pointer; }
+  .menu details p, .menu #hbAbout p { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 8px 0 0; }
   .homehint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.55; margin: -6px 0 18px; }
 </style>
 </head>
 <body>
+<button class="menubtn" aria-label="Menu" onclick="openMenu(true)">☰</button>
+<div class="scrim" id="scrim" onclick="openMenu(false)"></div>
+<nav class="menu" id="menu" aria-label="Menu">
+  <div class="logo">RECUP.STN</div>
+  <button class="mi" onclick="openMenu(false);scrollTo({top:0,behavior:'smooth'})">My Ascension card</button>
+  <button class="mi" onclick="goHB()">Book Health Bar</button>
+  <a id="mManual" href="repair-manual.html">Runner's Repair Manual</a>
+  <a id="mStory" href="story.html">Share my grade</a>
+  <h4>ABOUT US</h4>
+  <div id="aboutList"></div>
+  <h4>HEALTH BAR</h4>
+  <div id="hbAbout"></div>
+</nav>
 <div class="wrap">
   <div class="top"><div class="logo">RECUP.STN</div><div class="kicker">PHB SAUJANA · THE ASCENSION MODEL</div></div>
 
@@ -132,6 +167,7 @@
     $('manualBtn').href = RECUP.manualUrl(l);
     if (l.grade) { $('storyBtn').href = RECUP.storyUrl(l); $('storyBtn').style.display = 'block'; }
     me = l; renderClaim(); renderHB();
+    $('mManual').href = RECUP.manualUrl(l); $('mStory').href = RECUP.storyUrl(l);
     $('homeHint').style.display = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'none' : 'block';
   }
 
@@ -186,44 +222,75 @@
   }
   async function cancel() { try { await RECUP.cancelClaim(me.code); } catch {} me.claim = null; renderClaim(); }
   function dismissWon(id) { seenApproved = id; RECUP.store.set('recup_seen_claim', id); renderClaim(); }
-  /* ---------- Health Bar appointment ---------- */
-  let hbForm = false;
+  /* ---------- Health Bar appointment / enquiry ---------- */
+  const HBC = C.HEALTHBAR;
+  let hbForm = false, hbDraft = null;
+  const where = `<div class="hbwhere"><span>📍 ${esc(HBC.PLACE)}</span><span>🌏 ${esc(HBC.ONLINE)}</span></div>`;
+  const tags = (list, on) => `<div class="tags">${list.map(t => `<span class="${on ? 'on' : ''}">${esc(t)}</span>`).join('')}</div>`;
   function renderHB() {
     const box = $('hbCard'), b = me.healthbar; box.style.display = 'block';
     if (b && b.status === 'BOOKED') {
-      box.innerHTML = `<span class="tag ok">BOOKED</span><h2>YOUR HEALTH BAR APPOINTMENT</h2>
+      box.innerHTML = `<span class="tag ok">BOOKED</span><h2>YOUR HEALTH BAR SESSION</h2>
         <div class="slot">${esc(RECUP.slotText(b.slot) || 'Time to be confirmed')}</div>
-        <p class="sub" style="margin:0">${esc(b.place || 'Health Bar')}${b.note ? ' · ' + esc(b.note) : ''}</p>
-        ${b.goal ? `<p class="sub" style="margin:8px 0 0">Focus: ${esc(b.goal)}</p>` : ''}
+        <p class="sub" style="margin:0">${b.mode === 'ONLINE' ? '🌏 Online call' + (b.place ? ` · <a href="${/^https?:/.test(b.place) ? '' : 'https://'}${esc(b.place)}" target="_blank" rel="noopener" style="color:#fff">join link</a>` : '') : '📍 ' + esc(b.place || HBC.PLACE)}${b.note ? ' · ' + esc(b.note) : ''}</p>
+        ${b.for_whom && b.for_whom !== 'Myself' ? `<p class="sub" style="margin:6px 0 0">For: ${esc(b.for_whom)}</p>` : ''}
+        ${(b.concerns || []).length ? tags(b.concerns, true) : ''}
         <button class="linkbtn" onclick="cancelHB()">Can't make it? Cancel</button>`;
       return;
     }
     if (b && b.status === 'REQUESTED' && !hbForm) {
-      box.innerHTML = `<span class="tag">REQUESTED</span><h2>HEALTH BAR SESSION</h2>
-        <p class="sub" style="margin:4px 0 0">We've got your request${b.preferred ? ` (${esc(b.preferred)})` : ''}. We'll message you to confirm a time, and it will appear right here.</p>
-        <button class="linkbtn" onclick="hbForm=true;renderHB()">Edit</button><button class="linkbtn" onclick="cancelHB()">Cancel</button>`;
+      box.innerHTML = `<span class="tag">ENQUIRY SENT</span><h2>HEALTH BAR SESSION</h2>
+        <p class="sub" style="margin:4px 0 0">We'll message you to confirm a time${b.preferred ? ` (you said: ${esc(b.preferred)})` : ''}. Your booking will appear right here.</p>
+        ${(b.concerns || []).length ? tags(b.concerns, true) : ''}
+        <button class="linkbtn" onclick="editHB()">Edit</button><button class="linkbtn" onclick="cancelHB()">Cancel</button>`;
       return;
     }
     if (!hbForm) {
-      box.innerHTML = `<h2>WANT A PLAN BUILT AROUND YOUR BODY?</h2>
-        <p class="sub">One-on-one nutrition and performance planning at Health Bar, our running nutrition cafe.</p>
-        <button class="btn" onclick="hbForm=true;renderHB()">BOOK A HEALTH BAR SESSION</button>${b && b.status === 'DONE' ? '<p class="sub" style="margin:10px 0 0">Last session done ✓</p>' : ''}`;
+      box.innerHTML = `<div class="hbk">THE DEEP-REPAIR LAB</div><h2>${esc(HBC.NAME.toUpperCase())}</h2>
+        <p class="sub" style="margin:6px 0 0">${esc(HBC.PITCH)}</p>${where}
+        <div class="hbk" style="margin-top:14px">WE CALIBRATE</div>${tags(HBC.CONCERNS)}
+        <button class="btn" onclick="editHB()">BOOK OR ENQUIRE →</button>
+        <p class="sub" style="margin:10px 0 0;text-align:center">For yourself or your family.</p>${b && b.status === 'DONE' ? '<p class="sub" style="margin:6px 0 0;text-align:center">Last session done ✓</p>' : ''}`;
       return;
     }
-    const cur = b && b.status === 'REQUESTED' ? b : {};
-    box.innerHTML = `<h2>BOOK A HEALTH BAR SESSION</h2>
-      <p class="sub">Tell us what you want help with and when suits you. We'll confirm a time.</p>
-      <input class="field" id="hbGoal" placeholder="What do you want help with? (e.g. knee pain, first half marathon)" value="${esc(cur.goal || '')}">
-      <input class="field" id="hbPref" placeholder="When suits you? (e.g. Sat after the run, weekday evenings)" value="${esc(cur.preferred || '')}">
+    const d = hbDraft;
+    box.innerHTML = `<div class="hbk">HEALTH BAR · ENQUIRY</div><h2>WHAT SHOULD WE LOOK AT?</h2>
+      <p class="sub" style="margin:4px 0 0">Tap all that apply.</p>
+      <div class="tags pick">${HBC.CONCERNS.map(t => `<button type="button" class="${d.concerns.includes(t) ? 'on' : ''}" onclick="toggleConcern(this)" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      <div class="hbk" style="margin-top:14px">WHO IS IT FOR?</div>
+      <div class="seg">${['Myself', 'A family member'].map(w => `<button type="button" class="${(w === 'Myself') === (d.forWhom === 'Myself') ? 'on' : ''}" onclick="hbDraft.forWhom='${w === 'Myself' ? 'Myself' : ''}';renderHB()">${w}</button>`).join('')}</div>
+      ${d.forWhom !== 'Myself' ? `<input class="field" id="hbWho" placeholder="Who? (e.g. my wife, my dad, 2 kids)" value="${esc(d.forWhom)}" oninput="hbDraft.forWhom=this.value||' '">` : ''}
+      <div class="hbk" style="margin-top:14px">WHERE?</div>
+      <div class="seg"><button type="button" class="${d.mode === 'CAFE' ? 'on' : ''}" onclick="hbDraft.mode='CAFE';renderHB()">📍 At the cafe</button><button type="button" class="${d.mode === 'ONLINE' ? 'on' : ''}" onclick="hbDraft.mode='ONLINE';renderHB()">🌏 Online call</button></div>
+      <p class="sub" style="margin:6px 0 10px">${d.mode === 'ONLINE' ? esc(HBC.ONLINE) : esc(HBC.PLACE)}</p>
+      <input class="field" id="hbPref" placeholder="When suits you? (e.g. weekday evenings)" value="${esc(d.preferred)}" oninput="hbDraft.preferred=this.value">
+      <textarea class="field" id="hbGoal" rows="3" placeholder="Anything else we should know? Questions welcome." oninput="hbDraft.goal=this.value">${esc(d.goal)}</textarea>
       <div class="err" id="hbErr"></div>
-      <button class="btn" id="hbBtn" onclick="submitHB()">REQUEST MY SESSION</button><button class="linkbtn" onclick="hbForm=false;renderHB()">Not now</button>`;
+      <button class="btn" id="hbBtn" onclick="submitHB()">SEND MY ENQUIRY</button><button class="linkbtn" onclick="hbForm=false;renderHB()">Not now</button>`;
+  }
+  function editHB() {
+    const b = me.healthbar && me.healthbar.status === 'REQUESTED' ? me.healthbar : {};
+    hbDraft = { concerns: [...(b.concerns || [])], forWhom: b.for_whom || 'Myself', mode: b.mode || 'CAFE', preferred: b.preferred || '', goal: b.goal || '' };
+    hbForm = true; renderHB();
+  }
+  function toggleConcern(el) {
+    const v = el.dataset.v; hbDraft.concerns = hbDraft.concerns.includes(v) ? hbDraft.concerns.filter(x => x !== v) : hbDraft.concerns.concat(v);
+    el.classList.toggle('on');
   }
   async function submitHB() {
+    const d = hbDraft;
+    if (!d.concerns.length && !d.goal.trim()) return $('hbErr').textContent = 'Tap at least one area, or tell us what you need.';
     $('hbBtn').disabled = true; $('hbBtn').textContent = 'SENDING…';
-    try { me.healthbar = await RECUP.requestHealthbar(me.code, $('hbGoal').value.trim(), $('hbPref').value.trim()); hbForm = false; renderHB(); }
+    try { me.healthbar = await RECUP.requestHealthbar(me.code, { ...d, forWhom: d.forWhom.trim() || 'A family member', goal: d.goal.trim(), preferred: d.preferred.trim() }); hbForm = false; renderHB(); }
     catch (e) { $('hbErr').textContent = 'Could not send: ' + e.message; $('hbBtn').disabled = false; $('hbBtn').textContent = 'TRY AGAIN'; }
   }
   async function cancelHB() { if (!confirm('Cancel your Health Bar session?')) return; try { await RECUP.cancelHealthbar(me.code); } catch {} me.healthbar = null; renderHB(); }
+
+  /* ---------- side menu ---------- */
+  function openMenu(on) { $('menu').classList.toggle('open', on); $('scrim').classList.toggle('open', on); }
+  function goHB() { openMenu(false); if (me) { $('hbCard').scrollIntoView({ behavior: 'smooth' }); if (!me.healthbar) editHB(); } }
+  $('aboutList').innerHTML = C.ABOUT.map(([h, t]) => `<details><summary>${esc(h)}</summary><p>${esc(t)}</p></details>`).join('');
+  $('hbAbout').innerHTML = `<p>${esc(HBC.PITCH)}</p><p>📍 ${esc(HBC.PLACE)}<br>🌏 ${esc(HBC.ONLINE)}</p>`;
 
   async function refreshMe() {
     const l = await RECUP.getByCode(me.code);

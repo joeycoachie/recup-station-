@@ -589,8 +589,8 @@ function renderHB() {
     const msg = l.phone ? `<a class="btn-t sm wa" href="https://wa.me/${l.phone}?text=${encodeURIComponent(`Hi ${(l.name || '').split(' ')[0]}, RECUP.STN here. Your Health Bar session: ${RECUP.slotText(b.slot) || '(time to confirm)'}${b.place ? ' at ' + b.place : ''}. See it on your card: ${RECUP.memberUrl(l)}`)}" target="_blank">WA</a>`
       : l.instagram ? `<a class="btn-t sm ig" href="${RECUP.igDmUrl(l)}" target="_blank">IG DM</a>` : '';
     return `<div class="hb-row ${b.status === 'BOOKED' ? 'booked' : ''}"><div><b style="text-transform:none">${esc((l.name || '').split(' ')[0] || b.code)}</b> <span class="muted">${esc(b.code)}</span><small>${b.status === 'BOOKED' ? '✓ BOOKED ' + esc(RECUP.slotText(b.slot)) : 'REQUESTED ' + new Date(b.created_at).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' })}</small></div>
-      <div style="text-transform:none"><small>Wants help with</small>${esc(b.goal || '—')}<small>Prefers: ${esc(b.preferred || '—')}</small></div>
-      <div><input id="hb-slot-${b.id}" type="datetime-local" value="${localInput(b.slot)}"><input id="hb-place-${b.id}" placeholder="Place (e.g. Health Bar, PHB Saujana)" value="${esc(b.place || '')}"></div>
+      <div style="text-transform:none"><b>${esc((b.concerns || []).join(' · ') || '—')}</b>${b.goal ? `<small>“${esc(b.goal)}”</small>` : ''}<small>For: ${esc(b.for_whom || 'Myself')} · ${b.mode === 'ONLINE' ? '🌏 ONLINE CALL' : '📍 CAFE'} · Prefers: ${esc(b.preferred || '—')}</small></div>
+      <div><input id="hb-slot-${b.id}" type="datetime-local" value="${localInput(b.slot)}"><input id="hb-place-${b.id}" placeholder="${b.mode === 'ONLINE' ? 'Call link (Zoom / Meet / WhatsApp)' : 'Place'}" value="${esc(b.place || (b.mode === 'ONLINE' ? '' : C.HEALTHBAR.PLACE))}"></div>
       <div class="btn-row"><button class="btn-t primary sm" onclick="bookHB('${b.id}')">${b.status === 'BOOKED' ? 'UPDATE' : 'BOOK'}</button>${msg}
         ${b.status === 'BOOKED' ? `<button class="btn-t sm" onclick="setHB('${b.id}','DONE')">DONE</button>` : ''}<button class="btn-t sm" onclick="setHB('${b.id}','CANCELLED')">✗</button></div></div>`;
   }).join('');

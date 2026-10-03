@@ -76,6 +76,24 @@ const RECUP_CONFIG = {
   ],
 };
 
+// HEALTH BAR: the deep-repair lab. Edit copy here; the runner's card and the side menu use it.
+RECUP_CONFIG.HEALTHBAR = {
+  NAME: 'Health Bar',
+  PLACE: 'Bukit Damansara Nutrition Cafe',
+  ONLINE: 'Worldwide online calls available',
+  PITCH: 'Your run data only shows the outside. We check the inside dashboard: one-on-one nutrition and performance calibration.',
+  CONCERNS: ['Energy', 'Sleep', 'Skin', 'Gut / Toilet', 'Mood & Mental health', 'Biomarkers (BP, cholesterol, blood sugar)',
+             'Thyroid', 'Hormones', 'Fertility', 'PCOS', 'Acid reflux'],
+};
+
+// ABOUT (side menu on the runner's card). DRAFT copy: edit freely.
+RECUP_CONFIG.ABOUT = [
+  ['Who we are', 'RECUP.STN is a Body Science Specialist for runners. Not a juice bar. We sell Metabolic Protocols: what your body needs before, during and after a run, so you recover instead of decay.'],
+  ['How it works', 'Scan. Identify the Leak. Calibrate your Repair. A 60-second diagnostic grades your mechanics, we reserve the right Protocol, and every cup moves you up the Ascension ladder.'],
+  ['Where to find us', 'Every Saturday at the PHB Saujana run club, from flag-off until the cups are gone. Deeper sessions at our Health Bar, Bukit Damansara Nutrition Cafe, or online worldwide.'],
+  ['Your data', 'Only used for your guide, your cups and your rewards. Never shared or sold. Want it removed? Tell us at the table or message us.'],
+];
+
 RECUP_CONFIG.REGIONS = RECUP_CONFIG.AREAS.flatMap(([, list]) => list).concat('Other');
 
 const RECUP = (() => {
@@ -343,7 +361,10 @@ const RECUP = (() => {
   }
 
   /* ---------- Health Bar appointments ---------- */
-  async function requestHealthbar(code, goal, preferred) { return rest('rpc/request_healthbar', { method: 'POST', body: { p_code: code, p_goal: goal || '', p_preferred: preferred || '' } }); }
+  async function requestHealthbar(code, f = {}) {
+    return rest('rpc/request_healthbar', { method: 'POST', body: { p_code: code, p_goal: f.goal || '', p_preferred: f.preferred || '',
+      p_concerns: f.concerns || [], p_for_whom: f.forWhom || 'Myself', p_mode: f.mode === 'ONLINE' ? 'ONLINE' : 'CAFE' } });
+  }
   async function cancelHealthbar(code) { await rest('rpc/cancel_healthbar', { method: 'POST', body: { p_code: code } }); }
   async function loadHealthbar() {
     const token = await staffToken(); if (!token) return [];
