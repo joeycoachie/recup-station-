@@ -387,15 +387,16 @@ const v = id => parseFloat($(id).value) || 0;
 // One batch = some scoops of each ingredient in some ml of water, poured into N cups.
 // Ingredient cost per scoop = tub price ÷ scoops in the tub. Tub prices: Herbalife Malaysia
 // Distributor Price List (19 May 2026), Supervisor 50% nett purchase price.
-// Scoops per tub from the labels: Niteworks 10 g/scoop (15), Collagen Plus 5 g/scoop (60),
-// CR7 Drive 13.5 g/scoop (60), RS Pro ~25.5 g/scoop (39).
+// Scoops per tub from the labels (confirmed by Joey, 4 Oct 2026): Niteworks 15,
+// Collagen Plus 2 scoops × 22 servings = 44 (we use 1 scoop per cup), CR7 Drive 1 scoop × 60 = 60,
+// RS Pro 2 scoops × 20 servings = 40.
 // Everything cyan is editable; it works out ml + scoops per cup, cost, margin and the prep list.
 const OZ = 29.57;
 const RECIPES = [
   { k: 'a', name: 'THE FLOW', sub: '8OZ MOBILITY · JUG', water: 1000, cups: 10, oz: 8, price: 18, iceNote: 'fill the rest of the cup with ice',
-    ing: [['nite', 'Niteworks 150g', 2.5, 228.81, 15], ['col', 'Collagen Plus 300g', 10, 201.90, 60], ['ele', 'CR7 Drive 810g', 10, 121.73, 60]] },
+    ing: [['nite', 'Niteworks 150g', 2.5, 228.81, 15], ['col', 'Collagen Plus 300g', 10, 201.90, 44], ['ele', 'CR7 Drive 810g', 10, 121.73, 60]] },
   { k: 'b', name: 'THE BUILD', sub: '8OZ DENSITY · BLENDER', water: 800, cups: 3, oz: 8, price: 10, iceNote: 'only 3 ice cubes',
-    ing: [['rs', 'RS Pro 990g', 2, 368.49, 39], ['pb', 'PB / Caramel (per batch)', 1, 1.50, 1]] },
+    ing: [['rs', 'RS Pro 990g', 2, 368.49, 40], ['pb', 'PB / Caramel (per batch)', 1, 1.50, 1]] },
 ];
 const RV = (r, f) => v(`r${r.k}_${f}`);
 (function buildRecipes() {
@@ -681,6 +682,8 @@ function tick() {
   const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60;
   $('countdown').textContent = `T-MINUS ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M`;
 }
+// Recipe defaults changed: drop recipe values saved on this device once, so everyone sees the new numbers
+if (settings.recipeV !== 3) { Object.keys(settings.inputs || {}).forEach(k => { if (/^r[ab]_/.test(k)) delete settings.inputs[k]; }); settings.recipeV = 3; saveSettings(); }
 Object.entries(settings.inputs || {}).forEach(([id, val]) => { const el = $(id); if (!el) return; if (el.type === 'checkbox') el.checked = val; else el.value = val; });
 document.querySelectorAll('.f2, #headcount').forEach(el => el.addEventListener('input', paint));
 $('nodeName').textContent = C.NODE_NAME;
