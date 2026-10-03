@@ -704,7 +704,7 @@ async function bookHB(id) {
 async function setHB(id, status) { if (status === 'CANCELLED' && !confirm('Cancel this Health Bar appointment?')) return; try { await RECUP.updateHealthbar(id, { status }); } catch (e) { alert(e.message); } pollHB(); }
 
 async function reject(id) { if (!confirm('Remove this claim? (No cup is logged.)')) return; try { await RECUP.rejectClaim(id); } catch (e) { alert(e.message); } pollClaims(); }
-function demo() { RECUP.seedDemo(); refresh(); }
+function demo() { if (RECUP.session()) return alert('Demo data is only for previewing while logged out. Logged in, the terminal shows the real database only.'); RECUP.seedDemo(); refresh(); }
 function wipe() { if (confirm('Clear runners stored on THIS device? (The database is not touched)')) { RECUP.clearLocal(); refresh(); } }
 async function doLogin(e) {
   e.preventDefault(); $('lErr').textContent = ''; $('lBtn').textContent = '…';

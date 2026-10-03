@@ -305,8 +305,18 @@ const RECUP = (() => {
       }
       catch (e) { error = e.message; }
     }
-    const leads = mergeById([remote, local]).filter(l => l.ts).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
-    return { leads, remoteOk, loggedIn: !!token, error, pending: store.get(K_QUEUE, []).length };
+    // Database is the truth once we can read it: drop local copies it no longer has (e.g. after a wipe),
+    // except runners still waiting in the offline queue to be uploaded.
+    let keep = local, pruned = 0;
+    if (remoteOk) {
+      const onServer = new Set(remote.map(l => l.id));
+      const queued = new Set(store.get(K_QUEUE, []).filter(q => q.action === 'create').map(q => q.lead.id));
+      keep = local.filter(l => onServer.has(l.id) || queued.has(l.id));
+      pruned = local.length - keep.length;
+      if (pruned) store.set(K_LEADS, keep);
+    }
+    const leads = mergeById([remote, keep]).filter(l => l.ts).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+    return { leads, remoteOk, loggedIn: !!token, error, pruned, pending: store.get(K_QUEUE, []).length };
   }
 
   // Booth lookup. Staff (logged in): code, phone, @handle or name. Otherwise: exact member code only.
