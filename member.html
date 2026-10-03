@@ -92,6 +92,11 @@
   .rank.s .badge { border: none; background: linear-gradient(135deg, #C1592E, #B8860B); color: #fff; box-shadow: 0 6px 18px rgba(193,89,46,.35); }
   .rank .st { font: 700 11px var(--mono); letter-spacing: 1.5px; color: var(--warn); }
   .rank.s .st { color: var(--success); }
+  .body-fig { display: grid; grid-template-columns: 110px 1fr; gap: 14px; align-items: center; margin: 14px 0 4px; padding: 12px; border-radius: 14px; background: var(--panel-2); }
+  .body-fig svg { width: 110px; height: auto; display: block; }
+  .body-fig .key { display: grid; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .body-fig .key b { display: block; color: var(--text); font-size: 14px; }
+  .body-fig .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
   .gate { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
   .gate .ok { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 2px solid var(--line-2); color: var(--muted); }
   .gate.done .ok { background: var(--success); border-color: var(--success); color: #fff; }
@@ -108,6 +113,7 @@
   <button class="mi" onclick="goHB()">Book HealthBar</button>
   <a id="mManual" href="repair-manual.html">Runner's Repair Manual</a>
   <a id="mStory" href="story.html">Share my grade</a>
+  <a id="mWa" href="#" target="_blank" rel="noopener" style="display:none">💬 WhatsApp us</a>
   <h4>ABOUT US</h4>
   <div id="aboutList"></div>
   <h4>HEALTHBAR</h4>
@@ -182,6 +188,7 @@
     if (l.grade) { $('storyBtn').href = RECUP.storyUrl(l); $('storyBtn').style.display = 'block'; }
     me = l; renderClaim(); renderHB(); renderRank();
     $('mManual').href = RECUP.manualUrl(l); $('mStory').href = RECUP.storyUrl(l);
+    if (C.BUSINESS_WA) { $('mWa').href = RECUP.contactWaLink(l); $('mWa').style.display = 'block'; }
     $('homeHint').style.display = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'none' : 'block';
   }
 
@@ -264,6 +271,7 @@
         <p class="sub" style="margin:6px 0 0">${esc(HBC.PITCH)}</p>${where}
         <div class="hbk" style="margin-top:14px">WE CALIBRATE</div>${tags(HBC.CONCERNS)}
         <button class="btn" onclick="editHB()">BOOK OR ENQUIRE →</button>
+        ${C.BUSINESS_WA ? `<a href="${RECUP.contactWaLink(me, 'healthbar')}" target="_blank" rel="noopener" style="display:block;text-align:center;color:#DEDACD;font-size:13px;margin-top:10px">Prefer to chat? 💬 WhatsApp us to book</a>` : ''}
         <p class="sub" style="margin:10px 0 0;text-align:center">For yourself or your family.</p>${b && b.status === 'DONE' ? '<p class="sub" style="margin:6px 0 0;text-align:center">Last session done ✓</p>' : ''}`;
       return;
     }
@@ -300,6 +308,27 @@
   }
   async function cancelHB() { if (!confirm('Cancel your Health Bar session?')) return; try { await RECUP.cancelHealthbar(me.code); } catch {} me.healthbar = null; renderHB(); }
 
+  /* ---------- S-Rank picture: OUTSIDE = movement (legs/knees), INSIDE = sleep, gut, energy, blood markers ---------- */
+  function bodyFig(ch, en) {
+    const ON = '#4F6B4C', OFF = '#C1592E', LINE = '#B8B4A6';
+    const out = ch ? ON : OFF, ins = en ? ON : OFF;
+    return `<div class="body-fig">
+      <svg viewBox="0 0 110 200" role="img" aria-label="Body: legs show movement, inside the torso shows inside health">
+        <circle cx="55" cy="20" r="14" fill="none" stroke="${LINE}" stroke-width="3"/>
+        <path d="M35 40 h40 l8 60 h-14 l-2 -10 h-24 l-2 10 h-14 z" fill="none" stroke="${LINE}" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M35 42 l-14 42 M75 42 l14 42" stroke="${LINE}" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="55" cy="66" rx="13" ry="18" fill="${ins}" opacity="${en ? .9 : .25}"/>
+        <path d="M49 60 q6 -6 12 0 q-6 10 -12 0 z" fill="#fff" opacity=".85"/>
+        <path d="M44 102 l-6 44 l-4 44 M66 102 l6 44 l4 44" stroke="${out}" stroke-width="7" stroke-linecap="round" fill="none" opacity="${ch ? 1 : .55}"/>
+        <circle cx="38" cy="146" r="6" fill="${out}"/><circle cx="72" cy="146" r="6" fill="${out}"/>
+        ${ch ? '<text x="88" y="150" font-size="16" fill="' + ON + '">✓</text>' : ''}${en ? '<text x="73" y="70" font-size="14" fill="#fff">✓</text>' : ''}
+      </svg>
+      <div class="key">
+        <div><b><span class="dot" style="background:${out}"></span>Outside · Movement</b>Your legs, knees and form. Checked with the squat test.</div>
+        <div><b><span class="dot" style="background:${ins}"></span>Inside health</b>Sleep, gut, energy, hormones and blood markers. Checked at HealthBar.</div>
+      </div></div>`;
+  }
+
   /* ---------- S-Rank status gate ---------- */
   function renderRank() {
     const SR = C.SRANK, ch = me.grade === 'A' || !!(me.chassisOk || me.chassis_ok), en = !!me.engine_ok, s = ch && en;
@@ -308,8 +337,9 @@
     $('rankCard').innerHTML = `<div class="rank ${s ? 's' : ''}"><div class="badge">${s ? 'S' : (me.grade || '?')}</div>
         <div><div class="st">${s ? 'S-RANK · CALIBRATED ATHLETE' : 'STATUS: CALIBRATION_PENDING'}</div>
         <h2 style="margin:4px 0 2px">${s ? 'Zero Energy Leaks.' : 'S-Rank: ' + (ch ? '1' : '0') + ' of 2 unlocked'}</h2>
-        <p class="sub" style="margin:0">${s ? 'Chassis and engine verified. You are the standard.' : ch ? 'Your chassis holds, but your engine is unverified. Book your HealthBar session to unlock S-Rank.' : SR.LINE}</p></div></div>
-      <div style="margin-top:12px">${row(ch, SR.CHASSIS)}${row(en, SR.ENGINE)}</div>
+        <p class="sub" style="margin:0">${s ? 'Outside and inside both checked. No energy leaks.' : ch ? 'Your movement passes. Now check what\'s happening inside: book a HealthBar session to unlock S-Rank.' : 'S-Rank means no energy leaks, outside and inside. Unlock both to get it.'}</p></div></div>
+      ${bodyFig(ch, en)}
+      <div style="margin-top:6px">${row(ch, SR.CHASSIS)}${row(en, SR.ENGINE)}</div>
       ${!en ? `<button class="btn" style="margin-top:10px" onclick="goHB()">${me.healthbar && ['REQUESTED', 'BOOKED'].includes(me.healthbar.status) ? 'SEE MY HEALTHBAR SESSION' : 'BOOK MY HEALTHBAR SESSION'} →</button>` : ''}`;
   }
 

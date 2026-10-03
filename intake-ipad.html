@@ -313,7 +313,7 @@
   }
 
   async function passChassis() {
-    if (!confirm('Passed the squat re-test? (knee over toes, heel tap, no collapse)\nThis ticks THE CHASSIS on their S-Rank.')) return;
+    if (!confirm('Passed the squat re-test? (knee over toes, heel tap, no collapse)\nThis ticks MOVEMENT on their S-Rank.')) return;
     await RECUP.updateLead(current.id, { chassisOk: true }); current.chassisOk = true; renderCard(lookupMode);
   }
 

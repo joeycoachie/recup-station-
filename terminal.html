@@ -167,7 +167,7 @@
         <button class="btn-t" onclick="exportCSV()">⤓ CSV</button>
       </span>
     </h2>
-    <div class="legend"><b>+CUP</b> log a cup you poured · <b>WA</b> / <b>IG DM</b> send their Repair Manual (✓ = sent) · <b>CHASSIS ✓</b> they passed the squat re-test · <b>RESERVED</b> did the online diagnostic, hasn't collected yet · <b>G-A/B/C</b> squat grade · <b>S-RANK</b> chassis + engine verified · <b>⚙</b> chassis done, HealthBar pending · <b>HB</b> asked for HealthBar</div>
+    <div class="legend"><b>+CUP</b> log a cup you poured · <b>WA</b> / <b>IG DM</b> send their Repair Manual (✓ = sent) · <b>MOVEMENT ✓</b> they passed the squat re-test · <b>RESERVED</b> did the online diagnostic, hasn't collected yet · <b>G-A/B/C</b> squat grade · <b>S-RANK</b> movement + inside health verified · <b>⚙</b> movement done, HealthBar pending · <b>HB</b> asked for HealthBar</div>
     <div class="feed"><table>
       <thead><tr><th>SIGNED UP</th><th>WHERE</th><th>RUNNER · CODE · GRADE</th><th>RUNS AT</th><th>WHAT HURTS</th><th>THEIR DRINK</th><th>CUPS (OF 5)</th><th>MANUAL VIA</th><th>ACTIONS</th></tr></thead>
       <tbody id="feed"></tbody>
@@ -352,13 +352,13 @@ function renderFeed() {
     const via = l.contactMethod === 'INSTAGRAM' && l.instagram ? `<a href="${RECUP.igProfileUrl(l)}" target="_blank" rel="noopener" style="color:inherit">${esc(l.instagram)} ↗</a>`
       : { WHATSAPP: 'WA', EMAIL: 'EMAIL (OLD)', NONE: 'QR ONLY' }[l.contactMethod] || '—';
     let act = `<button class="btn-t sm primary" onclick="openPour('${l.id}')">+CUP</button> `;
-    if (!chassisOk(l)) act += `<button class="btn-t sm" onclick="passChassis('${l.id}')" title="They passed the squat re-test at the booth">CHASSIS ✓</button> `;
+    if (!chassisOk(l)) act += `<button class="btn-t sm" onclick="passChassis('${l.id}')" title="They passed the squat re-test at the booth">MOVEMENT ✓</button> `;
     if (l.phone) act += `<a class="btn-t sm wa" href="${RECUP.waLink(l)}" target="_blank" onclick="markSent('${l.id}')">WA${l.manualSent ? ' ✓' : ''}</a> `;
     if (l.instagram) act += `<button class="btn-t sm ig" onclick="igDM('${l.id}')" title="Copies the message, opens their Instagram DM: paste + send">IG DM${l.manualSent ? ' ✓' : ''}</button>`;
     return `<tr>
       <td class="muted">${time}</td>
       <td><span class="tag t-${l.source}">${SRC[l.source] || l.source}</span></td>
-      <td style="text-transform:none"><b>${esc(l.name)}</b> <span class="muted">${esc(l.code)}</span>${l.status === 'RESERVED' && !l.cups ? ' <span class="res">RESERVED</span>' : ''}${l.grade ? ` <span class="muted">G-${l.grade}</span>` : ''}${sRank(l) ? ' <span class="tag" style="background:var(--warn);color:#000">S-RANK</span>' : chassisOk(l) ? ' <span class="muted" title="Chassis ✓, engine pending (HealthBar)">⚙</span>' : ''}</td>
+      <td style="text-transform:none"><b>${esc(l.name)}</b> <span class="muted">${esc(l.code)}</span>${l.status === 'RESERVED' && !l.cups ? ' <span class="res">RESERVED</span>' : ''}${l.grade ? ` <span class="muted">G-${l.grade}</span>` : ''}${sRank(l) ? ' <span class="tag" style="background:var(--warn);color:#000">S-RANK</span>' : chassisOk(l) ? ' <span class="muted" title="Movement ✓, inside health pending (HealthBar)">⚙</span>' : ''}</td>
       <td class="muted">${esc(l.region)}</td>
       <td>${esc(l.pain)}</td>
       <td>${p.name}</td>
@@ -619,9 +619,9 @@ async function confirmPour() {
 // S-Rank: runner passed the movement on a re-test at the booth
 async function passChassis(id) {
   const l = LEADS.find(x => x.id === id); if (!l) return;
-  if (!confirm(`${l.name} passed the squat re-test (knee over toes, heel tap, no collapse)?\n\nThis ticks THE CHASSIS on their S-Rank.`)) return;
+  if (!confirm(`${l.name} passed the squat re-test (knee over toes, heel tap, no collapse)?\n\nThis ticks MOVEMENT on their S-Rank.`)) return;
   await RECUP.updateLead(id, { chassisOk: true }); l.chassisOk = true; paint();
-  toast('Chassis ✓. Engine unlocks when their HealthBar session is marked DONE.');
+  toast('Movement ✓. Inside health ticks when their HealthBar session is marked DONE.');
 }
 async function markSent(id) { await RECUP.updateLead(id, { manualSent: 'YES' }); const l = LEADS.find(x => x.id === id); if (l) l.manualSent = 'YES'; setTimeout(paint, 300); }
 function setFilter(f) { FILTER = f; document.querySelectorAll('.filters .btn-t').forEach(b => b.classList.toggle('active', b.dataset.f === f)); renderFeed(); }

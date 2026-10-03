@@ -22,7 +22,7 @@ const RECUP_CONFIG = {
 
   // 3) Your Recup Station WhatsApp Business number (digits only, e.g. '60123456789').
   //    Runners who don't want to type their number can tap/scan to message you instead.
-  BUSINESS_WA: '',
+  BUSINESS_WA: '60102319893',               // Joey's WhatsApp (010-231 9893). Swap for a WhatsApp Business number later.
 
   LAUNCH_DATE: '2026-10-03T07:00:00+08:00',   // edit to your real open day
   NODE_NAME: 'NODE_001 · PHB SAUJANA',
@@ -87,11 +87,11 @@ RECUP_CONFIG.HEALTHBAR = {
              'Thyroid', 'Hormones', 'Fertility', 'PCOS', 'Acid reflux'],
 };
 
-// S-RANK = Zero Energy Leaks. Chassis (passes the squat) + Engine (HealthBar session done).
+// S-RANK = Zero Energy Leaks. Movement (passes the squat) + Inside health (HealthBar session done).
 RECUP_CONFIG.SRANK = {
   LINE: 'Zero Energy Leaks. The Calibrated Athlete.',
-  CHASSIS: ['The Chassis', 'Pass the movement: your joints are glued.', 'Ask for a re-test at the Recup table.'],
-  ENGINE: ['The Engine', 'Calibrate your inside dashboard at HealthBar.', 'Book your HealthBar session to unlock S-Rank.'],
+  CHASSIS: ['Movement · outside', 'You pass the squat test: knees stay over your toes, your joints hold.', 'Pass the squat test. Ask for a re-test at the Recup table.'],
+  ENGINE: ['Inside health', 'Your sleep, gut, energy and blood markers are checked at HealthBar.', 'Book a HealthBar session to check your sleep, gut, energy and blood markers.'],
 };
 
 // ABOUT (side menu on the runner's card). DRAFT copy: edit freely.
@@ -116,7 +116,7 @@ const RECUP = (() => {
 
   /* ---------- normalisers ---------- */
   const SQUAT = { 'Yes': 'SOLID', 'Struggle': 'SHAKY', 'No': 'COLLAPSE', 'Solid': 'SOLID', 'Shaky': 'SHAKY', 'Collapse': 'COLLAPSE' };
-  const GRADE = { SOLID: { grade: 'A', label: 'STABLE CHASSIS' }, SHAKY: { grade: 'B', label: 'ENERGY LEAK' }, COLLAPSE: { grade: 'C', label: 'STRUCTURAL REPAIR' } };
+  const GRADE = { SOLID: { grade: 'A', label: 'SOLID MOVEMENT' }, SHAKY: { grade: 'B', label: 'ENERGY LEAK' }, COLLAPSE: { grade: 'C', label: 'STRUCTURAL REPAIR' } };
   function normArchetype(v = '') {
     const s = v.toLowerCase();
     if (/^none/.test(s)) return 'NONE';
@@ -432,6 +432,13 @@ Scan. Identify the Leak. Calibrate your Repair.`;
     return `https://wa.me/${lead.phone}?text=${encodeURIComponent(msg)}`;
   }
   // For runners who don't want to type a number: they message US (they choose to share)
+  // Runner → us: open WhatsApp to our number with their code pre-filled
+  function contactWaLink(lead, purpose) {
+    if (!C.BUSINESS_WA) return '';
+    const first = ((lead && lead.name) || '').split(' ')[0];
+    const why = purpose === 'healthbar' ? "I'd like to book a HealthBar session" : 'I have a question';
+    return `https://wa.me/${C.BUSINESS_WA}?text=${encodeURIComponent(`Hi RECUP.STN, ${first ? first + ' here' : ''}${lead && lead.code ? ` (member ${lead.code})` : ''}. ${why}.`)}`;
+  }
   function selfWaLink(lead) {
     if (!C.BUSINESS_WA) return '';
     return `https://wa.me/${C.BUSINESS_WA}?text=${encodeURIComponent(`Hi RECUP.STN, send my Repair Manual. Code ${lead.code}`)}`;
@@ -465,7 +472,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
     store.set(K_LEADS, all);
   }
 
-  return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
+  return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, contactWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
            getSetting, setSetting, requestHealthbar, cancelHealthbar, loadHealthbar, updateHealthbar, slotText,
            claimCup, cancelClaim, loadClaims, approveClaim, rejectClaim, igDmUrl, igProfileUrl, igMessage,
            tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, login, logout, session, GRADE, store };
