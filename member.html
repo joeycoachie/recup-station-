@@ -15,6 +15,7 @@
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 18px; }
   .who { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
   .who h1 { margin: 0; font-size: 26px; }
+  .since { font: 600 11px var(--mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
   .code { font: 800 26px var(--mono); letter-spacing: 3px; color: var(--accent); }
   .status { display: inline-block; margin-top: 10px; font: 700 11px var(--mono); letter-spacing: 1px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); }
   .status.active { background: var(--success); color: var(--on-accent); border-color: var(--success); }
@@ -95,12 +96,12 @@
 <nav class="menu" id="menu" aria-label="Menu">
   <div class="logo">RECUP.STN</div>
   <button class="mi" onclick="openMenu(false);scrollTo({top:0,behavior:'smooth'})">My Ascension card</button>
-  <button class="mi" onclick="goHB()">Book Health Bar</button>
+  <button class="mi" onclick="goHB()">Book HealthBar</button>
   <a id="mManual" href="repair-manual.html">Runner's Repair Manual</a>
   <a id="mStory" href="story.html">Share my grade</a>
   <h4>ABOUT US</h4>
   <div id="aboutList"></div>
-  <h4>HEALTH BAR</h4>
+  <h4>HEALTHBAR</h4>
   <div id="hbAbout"></div>
 </nav>
 <div class="wrap">
@@ -108,7 +109,7 @@
 
   <div class="card" id="me" style="display:none">
     <div class="who">
-      <div><div class="sub" style="margin:0">PERFORMANCE PARTNER</div><h1 id="mName"></h1></div>
+      <div><div class="sub" style="margin:0">PERFORMANCE PARTNER</div><h1 id="mName"></h1><div class="since" id="mSince"></div></div>
       <div class="code" id="mCode"></div>
     </div>
     <span class="status" id="mStatus"></span>
@@ -158,6 +159,7 @@
     $('me').style.display = 'block'; $('findCard').style.display = 'none';
     $('mName').textContent = (l.name || 'Runner').split(' ')[0];
     $('mCode').textContent = l.code;
+    $('mSince').textContent = l.ts ? 'Member since ' + new Date(l.ts).toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
     const activated = cups >= 4;
     $('mStatus').textContent = activated ? (cups >= C.LADDER.length ? '★ MILESTONE MEMBER' : '● ACCOUNT ACTIVATED') : `${4 - cups} CUP${4 - cups === 1 ? '' : 'S'} TO ACTIVATION`;
     $('mStatus').className = 'status' + (activated ? ' active' : '');
@@ -230,7 +232,7 @@
   function renderHB() {
     const box = $('hbCard'), b = me.healthbar; box.style.display = 'block';
     if (b && b.status === 'BOOKED') {
-      box.innerHTML = `<span class="tag ok">BOOKED</span><h2>YOUR HEALTH BAR SESSION</h2>
+      box.innerHTML = `<span class="tag ok">BOOKED</span><h2>YOUR ${esc(HBC.NAME.toUpperCase())} SESSION</h2>
         <div class="slot">${esc(RECUP.slotText(b.slot) || 'Time to be confirmed')}</div>
         <p class="sub" style="margin:0">${b.mode === 'ONLINE' ? '🌏 Online call' + (b.place ? ` · <a href="${/^https?:/.test(b.place) ? '' : 'https://'}${esc(b.place)}" target="_blank" rel="noopener" style="color:#fff">join link</a>` : '') : '📍 ' + esc(b.place || HBC.PLACE)}${b.note ? ' · ' + esc(b.note) : ''}</p>
         ${b.for_whom && b.for_whom !== 'Myself' ? `<p class="sub" style="margin:6px 0 0">For: ${esc(b.for_whom)}</p>` : ''}
@@ -239,14 +241,14 @@
       return;
     }
     if (b && b.status === 'REQUESTED' && !hbForm) {
-      box.innerHTML = `<span class="tag">ENQUIRY SENT</span><h2>HEALTH BAR SESSION</h2>
+      box.innerHTML = `<span class="tag">ENQUIRY SENT</span><h2>${esc(HBC.NAME.toUpperCase())} SESSION</h2>
         <p class="sub" style="margin:4px 0 0">We'll message you to confirm a time${b.preferred ? ` (you said: ${esc(b.preferred)})` : ''}. Your booking will appear right here.</p>
         ${(b.concerns || []).length ? tags(b.concerns, true) : ''}
         <button class="linkbtn" onclick="editHB()">Edit</button><button class="linkbtn" onclick="cancelHB()">Cancel</button>`;
       return;
     }
     if (!hbForm) {
-      box.innerHTML = `<div class="hbk">THE DEEP-REPAIR LAB</div><h2>${esc(HBC.NAME.toUpperCase())}</h2>
+      box.innerHTML = `<div class="hbk">${esc(HBC.NAME.toUpperCase())}</div><h2>${esc(HBC.HEADLINE.toUpperCase())}</h2>
         <p class="sub" style="margin:6px 0 0">${esc(HBC.PITCH)}</p>${where}
         <div class="hbk" style="margin-top:14px">WE CALIBRATE</div>${tags(HBC.CONCERNS)}
         <button class="btn" onclick="editHB()">BOOK OR ENQUIRE →</button>
@@ -254,7 +256,7 @@
       return;
     }
     const d = hbDraft;
-    box.innerHTML = `<div class="hbk">HEALTH BAR · ENQUIRY</div><h2>WHAT SHOULD WE LOOK AT?</h2>
+    box.innerHTML = `<div class="hbk">${esc(HBC.NAME.toUpperCase())} · ENQUIRY</div><h2>WHAT SHOULD WE LOOK AT?</h2>
       <p class="sub" style="margin:4px 0 0">Tap all that apply.</p>
       <div class="tags pick">${HBC.CONCERNS.map(t => `<button type="button" class="${d.concerns.includes(t) ? 'on' : ''}" onclick="toggleConcern(this)" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       <div class="hbk" style="margin-top:14px">WHO IS IT FOR?</div>
@@ -290,7 +292,7 @@
   function openMenu(on) { $('menu').classList.toggle('open', on); $('scrim').classList.toggle('open', on); }
   function goHB() { openMenu(false); if (me) { $('hbCard').scrollIntoView({ behavior: 'smooth' }); if (!me.healthbar) editHB(); } }
   $('aboutList').innerHTML = C.ABOUT.map(([h, t]) => `<details><summary>${esc(h)}</summary><p>${esc(t)}</p></details>`).join('');
-  $('hbAbout').innerHTML = `<p>${esc(HBC.PITCH)}</p><p>📍 ${esc(HBC.PLACE)}<br>🌏 ${esc(HBC.ONLINE)}</p>`;
+  $('hbAbout').innerHTML = `<p><b>${esc(HBC.HEADLINE)}</b> ${esc(HBC.PITCH)}</p><p>📍 ${esc(HBC.PLACE)}<br>🌏 ${esc(HBC.ONLINE)}</p>`;
 
   async function refreshMe() {
     const l = await RECUP.getByCode(me.code);

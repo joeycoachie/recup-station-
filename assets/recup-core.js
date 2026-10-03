@@ -76,12 +76,13 @@ const RECUP_CONFIG = {
   ],
 };
 
-// HEALTH BAR: the deep-repair lab. Edit copy here; the runner's card and the side menu use it.
+// HEALTHBAR: our running nutrition cafe. Edit copy here; the runner's card and the side menu use it.
 RECUP_CONFIG.HEALTHBAR = {
-  NAME: 'Health Bar',
+  NAME: 'HealthBar',
   PLACE: 'Bukit Damansara Nutrition Cafe',
   ONLINE: 'Worldwide online calls available',
-  PITCH: 'Your run data only shows the outside. We check the inside dashboard: one-on-one nutrition and performance calibration.',
+  HEADLINE: 'Want a plan built around your body?',
+  PITCH: 'One-on-one nutrition and performance planning at HealthBar, our running nutrition cafe.',
   CONCERNS: ['Energy', 'Sleep', 'Skin', 'Gut / Toilet', 'Mood & Mental health', 'Biomarkers (BP, cholesterol, blood sugar)',
              'Thyroid', 'Hormones', 'Fertility', 'PCOS', 'Acid reflux'],
 };
@@ -90,7 +91,7 @@ RECUP_CONFIG.HEALTHBAR = {
 RECUP_CONFIG.ABOUT = [
   ['Who we are', 'RECUP.STN is a Body Science Specialist for runners. Not a juice bar. We sell Metabolic Protocols: what your body needs before, during and after a run, so you recover instead of decay.'],
   ['How it works', 'Scan. Identify the Leak. Calibrate your Repair. A 60-second diagnostic grades your mechanics, we reserve the right Protocol, and every cup moves you up the Ascension ladder.'],
-  ['Where to find us', 'Every Saturday at the PHB Saujana run club, from flag-off until the cups are gone. Deeper sessions at our Health Bar, Bukit Damansara Nutrition Cafe, or online worldwide.'],
+  ['Where to find us', 'Every Saturday at the PHB Saujana run club, from flag-off until the cups are gone. One-on-one sessions at HealthBar, our running nutrition cafe in Bukit Damansara, or online worldwide.'],
   ['Your data', 'Only used for your guide, your cups and your rewards. Never shared or sold. Want it removed? Tell us at the table or message us.'],
 ];
 
