@@ -85,6 +85,12 @@
   @media (max-width: 900px) { .hb-row { grid-template-columns: 1fr; } }
   .hb-row small { display: block; color: var(--muted); text-transform: none; font-size: 11px; margin-top: 2px; }
   .hb-row input { background: var(--bg); color: var(--text); border: 1px solid var(--border); font: 12px var(--mono); padding: 6px; width: 100%; margin-bottom: 4px; text-transform: none; }
+  .lockwrap { display: inline-flex; align-items: center; white-space: nowrap; }
+  #finPanel .calc-input { width: 58px; }
+  .lockbtn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1; padding: 3px 4px; margin-left: 3px; border-radius: 3px; cursor: pointer; vertical-align: middle; }
+  .lockbtn:hover { border-color: var(--accent); }
+  .lockbtn.on { border-color: var(--success); color: var(--success); }
+  input.calc-input.locked { border-color: var(--success); color: var(--success); background: transparent; cursor: not-allowed; }
   .empty { color: var(--muted); padding: 24px; text-align: center; text-transform: none; }
   .filters .btn-t.active { border-color: var(--accent); color: var(--accent); }
   .search { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font: 11px var(--mono); padding: 5px 8px; width: 160px; }
@@ -180,8 +186,9 @@
   </div>
 
   <!-- 04 FINANCIALS + SMART RECIPE CALCULATOR -->
-  <div class="panel s6">
-    <h2>04_RECIPE_&amp;_MARGIN_CALCULATOR <small>edit any cyan field · costs = what you pay after discount</small></h2>
+  <div class="panel s6" id="finPanel">
+    <h2>04_RECIPE_&amp;_MARGIN_CALCULATOR <small id="lockSub">edit any cyan field · 🔒 to lock it in</small>
+      <span class="btn-row"><button class="btn-t sm" onclick="lockAll(true)">🔒 LOCK ALL</button><button class="btn-t sm" onclick="lockAll(false)">🔓 UNLOCK ALL</button></span></h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="recipes"></div>
     <h3>SHARED COSTS</h3>
     <div class="metric-row"><span>8OZ CUPS: PACK PRICE / PACK SIZE</span><span><input class="calc-input f2" id="c_cupPack" value="59.60"> / <input class="calc-input f2" id="c_cupQty" value="48"></span></div>
@@ -658,7 +665,7 @@ function demo() { RECUP.seedDemo(); refresh(); }
 function wipe() { if (confirm('Clear runners stored on THIS device? (The database is not touched)')) { RECUP.clearLocal(); refresh(); } }
 async function doLogin(e) {
   e.preventDefault(); $('lErr').textContent = ''; $('lBtn').textContent = '…';
-  try { await RECUP.login($('lEmail').value.trim(), $('lPass').value); $('lPass').value = ''; await refresh(); pollClaims(); pollHB(); }
+  try { await RECUP.login($('lEmail').value.trim(), $('lPass').value); $('lPass').value = ''; await refresh(); pollClaims(); pollHB(); pullLocks(); }
   catch (err) { $('lErr').textContent = err.message; }
   $('lBtn').textContent = 'LOGIN';
 }
@@ -682,6 +689,32 @@ function tick() {
   const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60;
   $('countdown').textContent = `T-MINUS ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M`;
 }
+/* ---------- 🔒 locks: freeze a cyan field once the number is final ----------
+   Saved on this device AND (when logged in) in Supabase terminal_settings, so every staff device shows the same locked numbers. */
+let LOCKS = settings.locks || {};
+function finInputs() { return [...document.querySelectorAll('#finPanel input.f2')]; }
+function decorateLocks() {
+  finInputs().forEach(el => {
+    if (el.nextElementSibling && el.nextElementSibling.classList.contains('lockbtn')) return;
+    const wrap = document.createElement('span'); wrap.className = 'lockwrap'; el.before(wrap); wrap.appendChild(el);   // keep box + 🔒 together
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lockbtn'; b.onclick = () => toggleLock(el.id); el.after(b);
+  });
+  refreshLocks();
+}
+function refreshLocks() {
+  let n = 0;
+  finInputs().forEach(el => {
+    const on = Object.prototype.hasOwnProperty.call(LOCKS, el.id); if (on) { el.value = LOCKS[el.id]; n++; }
+    el.readOnly = on; el.classList.toggle('locked', on);
+    const b = el.nextElementSibling; if (b && b.classList.contains('lockbtn')) { b.textContent = on ? '🔒' : '🔓'; b.classList.toggle('on', on); b.title = on ? 'Locked. Tap to unlock and edit' : 'Tap to lock this number in'; }
+  });
+  $('lockSub').textContent = n ? `${n} of ${finInputs().length} locked · tap 🔒 to unlock` : 'edit any cyan field · 🔒 to lock it in';
+}
+async function saveLocks() { settings.locks = LOCKS; saveSettings(); refreshLocks(); paint(); const ok = await RECUP.setSetting('calc_locks', LOCKS); if (!ok && RECUP.session()) toast('Locked on this device only. Run supabase/recup_station.sql to share locks.'); }
+function toggleLock(id) { const el = $(id); if (LOCKS[id] !== undefined) delete LOCKS[id]; else LOCKS[id] = el.value; saveLocks(); }
+function lockAll(on) { if (!on && !confirm('Unlock every field?')) return; LOCKS = on ? Object.fromEntries(finInputs().map(el => [el.id, el.value])) : {}; saveLocks(); }
+async function pullLocks() { const v = await RECUP.getSetting('calc_locks'); if (v && typeof v === 'object' && Object.keys(v).length) { LOCKS = v; settings.locks = v; saveSettings(); refreshLocks(); paint(); } }
+
 // Recipe defaults changed: drop recipe values saved on this device once, so everyone sees the new numbers
 if (settings.recipeV !== 3) { Object.keys(settings.inputs || {}).forEach(k => { if (/^r[ab]_/.test(k)) delete settings.inputs[k]; }); settings.recipeV = 3; saveSettings(); }
 Object.entries(settings.inputs || {}).forEach(([id, val]) => { const el = $(id); if (!el) return; if (el.type === 'checkbox') el.checked = val; else el.value = val; });
@@ -689,8 +722,9 @@ document.querySelectorAll('.f2, #headcount').forEach(el => el.addEventListener('
 $('nodeName').textContent = C.NODE_NAME;
 try { const q = qrcode(0, 'M'); q.addData(RECUP.siteUrl('intake-ig.html') + '?utm_content=qr'); q.make(); $('qr').innerHTML = q.createImgTag(3, 0); } catch {}
 $('qrHint').textContent = C.SITE_URL ? 'QR → The Diagnostic. Use in stories / flyers.' : 'Set SITE_URL so this QR works on phones.';
+decorateLocks();
 tick(); setInterval(tick, 30000);
-refresh().then(() => { pollClaims(); pollHB(); }); setInterval(refresh, 30000); setInterval(pollClaims, 5000); setInterval(pollHB, 15000);
+refresh().then(() => { pollClaims(); pollHB(); pullLocks(); }); setInterval(refresh, 30000); setInterval(pollClaims, 5000); setInterval(pollHB, 15000);
 </script>
 </body>
 </html>

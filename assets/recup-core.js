@@ -371,6 +371,16 @@ const RECUP = (() => {
     await rest(`cup_claims?id=eq.${id}`, { method: 'PATCH', token, prefer: 'return=minimal', body: { status: 'REJECTED', decided_at: new Date().toISOString(), staff_email: (session() || {}).email } });
   }
 
+  /* ---------- shared terminal settings (staff only) ---------- */
+  async function getSetting(key) {
+    const token = await staffToken(); if (!token) return null;
+    try { const r = await rest(`terminal_settings?select=value&key=eq.${encodeURIComponent(key)}`, { token }); return r.length ? r[0].value : {}; } catch { return null; }
+  }
+  async function setSetting(key, value) {
+    const token = await staffToken(); if (!token) return false;
+    try { await rest('terminal_settings?on_conflict=key', { method: 'POST', token, prefer: 'resolution=merge-duplicates,return=minimal', body: { key, value, updated_at: new Date().toISOString() } }); return true; } catch { return false; }
+  }
+
   /* ---------- Health Bar appointments ---------- */
   async function requestHealthbar(code, f = {}) {
     return rest('rpc/request_healthbar', { method: 'POST', body: { p_code: code, p_goal: f.goal || '', p_preferred: f.preferred || '',
@@ -456,7 +466,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
   }
 
   return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
-           requestHealthbar, cancelHealthbar, loadHealthbar, updateHealthbar, slotText,
+           getSetting, setSetting, requestHealthbar, cancelHealthbar, loadHealthbar, updateHealthbar, slotText,
            claimCup, cancelClaim, loadClaims, approveClaim, rejectClaim, igDmUrl, igProfileUrl, igMessage,
            tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, login, logout, session, GRADE, store };
 })();

@@ -333,3 +333,17 @@ grant execute on function get_member(text) to anon, authenticated;
 -- Staff view of who holds the Engine ✓ (terminal reads this)
 create or replace view runner_engine with (security_invoker = true) as
   select runner_id, bool_or(status = 'DONE') as engine_ok from healthbar_bookings group by runner_id;
+
+-- ============================================================================
+-- 9. TERMINAL SETTINGS (added 2026-10-04): locked calculator values shared
+--    across every staff device. Safe to re-run.
+-- ============================================================================
+create table if not exists terminal_settings (
+  key        text primary key,
+  value      jsonb not null default '{}',
+  updated_at timestamptz not null default now()
+);
+alter table terminal_settings enable row level security;
+drop policy if exists "staff all" on terminal_settings;
+create policy "staff all" on terminal_settings for all to authenticated
+  using (recup_is_staff()) with check (recup_is_staff());
