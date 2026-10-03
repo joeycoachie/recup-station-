@@ -119,7 +119,7 @@
     text(runner.grade, W / 2, 1000, `800 620px ${DISPLAY}`, '#fff');
     text(g()[0], W / 2, 1130, `800 96px ${DISPLAY}`, RUST);
     text(g()[1], W / 2, 1210, `400 40px ${SANS}`, '#DEDACD');
-    if (runner.archetype) text(ARCH[runner.archetype] || runner.archetype, W / 2, 1360, `700 52px ${SANS}`, '#fff');
+    if (runner.archetype && runner.archetype !== 'NONE') text(ARCH[runner.archetype] || runner.archetype, W / 2, 1360, `700 52px ${SANS}`, '#fff');
     text(`Protocol: ${proto()}`, W / 2, 1430, `500 36px ${SANS}`, MUTED);
     cta(true);
   }
@@ -129,7 +129,7 @@
     text('KINETIC DIAGNOSTIC', W / 2, 460, `600 38px ${SANS}`, '#7A766A');
     text(runner.grade, W / 2, 900, `800 460px ${DISPLAY}`, INK);
     text(g()[0], W / 2, 1020, `800 84px ${DISPLAY}`, RUST);
-    if (runner.archetype) text(ARCH[runner.archetype] || runner.archetype, W / 2, 1120, `700 48px ${SANS}`, INK);
+    if (runner.archetype && runner.archetype !== 'NONE') text(ARCH[runner.archetype] || runner.archetype, W / 2, 1120, `700 48px ${SANS}`, INK);
     text(`Protocol: ${proto()}`, W / 2, 1185, `500 34px ${SANS}`, '#7A766A');
     // ascension ladder
     const n = C.LADDER.length, sz = 96, gap = 34, x0 = W / 2 - (n * sz + (n - 1) * gap) / 2;
@@ -151,7 +151,7 @@
     text(runner.grade, W - 200, 318, `800 220px ${DISPLAY}`, '#fff');
     text('RECUP.STN', 90, 150, `800 54px ${DISPLAY}`, '#fff', 'left');
     text(`GRADE ${runner.grade} · ${g()[0]}`, 90, 1360, `800 88px ${DISPLAY}`, '#fff', 'left');
-    if (runner.archetype) text(`${ARCH[runner.archetype] || runner.archetype} · Protocol: ${proto()}`, 90, 1430, `500 38px ${SANS}`, '#DEDACD', 'left');
+    if (runner.archetype && runner.archetype !== 'NONE') text(`${ARCH[runner.archetype] || runner.archetype} · Protocol: ${proto()}`, 90, 1430, `500 38px ${SANS}`, '#DEDACD', 'left');
     cta(true);
   }
   /* ---------- "My run": Strava-style stats card ---------- */

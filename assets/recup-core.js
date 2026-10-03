@@ -47,7 +47,7 @@ const RECUP_CONFIG = {
 
   // Where runners usually run, grouped by zone (Klang Valley run clubs + parks).
   AREAS: [
-    ['Saujana & Shah Alam', ['PHB Saujana', 'Glenhill / Saujana (other)', 'Shah Alam Lake Gardens', 'Setia Alam / Eco Ardence']],
+    ['Saujana & Shah Alam', ['PHB Saujana', 'Shah Alam Lake Gardens', 'Setia Alam / Eco Ardence']],
     ['PJ & Subang', ['Subang Jaya / USJ', 'Sunway / Bandar Sunway', 'Kelana Jaya Lake / Ara Damansara', 'Bukit Gasing / PJ']],
     ['Damansara & Kiara', ['Kota Damansara', 'Bandar Utama / Mutiara Damansara', 'Bukit Kiara / TTDI', 'Mont Kiara / Hartamas', 'Bangsar / Damansara Heights']],
     ['KL City', ['KLCC Park', 'Perdana Botanical Gardens', 'KL Forest Eco Park', 'Titiwangsa Lake']],
@@ -93,6 +93,7 @@ const RECUP = (() => {
   const GRADE = { SOLID: { grade: 'A', label: 'STABLE CHASSIS' }, SHAKY: { grade: 'B', label: 'ENERGY LEAK' }, COLLAPSE: { grade: 'C', label: 'STRUCTURAL REPAIR' } };
   function normArchetype(v = '') {
     const s = v.toLowerCase();
+    if (/^none/.test(s)) return 'NONE';
     for (const [k, out] of [['sprinter', 'SPRINTER'], ['diesel', 'DIESEL'], ['tank', 'TANK'], ['soul', 'SOUL RUNNER'], ['office', 'OFFICE BODY']]) if (s.includes(k)) return out;
     return v ? v.toUpperCase() : '';
   }
@@ -341,6 +342,20 @@ const RECUP = (() => {
     await rest(`cup_claims?id=eq.${id}`, { method: 'PATCH', token, prefer: 'return=minimal', body: { status: 'REJECTED', decided_at: new Date().toISOString(), staff_email: (session() || {}).email } });
   }
 
+  /* ---------- Health Bar appointments ---------- */
+  async function requestHealthbar(code, goal, preferred) { return rest('rpc/request_healthbar', { method: 'POST', body: { p_code: code, p_goal: goal || '', p_preferred: preferred || '' } }); }
+  async function cancelHealthbar(code) { await rest('rpc/cancel_healthbar', { method: 'POST', body: { p_code: code } }); }
+  async function loadHealthbar() {
+    const token = await staffToken(); if (!token) return [];
+    try { return await rest(`healthbar_bookings?select=*&status=in.(REQUESTED,BOOKED)&order=created_at.asc`, { token }); } catch { return []; }
+  }
+  async function updateHealthbar(id, patch) {
+    const token = await staffToken(); if (!token) throw new Error('Log in first');
+    await rest(`healthbar_bookings?id=eq.${id}`, { method: 'PATCH', token, prefer: 'return=minimal', body: { ...patch, updated_at: new Date().toISOString() } });
+  }
+  function slotText(iso) { if (!iso) return ''; const d = new Date(iso);
+    return d.toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString('en-MY', { hour: 'numeric', minute: '2-digit' }); }
+
   /* ---------- Instagram: open a DM with the runner ---------- */
   const igHandle = l => (l.instagram || '').replace(/^@/, '').trim();
   function igDmUrl(l) { return igHandle(l) ? `https://ig.me/m/${encodeURIComponent(igHandle(l))}` : ''; }
@@ -409,6 +424,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
   }
 
   return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
+           requestHealthbar, cancelHealthbar, loadHealthbar, updateHealthbar, slotText,
            claimCup, cancelClaim, loadClaims, approveClaim, rejectClaim, igDmUrl, igProfileUrl, igMessage,
            tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, login, logout, session, GRADE, store };
 })();

@@ -80,6 +80,11 @@
   .claim-row .collect { font-size: 16px; font-weight: 800; color: var(--success); }
   #claimsPanel.has h2 { color: var(--warn); }
   .ig { color: #d9467a; border-color: #d9467a; }
+  .hb-row { display: grid; grid-template-columns: 1.3fr 1.6fr 2fr auto; gap: 10px; align-items: center; background: var(--panel-2); border: 1px solid var(--border); padding: 10px 12px; border-radius: 4px; }
+  .hb-row.booked { border-color: var(--success); }
+  @media (max-width: 900px) { .hb-row { grid-template-columns: 1fr; } }
+  .hb-row small { display: block; color: var(--muted); text-transform: none; font-size: 11px; margin-top: 2px; }
+  .hb-row input { background: var(--bg); color: var(--text); border: 1px solid var(--border); font: 12px var(--mono); padding: 6px; width: 100%; margin-bottom: 4px; text-transform: none; }
   .empty { color: var(--muted); padding: 24px; text-align: center; text-transform: none; }
   .filters .btn-t.active { border-color: var(--accent); color: var(--accent); }
   .search { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font: 11px var(--mono); padding: 5px 8px; width: 160px; }
@@ -121,6 +126,12 @@
   <div class="panel s12" id="claimsPanel">
     <h2>00_CUP_CLAIMS <small id="claimsSub">runners claim on their phone → you tap ✓ after pouring</small></h2>
     <div class="claims" id="claims"><div class="empty" style="padding:8px">No one waiting.</div></div>
+  </div>
+
+  <!-- HEALTH BAR: runners request on their card; set a time here, it shows on their card -->
+  <div class="panel s12" id="hbPanel" style="display:none">
+    <h2>00_HEALTH_BAR_APPOINTMENTS <small id="hbSub"></small></h2>
+    <div class="claims" id="hbList"></div>
   </div>
 
   <div class="panel s12"><div class="kpis" id="kpis"></div></div>
@@ -377,7 +388,7 @@ function bars(el, counts) {
 }
 const countBy = f => LEADS.reduce((a, l) => { const k = f(l); if (k) a[k] = (a[k] || 0) + 1; return a; }, {});
 function renderIntel() {
-  bars('bPain', countBy(l => l.pain)); bars('bRegion', countBy(l => l.region)); bars('bFreq', countBy(l => l.frequency));
+  bars('bPain', LEADS.reduce((a, l) => { String(l.pain || '').split(', ').filter(Boolean).forEach(k => a[k] = (a[k] || 0) + 1); return a; }, {})); bars('bRegion', countBy(l => l.region)); bars('bFreq', countBy(l => l.frequency));
   bars('bContact', countBy(l => ({ WHATSAPP: 'WHATSAPP', EMAIL: 'EMAIL (OLD)', INSTAGRAM: 'INSTAGRAM', NONE: 'QR ONLY (iPAD)' })[l.contactMethod]));
   bars('bSource', countBy(l => SRC[l.source])); bars('bGoal', countBy(l => l.goal));
 }
@@ -560,12 +571,44 @@ async function approve(id) {
   catch (e) { alert('Could not log the cup: ' + e.message); }
   await pollClaims(); refresh();
 }
+/* ---------- Health Bar appointments ---------- */
+let HB = [];
+async function pollHB() {
+  if (!RECUP.session()) { $('hbPanel').style.display = 'none'; return; }
+  const fresh = await RECUP.loadHealthbar();
+  if (document.activeElement && /^hb-/.test(document.activeElement.id)) return; // don't wipe what staff are typing
+  HB = fresh; renderHB();
+}
+function localInput(iso) { if (!iso) return ''; const d = new Date(iso); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); }
+function renderHB() {
+  $('hbPanel').style.display = HB.length ? '' : 'none';
+  const req = HB.filter(b => b.status === 'REQUESTED').length;
+  $('hbSub').textContent = `${req} to book · ${HB.length - req} booked · set a time and it shows on the runner's card`;
+  $('hbList').innerHTML = HB.map(b => {
+    const l = LEADS.find(x => x.id === b.runner_id) || {};
+    const msg = l.phone ? `<a class="btn-t sm wa" href="https://wa.me/${l.phone}?text=${encodeURIComponent(`Hi ${(l.name || '').split(' ')[0]}, RECUP.STN here. Your Health Bar session: ${RECUP.slotText(b.slot) || '(time to confirm)'}${b.place ? ' at ' + b.place : ''}. See it on your card: ${RECUP.memberUrl(l)}`)}" target="_blank">WA</a>`
+      : l.instagram ? `<a class="btn-t sm ig" href="${RECUP.igDmUrl(l)}" target="_blank">IG DM</a>` : '';
+    return `<div class="hb-row ${b.status === 'BOOKED' ? 'booked' : ''}"><div><b style="text-transform:none">${esc((l.name || '').split(' ')[0] || b.code)}</b> <span class="muted">${esc(b.code)}</span><small>${b.status === 'BOOKED' ? '✓ BOOKED ' + esc(RECUP.slotText(b.slot)) : 'REQUESTED ' + new Date(b.created_at).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' })}</small></div>
+      <div style="text-transform:none"><small>Wants help with</small>${esc(b.goal || '—')}<small>Prefers: ${esc(b.preferred || '—')}</small></div>
+      <div><input id="hb-slot-${b.id}" type="datetime-local" value="${localInput(b.slot)}"><input id="hb-place-${b.id}" placeholder="Place (e.g. Health Bar, PHB Saujana)" value="${esc(b.place || '')}"></div>
+      <div class="btn-row"><button class="btn-t primary sm" onclick="bookHB('${b.id}')">${b.status === 'BOOKED' ? 'UPDATE' : 'BOOK'}</button>${msg}
+        ${b.status === 'BOOKED' ? `<button class="btn-t sm" onclick="setHB('${b.id}','DONE')">DONE</button>` : ''}<button class="btn-t sm" onclick="setHB('${b.id}','CANCELLED')">✗</button></div></div>`;
+  }).join('');
+}
+async function bookHB(id) {
+  const v = $('hb-slot-' + id).value; if (!v) return alert('Pick a date and time first.');
+  try { await RECUP.updateHealthbar(id, { status: 'BOOKED', slot: new Date(v).toISOString(), place: $('hb-place-' + id).value.trim() }); toast('Booked. It now shows on their card. Tap WA / IG DM to tell them.'); }
+  catch (e) { alert(e.message); }
+  document.activeElement && document.activeElement.blur(); pollHB();
+}
+async function setHB(id, status) { if (status === 'CANCELLED' && !confirm('Cancel this Health Bar appointment?')) return; try { await RECUP.updateHealthbar(id, { status }); } catch (e) { alert(e.message); } pollHB(); }
+
 async function reject(id) { if (!confirm('Remove this claim? (No cup is logged.)')) return; try { await RECUP.rejectClaim(id); } catch (e) { alert(e.message); } pollClaims(); }
 function demo() { RECUP.seedDemo(); refresh(); }
 function wipe() { if (confirm('Clear runners stored on THIS device? (The database is not touched)')) { RECUP.clearLocal(); refresh(); } }
 async function doLogin(e) {
   e.preventDefault(); $('lErr').textContent = ''; $('lBtn').textContent = '…';
-  try { await RECUP.login($('lEmail').value.trim(), $('lPass').value); $('lPass').value = ''; await refresh(); }
+  try { await RECUP.login($('lEmail').value.trim(), $('lPass').value); $('lPass').value = ''; await refresh(); pollClaims(); pollHB(); }
   catch (err) { $('lErr').textContent = err.message; }
   $('lBtn').textContent = 'LOGIN';
 }
@@ -595,7 +638,7 @@ $('nodeName').textContent = C.NODE_NAME;
 try { const q = qrcode(0, 'M'); q.addData(RECUP.siteUrl('intake-ig.html') + '?utm_content=qr'); q.make(); $('qr').innerHTML = q.createImgTag(3, 0); } catch {}
 $('qrHint').textContent = C.SITE_URL ? 'QR → The Diagnostic. Use in stories / flyers.' : 'Set SITE_URL so this QR works on phones.';
 tick(); setInterval(tick, 30000);
-refresh().then(pollClaims); setInterval(refresh, 30000); setInterval(pollClaims, 5000);
+refresh().then(() => { pollClaims(); pollHB(); }); setInterval(refresh, 30000); setInterval(pollClaims, 5000); setInterval(pollHB, 15000);
 </script>
 </body>
 </html>

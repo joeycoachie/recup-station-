@@ -176,3 +176,75 @@ revoke all on function claim_cup(text, text, jsonb) from public;
 revoke all on function cancel_claim(text) from public;
 revoke all on function get_member(text) from public;
 grant execute on function claim_cup(text, text, jsonb), cancel_claim(text), get_member(text) to anon, authenticated;
+
+-- ============================================================================
+-- 6. HEALTH BAR APPOINTMENTS (added 2026-10-03). Runner requests from their
+--    card; staff set the date/time in the God Terminal; the card shows it.
+-- ============================================================================
+create table if not exists healthbar_bookings (
+  id          uuid primary key default gen_random_uuid(),
+  runner_id   text not null references runners(id) on delete cascade,
+  code        text not null,
+  status      text not null default 'REQUESTED' check (status in ('REQUESTED', 'BOOKED', 'DONE', 'CANCELLED')),
+  goal        text not null default '',          -- what they want help with (runner)
+  preferred   text not null default '',          -- when suits them (runner)
+  slot        timestamptz,                       -- confirmed date/time (staff)
+  place       text not null default '',          -- where (staff)
+  staff_note  text not null default '',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create unique index if not exists healthbar_one_open on healthbar_bookings (runner_id) where status in ('REQUESTED', 'BOOKED');
+
+alter table healthbar_bookings enable row level security;
+drop policy if exists "staff all" on healthbar_bookings;
+create policy "staff all" on healthbar_bookings for all to authenticated
+  using (recup_is_staff()) with check (recup_is_staff());
+
+-- PUBLIC: request (or update the request) by member code
+create or replace function request_healthbar(p_code text, p_goal text default '', p_preferred text default '') returns json
+language plpgsql security definer set search_path = public as $$
+declare r runners%rowtype; b healthbar_bookings%rowtype;
+begin
+  select * into r from runners where code = upper(trim(p_code));
+  if r.id is null then raise exception 'Member code not found'; end if;
+  update healthbar_bookings set goal = left(coalesce(p_goal, ''), 200), preferred = left(coalesce(p_preferred, ''), 100), updated_at = now()
+    where runner_id = r.id and status = 'REQUESTED' returning * into b;
+  if b.id is null then
+    select * into b from healthbar_bookings where runner_id = r.id and status = 'BOOKED';
+    if b.id is null then
+      insert into healthbar_bookings (runner_id, code, goal, preferred)
+      values (r.id, r.code, left(coalesce(p_goal, ''), 200), left(coalesce(p_preferred, ''), 100)) returning * into b;
+    end if;
+  end if;
+  return json_build_object('status', b.status, 'slot', b.slot, 'place', b.place, 'goal', b.goal, 'preferred', b.preferred);
+end $$;
+
+-- PUBLIC: runner cancels their own open request / booking
+create or replace function cancel_healthbar(p_code text) returns void
+language sql security definer set search_path = public as $$
+  update healthbar_bookings set status = 'CANCELLED', updated_at = now()
+  where code = upper(trim(p_code)) and status in ('REQUESTED', 'BOOKED');
+$$;
+
+-- get_member: + latest cup claim (12 h) + open / most recent Health Bar booking
+create or replace function get_member(p_code text) returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'id', r.id, 'code', r.code, 'name', split_part(r.name, ' ', 1), 'protocol', r.protocol, 'grade', r.grade,
+    'squat', r.squat, 'archetype', r.archetype, 'status', r.status, 'cups', r.cups, 'history', r.history,
+    'source', r.source, 'ts', r.ts,
+    'claim', (select json_build_object('id', c.id, 'cup_no', c.cup_no, 'status', c.status, 'product', c.product, 'paid', c.paid)
+              from cup_claims c where c.runner_id = r.id and c.created_at > now() - interval '12 hours'
+              order by c.created_at desc limit 1),
+    'healthbar', (select json_build_object('status', b.status, 'slot', b.slot, 'place', b.place, 'goal', b.goal,
+                                           'preferred', b.preferred, 'note', b.staff_note)
+                  from healthbar_bookings b where b.runner_id = r.id and b.status <> 'CANCELLED'
+                  order by (b.status in ('REQUESTED', 'BOOKED')) desc, b.updated_at desc limit 1))
+  from runners r where r.code = upper(trim(p_code));
+$$;
+
+revoke all on function request_healthbar(text, text, text) from public;
+revoke all on function cancel_healthbar(text) from public;
+revoke all on function get_member(text) from public;
+grant execute on function request_healthbar(text, text, text), cancel_healthbar(text), get_member(text) to anon, authenticated;

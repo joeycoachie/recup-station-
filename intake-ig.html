@@ -27,6 +27,9 @@
   .areas h4:first-child { margin-top: 0; }
   .areas .grid2 { gap: 8px; }
   .areas .opt { padding: 12px 14px; font-size: 15px; margin: 0; }
+  .multi .opt.on { border-color: var(--accent); background: rgba(var(--accent-rgb), .08); }
+  .multi .opt.on::after { content: ' ✓'; color: var(--accent); font-weight: 700; }
+  .hintline { font-size: 13px; color: var(--muted); margin: -10px 0 12px; }
 </style>
 </head>
 <body>
@@ -63,13 +66,17 @@
       <button class="opt" onclick="pick('archetype','The Sprinter',3)"><strong>The Sprinter</strong><small>I want speed now. Often "cooked" after 5km.</small></button>
       <button class="opt" onclick="pick('archetype','The Tank',3)"><strong>The Tank</strong><small>I go far, but I get stiff.</small></button>
       <button class="opt" onclick="pick('archetype','The Office Body',3)"><strong>The Office Body</strong><small>I run to escape the desk.</small></button>
+      <button class="opt" onclick="pick('archetype','None',3)"><strong>None of these</strong><small>Skip, I'm still figuring it out.</small></button>
       <button class="back" onclick="go(1)">← BACK</button>
     </section>
 
     <section class="step" data-step="3">
       <div class="phase">03 / 07 · THE LEAK</div>
       <h3>What hurts most after a run?</h3>
-      <div class="grid2" id="painOpts"></div>
+      <p class="hintline">Pick all that apply.</p>
+      <div class="grid2 multi" id="painOpts"></div>
+      <div class="err" id="painErr"></div>
+      <button class="btn" onclick="painNext()">NEXT</button>
       <button class="back" onclick="go(2)">← BACK</button>
     </section>
 
@@ -136,7 +143,21 @@
   function go(n) { document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', +s.dataset.step === n)); $('bar').style.width = (n / TOTAL * 100) + '%'; window.scrollTo(0, 0); }
   function pick(k, v, next) { answers[k] = v; go(next); }
   function opts(el, list, key, next) { $(el).innerHTML = list.filter(v => v !== 'Other').map(v => `<button class="opt" onclick="pick('${key}','${v.replace(/'/g, "\\'")}',${next})">${v}</button>`).join(''); }
-  opts('painOpts', C.PAINS, 'pain', 4); opts('freqOpts', C.FREQUENCY, 'frequency', 5); areaOpts('regionOpts', 'pickRegion');
+  painMulti('painOpts'); opts('freqOpts', C.FREQUENCY, 'frequency', 5); areaOpts('regionOpts', 'pickRegion');
+  // Pain: multi-select. "Nothing" clears the others and vice versa.
+  const NOTHING = C.PAINS.find(p => /^nothing/i.test(p));
+  let pains = [];
+  function painMulti(el) {
+    $(el).innerHTML = C.PAINS.filter(v => v !== 'Other').map(v => `<button class="opt" data-v="${v}" onclick="togglePain(this)">${v}</button>`).join('');
+  }
+  function togglePain(b) {
+    const v = b.dataset.v;
+    if (v === NOTHING) pains = pains.includes(v) ? [] : [v];
+    else pains = pains.includes(v) ? pains.filter(x => x !== v) : pains.filter(x => x !== NOTHING).concat(v);
+    document.querySelectorAll('#painOpts .opt').forEach(x => x.classList.toggle('on', pains.includes(x.dataset.v)));
+    $('painErr').textContent = '';
+  }
+  function painNext() { if (!pains.length) return $('painErr').textContent = 'Pick at least one (or "Nothing").'; pick('pain', pains.join(', '), 4); }
   function pickRegion(v) { pick('region', v, 6); }
   // Areas grouped by zone (RECUP_CONFIG.AREAS) + Other
   function areaOpts(el, onPick) {
@@ -164,7 +185,7 @@
     const lead = await RECUP.submitLead({ source: 'DIAGNOSTIC_ONLINE', name, contact: v, campaign, ...answers });
     const p = C.PROTOCOLS[lead.protocol];
     $('rGrade').textContent = lead.grade; $('rLabel').textContent = lead.gradeLabel; $('rCode').textContent = lead.code;
-    $('rBox').innerHTML = `<b>Runner:</b> ${name.replace(/[<>&]/g, '')} · ${lead.archetype}<br><b>Leak:</b> ${answers.pain}<br><b>Reserved:</b> <span class="accent">${p.name}</span> — ${p.tag}`;
+    $('rBox').innerHTML = `<b>Runner:</b> ${name.replace(/[<>&]/g, '')}${lead.archetype && lead.archetype !== 'NONE' ? ' · ' + lead.archetype : ''}<br><b>Leak:</b> ${answers.pain}<br><b>Reserved:</b> <span class="accent">${p.name}</span> — ${p.tag}`;
     let links = `<a class="btn story" href="${storyLink(lead)}">SHARE MY GRADE TO MY STORY</a><a class="btn" href="${RECUP.manualUrl(lead)}">OPEN MY REPAIR MANUAL</a><a class="btn ghost" href="${RECUP.memberUrl(lead)}">MY ASCENSION CARD</a>`;
     if (C.BUSINESS_WA) links += `<a class="btn wa" href="${RECUP.selfWaLink(lead)}">SAVE IT TO MY WHATSAPP</a>`;
     $('links').innerHTML = links;

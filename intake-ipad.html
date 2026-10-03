@@ -57,6 +57,9 @@
   .areas h4:first-child { margin-top: 0; }
   .areas .grid2 { gap: 8px; }
   .areas .opt { padding: 12px 14px; font-size: 15px; margin: 0; }
+  .multi .opt.on { border-color: var(--accent); background: rgba(var(--accent-rgb), .08); }
+  .multi .opt.on::after { content: ' ✓'; color: var(--accent); font-weight: 700; }
+  .hintline { font-size: 13px; color: var(--muted); margin: -10px 0 12px; }
 </style>
 </head>
 <body>
@@ -119,9 +122,11 @@
   <section class="step" id="s-c4">
     <div class="phase">04 / 05 · THE LEAK</div>
     <h3>What hurts most after a run?</h3>
-    <div class="grid2" id="painOpts"></div>
+    <p class="hintline">Pick all that apply.</p>
+    <div class="grid2 multi" id="painOpts"></div>
     <input class="field" id="painOther" placeholder="Tell us (optional)" style="display:none;margin-top:12px">
-    <button class="btn" id="painOtherBtn" style="display:none" onclick="setPain(document.getElementById('painOther').value||'Other')">NEXT</button>
+    <div class="err" id="painErr"></div>
+    <button class="btn" id="painOtherBtn" onclick="painNext()">NEXT</button>
     <button class="back" onclick="show('s-c3',3)">← BACK</button>
   </section>
 
@@ -210,18 +215,29 @@
   }
   areaOpts('regionOpts', 'setRegion');
   opts('freqOpts', C.FREQUENCY, 'setFreq');
-  opts('painOpts', C.PAINS, 'pickPain');
+  const NOTHING = C.PAINS.find(p => /^nothing/i.test(p));
+  let pains = [];
+  $('painOpts').innerHTML = C.PAINS.map(v => `<button class="opt" data-v="${esc(v)}" onclick="pickPain(this)">${esc(v)}</button>`).join('');
 
   /* ---------- check-in ---------- */
   function startCheckin() { form = {}; show('s-c1', 1); setTimeout(() => $('name').focus(), 100); }
   function c1() { const n = $('name').value.trim(); if (!n) { $('e1').textContent = 'Just a first name is fine.'; return; } $('e1').textContent = ''; form.name = n; show('s-c2', 2); }
   function setRegion(v) { form.region = v; show('s-c3', 3); }
   function setFreq(v) { form.frequency = v; show('s-c4', 4); }
-  function pickPain(v) {
-    if (v === 'Other') { $('painOther').style.display = 'block'; $('painOtherBtn').style.display = 'block'; $('painOther').focus(); return; }
-    setPain(v);
+  function pickPain(b) {
+    const v = b.dataset.v;
+    if (v === NOTHING) pains = pains.includes(v) ? [] : [v];
+    else pains = pains.includes(v) ? pains.filter(x => x !== v) : pains.filter(x => x !== NOTHING).concat(v);
+    document.querySelectorAll('#painOpts .opt').forEach(x => x.classList.toggle('on', pains.includes(x.dataset.v)));
+    $('painOther').style.display = pains.includes('Other') ? 'block' : 'none';
+    $('painErr').textContent = '';
   }
-  function setPain(v) { form.pain = v; $('painOther').style.display = 'none'; $('painOtherBtn').style.display = 'none'; show('s-c5', 5); $('contactBox').style.display = 'none'; }
+  function painNext() {
+    if (!pains.length) return $('painErr').textContent = 'Pick at least one (or "Nothing").';
+    const other = $('painOther').value.trim();
+    setPain(pains.map(p => p === 'Other' && other ? other : p).join(', '));
+  }
+  function setPain(v) { form.pain = v; pains = []; document.querySelectorAll('#painOpts .opt').forEach(x => x.classList.remove('on')); $('painOther').style.display = 'none'; show('s-c5', 5); $('contactBox').style.display = 'none'; }
   function setContact(m) {
     form.contactMethod = m;
     if (m === 'NONE') { form.contact = ''; submitCheckin(); return; }

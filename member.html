@@ -56,6 +56,14 @@
   .won { text-align: center; background: rgba(var(--success-rgb), .08); border-color: var(--success); }
   .won b { display: block; font-size: 20px; margin-top: 6px; color: var(--success); }
   .linkbtn { background: none; border: none; color: var(--muted); font: 13px var(--sans); text-decoration: underline; cursor: pointer; padding: 8px; }
+  .hb { background: var(--text); color: #fff; border: none; }
+  .hb h2 { color: #fff; } .hb .sub { color: #B8B4A6; }
+  .hb .btn { background: #fff; color: var(--text); }
+  .hb .field { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); color: #fff; }
+  .hb .linkbtn { color: #B8B4A6; }
+  .hb .slot { font: 800 24px var(--mono); color: #fff; margin: 6px 0 2px; }
+  .hb .tag { display: inline-block; font: 700 10px var(--mono); letter-spacing: 1px; padding: 3px 8px; border-radius: 999px; background: var(--warn); color: #fff; margin-bottom: 8px; }
+  .hb .tag.ok { background: var(--success); }
   .homehint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.55; margin: -6px 0 18px; }
 </style>
 </head>
@@ -76,6 +84,9 @@
   <!-- CLAIM THE NEXT CUP (runner) → staff tap ✓ at the table -->
   <div class="card claim" id="claimCard" style="display:none"></div>
   <p class="homehint" id="homeHint" style="display:none">📌 Keep this card: tap <b>Share → Add to Home Screen</b> so it's one tap away next Saturday.</p>
+
+  <!-- HEALTH BAR APPOINTMENT -->
+  <div class="card hb" id="hbCard" style="display:none"></div>
 
   <div class="card" id="findCard" style="display:none">
     <h2>FIND MY CARD</h2>
@@ -120,7 +131,7 @@
     $('mNext').textContent = next ? `${cups} cup${cups === 1 ? '' : 's'} logged. Next: ${next.name} → ${next.reward}` : 'You hold the Milestone: 25% off every cup.';
     $('manualBtn').href = RECUP.manualUrl(l);
     if (l.grade) { $('storyBtn').href = RECUP.storyUrl(l); $('storyBtn').style.display = 'block'; }
-    me = l; renderClaim();
+    me = l; renderClaim(); renderHB();
     $('homeHint').style.display = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'none' : 'block';
   }
 
@@ -175,6 +186,45 @@
   }
   async function cancel() { try { await RECUP.cancelClaim(me.code); } catch {} me.claim = null; renderClaim(); }
   function dismissWon(id) { seenApproved = id; RECUP.store.set('recup_seen_claim', id); renderClaim(); }
+  /* ---------- Health Bar appointment ---------- */
+  let hbForm = false;
+  function renderHB() {
+    const box = $('hbCard'), b = me.healthbar; box.style.display = 'block';
+    if (b && b.status === 'BOOKED') {
+      box.innerHTML = `<span class="tag ok">BOOKED</span><h2>YOUR HEALTH BAR APPOINTMENT</h2>
+        <div class="slot">${esc(RECUP.slotText(b.slot) || 'Time to be confirmed')}</div>
+        <p class="sub" style="margin:0">${esc(b.place || 'Health Bar')}${b.note ? ' · ' + esc(b.note) : ''}</p>
+        ${b.goal ? `<p class="sub" style="margin:8px 0 0">Focus: ${esc(b.goal)}</p>` : ''}
+        <button class="linkbtn" onclick="cancelHB()">Can't make it? Cancel</button>`;
+      return;
+    }
+    if (b && b.status === 'REQUESTED' && !hbForm) {
+      box.innerHTML = `<span class="tag">REQUESTED</span><h2>HEALTH BAR SESSION</h2>
+        <p class="sub" style="margin:4px 0 0">We've got your request${b.preferred ? ` (${esc(b.preferred)})` : ''}. We'll message you to confirm a time, and it will appear right here.</p>
+        <button class="linkbtn" onclick="hbForm=true;renderHB()">Edit</button><button class="linkbtn" onclick="cancelHB()">Cancel</button>`;
+      return;
+    }
+    if (!hbForm) {
+      box.innerHTML = `<h2>WANT A PLAN BUILT AROUND YOUR BODY?</h2>
+        <p class="sub">One-on-one nutrition and performance planning at Health Bar, our running nutrition cafe.</p>
+        <button class="btn" onclick="hbForm=true;renderHB()">BOOK A HEALTH BAR SESSION</button>${b && b.status === 'DONE' ? '<p class="sub" style="margin:10px 0 0">Last session done ✓</p>' : ''}`;
+      return;
+    }
+    const cur = b && b.status === 'REQUESTED' ? b : {};
+    box.innerHTML = `<h2>BOOK A HEALTH BAR SESSION</h2>
+      <p class="sub">Tell us what you want help with and when suits you. We'll confirm a time.</p>
+      <input class="field" id="hbGoal" placeholder="What do you want help with? (e.g. knee pain, first half marathon)" value="${esc(cur.goal || '')}">
+      <input class="field" id="hbPref" placeholder="When suits you? (e.g. Sat after the run, weekday evenings)" value="${esc(cur.preferred || '')}">
+      <div class="err" id="hbErr"></div>
+      <button class="btn" id="hbBtn" onclick="submitHB()">REQUEST MY SESSION</button><button class="linkbtn" onclick="hbForm=false;renderHB()">Not now</button>`;
+  }
+  async function submitHB() {
+    $('hbBtn').disabled = true; $('hbBtn').textContent = 'SENDING…';
+    try { me.healthbar = await RECUP.requestHealthbar(me.code, $('hbGoal').value.trim(), $('hbPref').value.trim()); hbForm = false; renderHB(); }
+    catch (e) { $('hbErr').textContent = 'Could not send: ' + e.message; $('hbBtn').disabled = false; $('hbBtn').textContent = 'TRY AGAIN'; }
+  }
+  async function cancelHB() { if (!confirm('Cancel your Health Bar session?')) return; try { await RECUP.cancelHealthbar(me.code); } catch {} me.healthbar = null; renderHB(); }
+
   async function refreshMe() {
     const l = await RECUP.getByCode(me.code);
     if (l && (!l.claim || l.claim.status !== 'PENDING' || +l.cups !== +me.cups)) render(l);
