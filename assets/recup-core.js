@@ -34,7 +34,7 @@ const RECUP_CONFIG = {
   PROTOCOLS: {
     FLUSH: { code: 'FLUSH', name: 'THE FLUSH',  phase: 'CHECK-IN', tag: 'Check-in cup · hydrate & reset', price: null },
     N01:   { code: 'NODE_01', name: 'THE FLOW', phase: 'DURING-RUN', tag: 'Electrolyte balance + structural glue', price: 18 },
-    N02:   { code: 'NODE_02', name: 'THE BUILD', phase: 'POST-RUN', tag: 'Protein + collagen · the metabolic window', price: 28 },
+    N02:   { code: 'NODE_02', name: 'THE BUILD', phase: 'POST-RUN', tag: 'Protein + collagen · the metabolic window', price: 10 },   // 3 cups per blend
   },
 
   // Add-ons & take-home (poster + manual). Nitric Prime is NOT launched yet — shown as locked (Cup 2 reward).

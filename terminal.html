@@ -179,41 +179,18 @@
     </div>
   </div>
 
-  <!-- 04 FINANCIALS: built from the Final Mixing Protocols -->
+  <!-- 04 FINANCIALS + SMART RECIPE CALCULATOR -->
   <div class="panel s6">
-    <h2>04_DYNAMIC_FINANCIALS <small>final mixing protocols · edit any cyan field (your cost after discount)</small></h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="protocol-card">
-        <b>THE FLOW · 8OZ MOBILITY</b>
-        <div class="muted" style="font-size:10px;text-transform:none;margin:4px 0 8px">Jug = 2.5 Niteworks + 10 Collagen + 10 Electrolyte in 1000ml → 10 × 100ml + ice</div>
-        <div class="metric-row"><span>NITEWORKS / SCOOP</span><input class="calc-input f2" id="c_nite" value="0.00"></div>
-        <div class="metric-row"><span>COLLAGEN / SCOOP</span><input class="calc-input f2" id="c_col" value="4.00"></div>
-        <div class="metric-row"><span>ELECTROLYTE / SCOOP</span><input class="calc-input f2" id="c_ele" value="2.00"></div>
-        <div class="metric-row"><span>JUG COST (10 CUPS)</span><span id="a_jug" class="hl"></span></div>
-        <div class="metric-row"><span>RETAIL</span><input class="calc-input f2" id="a_price" value="18.00"></div>
-        <div class="metric-row"><span>COST / CUP</span><span id="a_cost" class="hl"></span></div>
-        <div class="metric-row"><span>MARGIN / CUP</span><span id="a_margin" class="hl"></span></div>
-      </div>
-      <div class="protocol-card">
-        <b>THE BUILD · 8OZ DENSITY</b>
-        <div class="muted" style="font-size:10px;text-transform:none;margin:4px 0 8px">Batch = 4 RS Pro + PB/Caramel in 400ml → 2 × ~200ml, 3 ice cubes</div>
-        <div class="metric-row"><span>RS PRO / SCOOP (LIST)</span><input class="calc-input f2" id="c_rs" value="7.38"></div>
-        <div class="metric-row"><span>YOUR DISCOUNT % (RS)</span><input class="calc-input f2" id="c_rsdisc" value="50"></div>
-        <div class="metric-row"><span>PB / CARAMEL / BATCH</span><input class="calc-input f2" id="c_pb" value="1.50"></div>
-        <div class="metric-row"><span>BATCH COST (2 CUPS)</span><span id="b_batch" class="hl"></span></div>
-        <div class="metric-row"><span>RETAIL</span><input class="calc-input f2" id="b_price" value="28.00"></div>
-        <div class="metric-row"><span>COST / CUP</span><span id="b_cost" class="hl"></span></div>
-        <div class="metric-row"><span>MARGIN / CUP</span><span id="b_margin" class="hl"></span></div>
-      </div>
-    </div>
-    <h3>PER CUP + PER SATURDAY</h3>
+    <h2>04_RECIPE_&amp;_MARGIN_CALCULATOR <small>edit any cyan field · costs = what you pay after discount</small></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="recipes"></div>
+    <h3>SHARED COSTS</h3>
     <div class="metric-row"><span>8OZ CUPS: PACK PRICE / PACK SIZE</span><span><input class="calc-input f2" id="c_cupPack" value="59.60"> / <input class="calc-input f2" id="c_cupQty" value="48"></span></div>
     <div class="metric-row"><span>ICE / CUP</span><input class="calc-input f2" id="c_ice" value="0.00"></div>
     <div class="metric-row"><span>2 BIG MINERAL WATERS (FREE FOR RUNNERS)</span><input class="calc-input f2" id="o_water" value="0.00"></div>
     <div class="metric-row"><span>SAMPLING CUPS</span><input class="calc-input f2" id="o_sample" value="0.00"></div>
     <div class="metric-row"><span>OTHER (E.G. EXTRA PEANUT BUTTER)</span><input class="calc-input f2" id="o_other" value="0.00"></div>
-    <h3>PROJECTION · NODE_001_SAUJANA</h3>
-    <div class="metric-row"><span>CUPS THIS SATURDAY: FLOW / BUILD</span><span><input class="calc-input f2" id="pFlow" value="10"> / <input class="calc-input f2" id="pBuild" value="0"></span></div>
+    <h3>THIS SATURDAY · NODE_001_SAUJANA</h3>
+    <div class="metric-row"><span>CUPS: FLOW / BUILD</span><span><input class="calc-input f2" id="sFlow" value="10"> / <input class="calc-input f2" id="sBuild" value="3"></span></div>
     <div class="metric-row"><span>SATURDAYS / MONTH · NODES</span><span><input class="calc-input f2" id="sats" value="4"> · <input class="calc-input f2" id="nodes" value="1"></span></div>
     <div id="proj"></div>
   </div>
@@ -406,32 +383,64 @@ function renderIntel() {
 }
 
 const v = id => parseFloat($(id).value) || 0;
-// Cups planned for this Saturday (cyan inputs) = the stock the UNITS LEFT counter uses
-function stockUnits() { const n = v('pFlow') + v('pBuild'); return n || C.STOCK_UNITS; }
+// ---------- Smart recipe calculator ----------
+// One batch = some scoops of each ingredient in some ml of water, poured into N cups.
+// Everything cyan is editable; it works out ml + scoops per cup, cost, margin and the prep list.
+const OZ = 29.57;
+const RECIPES = [
+  { k: 'a', name: 'THE FLOW', sub: '8OZ MOBILITY · JUG', water: 1000, cups: 10, oz: 8, price: 18, iceNote: 'fill the rest of the cup with ice',
+    ing: [['nite', 'Niteworks', 2.5, 0], ['col', 'Collagen', 10, 4], ['ele', 'Electrolyte', 10, 2]] },
+  { k: 'b', name: 'THE BUILD', sub: '8OZ DENSITY · BLENDER', water: 400, cups: 3, oz: 8, price: 10, iceNote: 'only 3 ice cubes',
+    ing: [['rs', 'RS Pro', 4, 3.69], ['pb', 'PB / Caramel (per batch)', 1, 1.5]] },
+];
+const RV = (r, f) => v(`r${r.k}_${f}`);
+(function buildRecipes() {
+  const inp = (id, val, w = 56) => `<input class="calc-input f2" style="width:${w}px" id="${id}" value="${val}">`;
+  $('recipes').innerHTML = RECIPES.map(r => `<div class="protocol-card">
+    <b>${r.name}</b> <span class="muted" style="font-size:10px">${r.sub}</span>
+    <div class="muted" style="font-size:10px;margin:8px 0 4px">ONE BATCH · SCOOPS × YOUR COST PER SCOOP</div>
+    ${r.ing.map(([id, n, sc, cost]) => `<div class="metric-row"><span style="text-transform:none">${n}</span><span>${inp(`r${r.k}_s_${id}`, sc, 44)} × RM ${inp(`r${r.k}_c_${id}`, cost.toFixed(2))}</span></div>`).join('')}
+    <div class="metric-row"><span>WATER (ML) → CUPS</span><span>${inp(`r${r.k}_water`, r.water)} → ${inp(`r${r.k}_cups`, r.cups, 40)}</span></div>
+    <div class="metric-row"><span>CUP SIZE (OZ) · RETAIL RM</span><span>${inp(`r${r.k}_oz`, r.oz, 40)} · ${inp(`r${r.k}_price`, r.price.toFixed(2))}</span></div>
+    <div class="arc-box" style="margin-top:8px" id="r${r.k}_out"></div></div>`).join('');
+})();
+function recipe(r) {
+  const cups = Math.max(1, RV(r, 'cups')), water = RV(r, 'water'), cupMl = RV(r, 'oz') * OZ;
+  const batch = r.ing.reduce((t, [id]) => t + RV(r, 's_' + id) * RV(r, 'c_' + id), 0);
+  const cup = v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0;
+  const cost = batch / cups + cup + v('c_ice'), price = RV(r, 'price');
+  return { cups, water, cupMl, batch, cost, price, margin: price - cost, pourMl: water / cups };
+}
+function stockUnits() { const n = v('sFlow') + v('sBuild'); return n || C.STOCK_UNITS; }
 function calc() {
-  const cup = v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0, ice = v('c_ice');
-  const jug = 2.5 * v('c_nite') + 10 * v('c_col') + 10 * v('c_ele');
-  const aCost = jug / 10 + cup + ice, aMargin = v('a_price') - aCost;
-  const batch = 4 * v('c_rs') * (1 - v('c_rsdisc') / 100) + v('c_pb');
-  const bCost = batch / 2 + cup + ice, bMargin = v('b_price') - bCost;
-  $('a_jug').textContent = rm(jug); $('b_batch').textContent = rm(batch);
-  $('a_cost').textContent = rm(aCost); $('a_margin').textContent = rm(aMargin); $('b_cost').textContent = rm(bCost); $('b_margin').textContent = rm(bMargin);
-  const A = v('pFlow'), B = v('pBuild'), jugs = Math.ceil(A / 10), batches = Math.ceil(B / 2);
+  const R = {};
+  RECIPES.forEach(r => {
+    const x = R[r.k] = recipe(r);
+    const per = r.ing.map(([id, n]) => `${(RV(r, 's_' + id) / x.cups).toFixed(2).replace(/\.?0+$/, '')} ${n.replace(/ \(per batch\)/, '')}`).join(' · ');
+    $(`r${r.k}_out`).innerHTML = `<b>POUR ${Math.round(x.pourMl)} ML</b> into each ${RV(r, 'oz')}oz (${Math.round(x.cupMl)} ml) cup, ${r.iceNote}.<br>
+      Per cup: ${per}${x.pourMl > x.cupMl ? ' <span class="bad">· more liquid than the cup holds</span>' : ''}<br>
+      Batch ${rm(x.batch)} · <b>cost ${rm(x.cost)}/cup</b> · retail ${rm(x.price)} · <span class="hl">margin ${rm(x.margin)} (${x.price ? Math.round(x.margin / x.price * 100) : 0}%)</span>`;
+  });
+  const A = v('sFlow'), B = v('sBuild'), fa = R.a, fb = R.b;
+  const jugs = Math.ceil(A / fa.cups), blends = Math.ceil(B / fb.cups);
   const over = v('o_water') + v('o_sample') + v('o_other');
-  const rev = A * v('a_price') + B * v('b_price');
-  const cost = jugs * jug + batches * batch + (A + B) * (cup + ice) + over;   // you pay for whole jugs / batches
+  const rev = A * fa.price + B * fb.price;
+  const cupIce = (v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0) + v('c_ice');
+  const cost = jugs * fa.batch + blends * fb.batch + (A + B) * cupIce + over;   // you pay for whole jugs / blends
   const profit = rev - cost, month = profit * v('sats');
-  const missing = ['c_nite', 'c_ice', 'o_water', 'o_sample'].filter(id => !v(id)).map(id => ({ c_nite: 'Niteworks', c_ice: 'ice', o_water: 'mineral water', o_sample: 'sampling cups' })[id]);
+  const shop = r => r.ing.map(([id, n]) => `${+(RV(r, 's_' + id) * (r.k === 'a' ? jugs : blends)).toFixed(2)} ${n.replace(/ \(per batch\)/, ' (batches)')}`).join(' · ');
+  const left = (r, n, x) => n % x.cups ? ` <span class="warn">(${x.cups - n % x.cups} spare cup${x.cups - n % x.cups > 1 ? 's' : ''} in the last ${r.k === 'a' ? 'jug' : 'blend'})</span>` : '';
+  const missing = [['ra_c_nite', 'Niteworks'], ['c_ice', 'ice'], ['o_water', 'mineral water'], ['o_sample', 'sampling cups']].filter(([id]) => !v(id)).map(([, n]) => n);
   $('proj').innerHTML = `
-    <div class="metric-row"><span>PREP: ${jugs} FLOW JUG${jugs === 1 ? '' : 'S'} · ${batches} BUILD BATCH${batches === 1 ? '' : 'ES'}</span><span class="muted" style="text-transform:none">${(2.5 * jugs).toFixed(1)} Niteworks · ${10 * jugs} Collagen · ${10 * jugs} Electrolyte · ${4 * batches} RS Pro scoops</span></div>
+    <div class="metric-row"><span>PREP: ${jugs} FLOW JUG${jugs === 1 ? '' : 'S'}${left(RECIPES[0], A, fa)}</span><span class="muted" style="text-transform:none">${shop(RECIPES[0])} · ${jugs * fa.water} ml water</span></div>
+    <div class="metric-row"><span>PREP: ${blends} BUILD BLEND${blends === 1 ? '' : 'S'}${left(RECIPES[1], B, fb)}</span><span class="muted" style="text-transform:none">${shop(RECIPES[1])} · ${blends * fb.water} ml water</span></div>
     <div class="metric-row"><span>CUPS USED</span><span>${A + B} of ${v('c_cupQty')} in a pack${A + B > v('c_cupQty') ? ' <span class="bad">· buy another pack</span>' : ''}</span></div>
-    <div class="metric-row"><span>POTENTIAL REVENUE / SATURDAY</span><span class="accent">${rm(rev)}</span></div>
+    <div class="metric-row"><span>REVENUE / SATURDAY (FULL PRICE)</span><span class="accent">${rm(rev)}</span></div>
     <div class="metric-row"><span>TOTAL COST / SATURDAY (INCL. FREEBIES)</span><span>${rm(cost)}</span></div>
     <div class="metric-row"><span>NET PROFIT / SATURDAY</span><span class="hl">${rm(profit)}</span></div>
     <div class="metric-row"><span>NET / MONTH (${v('sats')} SATS × ${v('nodes')} NODE)</span><span class="hl">${rm(month * v('nodes'))}</span></div>
-    <div class="metric-row"><span>GOAL: 10 NODES</span><span class="accent">${rm(month * 10)} / MONTH</span></div>
-    <div class="muted" style="font-size:10px;text-transform:none">Potential = full retail; the Ascension discounts lower real revenue (see REVENUE (REAL)). ${missing.length ? `<span class="warn">Still RM 0: ${missing.join(', ')}. Type your cost in to make this accurate.</span>` : ''}</div>`;
-  window.__fin = { aCost, aMargin, bCost, bMargin, rev, profit, month };
+    <div class="muted" style="font-size:10px;text-transform:none">Retail here is for this calculator only; the price runners pay at the booth comes from PROTOCOLS in assets/recup-core.js (Flow RM ${C.PROTOCOLS.N01.price} · Build RM ${C.PROTOCOLS.N02.price}). Ascension discounts lower real revenue. ${missing.length ? `<span class="warn">Still RM 0: ${missing.join(', ')}.</span>` : ''}</div>`;
+  window.__fin = { aCost: fa.cost, aMargin: fa.margin, bCost: fb.cost, bMargin: fb.margin, rev, profit, month };
   document.querySelectorAll('.f2').forEach(el => settings.inputs[el.id] = el.value);
   settings.inputs.headcount = $('headcount').value; saveSettings();
 }
@@ -525,8 +534,8 @@ Repair Manual sent: ${s.sent} · waiting: ${s.pdfTodo} · shared contact ${pct(s
 Real revenue: ${rm(s.revenue)}
 
 ## UNIT ECONOMICS
-THE FLOW RM${v('a_price')} · cost ${rm(f.aCost || 0)} · margin ${rm(f.aMargin || 0)}
-THE BUILD RM${v('b_price')} · cost ${rm(f.bCost || 0)} · margin ${rm(f.bMargin || 0)}`;
+THE FLOW RM${RV(RECIPES[0], 'price')} · cost ${rm(f.aCost || 0)} · margin ${rm(f.aMargin || 0)}
+THE BUILD RM${RV(RECIPES[1], 'price')} · cost ${rm(f.bCost || 0)} · margin ${rm(f.bMargin || 0)}`;
 }
 
 /* ---------- pour modal ---------- */
