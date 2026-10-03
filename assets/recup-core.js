@@ -26,7 +26,7 @@ const RECUP_CONFIG = {
 
   LAUNCH_DATE: '2026-10-03T07:00:00+08:00',   // edit to your real open day
   NODE_NAME: 'NODE_001 · PHB SAUJANA',
-  STOCK_UNITS: 55,
+  STOCK_UNITS: 10,                             // fallback only: the terminal uses CUPS THIS SATURDAY (panel 04)
   DISCOUNT_CODE: 'RECUP10',                    // placeholder – change to your real code
   WHATSAPP_FOLLOWUP_TARGET: 20,
 
@@ -85,6 +85,13 @@ RECUP_CONFIG.HEALTHBAR = {
   PITCH: 'One-on-one nutrition and performance planning at HealthBar, our running nutrition cafe.',
   CONCERNS: ['Energy', 'Sleep', 'Skin', 'Gut / Toilet', 'Mood & Mental health', 'Biomarkers (BP, cholesterol, blood sugar)',
              'Thyroid', 'Hormones', 'Fertility', 'PCOS', 'Acid reflux'],
+};
+
+// S-RANK = Zero Energy Leaks. Chassis (passes the squat) + Engine (HealthBar session done).
+RECUP_CONFIG.SRANK = {
+  LINE: 'Zero Energy Leaks. The Calibrated Athlete.',
+  CHASSIS: ['The Chassis', 'Pass the movement: your joints are glued.', 'Ask for a re-test at the Recup table.'],
+  ENGINE: ['The Engine', 'Calibrate your inside dashboard at HealthBar.', 'Book your HealthBar session to unlock S-Rank.'],
 };
 
 // ABOUT (side menu on the runner's card). DRAFT copy: edit freely.
@@ -168,8 +175,8 @@ const RECUP = (() => {
   }
 
   /* database rows (snake_case) <-> lead objects (camelCase, as every page uses them) */
-  const COLS = { contactMethod: 'contact_method', painFocus: 'pain_focus', manualSent: 'manual_sent', updatedAt: 'updated_at' };
-  const LOCAL_ONLY = ['gradeLabel'];
+  const COLS = { chassisOk: 'chassis_ok', contactMethod: 'contact_method', painFocus: 'pain_focus', manualSent: 'manual_sent', updatedAt: 'updated_at' };
+  const LOCAL_ONLY = ['gradeLabel', 'engineOk'];
   function toRow(o) {
     const r = {};
     for (const [k, v] of Object.entries(o)) if (!LOCAL_ONLY.includes(k)) r[COLS[k] || k] = k === 'history' ? safeJSON(v, []) : v;
@@ -292,7 +299,10 @@ const RECUP = (() => {
     let remote = [], remoteOk = false, error = '';
     const token = await staffToken();
     if (token) {
-      try { remote = (await rest('runners?select=*&order=ts.desc&limit=5000', { token })).map(fromRow); remoteOk = true; }
+      try {
+        remote = (await rest('runners?select=*&order=ts.desc&limit=5000', { token })).map(fromRow); remoteOk = true;
+        try { const eng = new Set((await rest('runner_engine?select=runner_id&engine_ok=eq.true', { token })).map(e => e.runner_id)); remote.forEach(l => l.engineOk = eng.has(l.id)); } catch {}
+      }
       catch (e) { error = e.message; }
     }
     const leads = mergeById([remote, local]).filter(l => l.ts).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));

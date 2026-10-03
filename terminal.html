@@ -179,34 +179,42 @@
     </div>
   </div>
 
-  <!-- 04 FINANCIALS -->
+  <!-- 04 FINANCIALS: built from the Final Mixing Protocols -->
   <div class="panel s6">
-    <h2>04_DYNAMIC_FINANCIALS <small>55 units · edit any cyan field</small></h2>
+    <h2>04_DYNAMIC_FINANCIALS <small>final mixing protocols · edit any cyan field (your cost after discount)</small></h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="protocol-card">
-        <b>THE FLOW · DURING-RUN</b>
-        <div class="metric-row" style="margin-top:8px"><span>CR7 (1 SCOOP)</span><input class="calc-input f" id="a_cr7" value="2.00"></div>
-        <div class="metric-row"><span>COLLAGEN (1 SCOOP)</span><input class="calc-input f" id="a_col" value="4.00"></div>
-        <div class="metric-row"><span>BOTTLE + ICE</span><input class="calc-input f" id="a_btl" value="1.00"></div>
-        <div class="metric-row"><span>RETAIL</span><input class="calc-input f" id="a_price" value="18.00"></div>
-        <div class="metric-row"><span>UNIT COST</span><span id="a_cost" class="hl"></span></div>
-        <div class="metric-row"><span>MARGIN / UNIT</span><span id="a_margin" class="hl"></span></div>
+        <b>THE FLOW · 8OZ MOBILITY</b>
+        <div class="muted" style="font-size:10px;text-transform:none;margin:4px 0 8px">Jug = 2.5 Niteworks + 10 Collagen + 10 Electrolyte in 1000ml → 10 × 100ml + ice</div>
+        <div class="metric-row"><span>NITEWORKS / SCOOP</span><input class="calc-input f2" id="c_nite" value="0.00"></div>
+        <div class="metric-row"><span>COLLAGEN / SCOOP</span><input class="calc-input f2" id="c_col" value="4.00"></div>
+        <div class="metric-row"><span>ELECTROLYTE / SCOOP</span><input class="calc-input f2" id="c_ele" value="2.00"></div>
+        <div class="metric-row"><span>JUG COST (10 CUPS)</span><span id="a_jug" class="hl"></span></div>
+        <div class="metric-row"><span>RETAIL</span><input class="calc-input f2" id="a_price" value="18.00"></div>
+        <div class="metric-row"><span>COST / CUP</span><span id="a_cost" class="hl"></span></div>
+        <div class="metric-row"><span>MARGIN / CUP</span><span id="a_margin" class="hl"></span></div>
       </div>
       <div class="protocol-card">
-        <b>THE BUILD · POST-RUN</b>
-        <div class="metric-row" style="margin-top:8px"><span>RS24 2 SCOOPS (LIST)</span><input class="calc-input f" id="b_rs" value="14.75"></div>
-        <div class="metric-row"><span>CUP + PREP</span><input class="calc-input f" id="b_cup" value="0.50"></div>
-        <div class="metric-row"><span>SUPERVISOR DISC %</span><input class="calc-input f" id="b_disc" value="50"></div>
-        <div class="metric-row"><span>+ COLLAGEN (NET)</span><input class="calc-input f" id="b_col" value="0.00"></div>
-        <div class="metric-row"><span><label><input type="checkbox" class="f" id="b_pb"> + PB/CARAMEL</label></span><input class="calc-input f" id="b_pbc" value="1.50"></div>
-        <div class="metric-row"><span>RETAIL</span><input class="calc-input f" id="b_price" value="28.00"></div>
-        <div class="metric-row"><span>UNIT COST</span><span id="b_cost" class="hl"></span></div>
-        <div class="metric-row"><span>MARGIN / UNIT</span><span id="b_margin" class="hl"></span></div>
+        <b>THE BUILD · 8OZ DENSITY</b>
+        <div class="muted" style="font-size:10px;text-transform:none;margin:4px 0 8px">Batch = 4 RS Pro + PB/Caramel in 400ml → 2 × ~200ml, 3 ice cubes</div>
+        <div class="metric-row"><span>RS PRO / SCOOP (LIST)</span><input class="calc-input f2" id="c_rs" value="7.38"></div>
+        <div class="metric-row"><span>YOUR DISCOUNT % (RS)</span><input class="calc-input f2" id="c_rsdisc" value="50"></div>
+        <div class="metric-row"><span>PB / CARAMEL / BATCH</span><input class="calc-input f2" id="c_pb" value="1.50"></div>
+        <div class="metric-row"><span>BATCH COST (2 CUPS)</span><span id="b_batch" class="hl"></span></div>
+        <div class="metric-row"><span>RETAIL</span><input class="calc-input f2" id="b_price" value="28.00"></div>
+        <div class="metric-row"><span>COST / CUP</span><span id="b_cost" class="hl"></span></div>
+        <div class="metric-row"><span>MARGIN / CUP</span><span id="b_margin" class="hl"></span></div>
       </div>
     </div>
+    <h3>PER CUP + PER SATURDAY</h3>
+    <div class="metric-row"><span>8OZ CUPS: PACK PRICE / PACK SIZE</span><span><input class="calc-input f2" id="c_cupPack" value="59.60"> / <input class="calc-input f2" id="c_cupQty" value="48"></span></div>
+    <div class="metric-row"><span>ICE / CUP</span><input class="calc-input f2" id="c_ice" value="0.00"></div>
+    <div class="metric-row"><span>2 BIG MINERAL WATERS (FREE FOR RUNNERS)</span><input class="calc-input f2" id="o_water" value="0.00"></div>
+    <div class="metric-row"><span>SAMPLING CUPS</span><input class="calc-input f2" id="o_sample" value="0.00"></div>
+    <div class="metric-row"><span>OTHER (E.G. EXTRA PEANUT BUTTER)</span><input class="calc-input f2" id="o_other" value="0.00"></div>
     <h3>PROJECTION · NODE_001_SAUJANA</h3>
-    <div class="metric-row"><span>MIX: FLOW / BUILD UNITS</span><span><input class="calc-input f" id="mixA" value="53"> / <input class="calc-input f" id="mixB" value="2"></span></div>
-    <div class="metric-row"><span>SATURDAYS / MONTH · NODES</span><span><input class="calc-input f" id="sats" value="4"> · <input class="calc-input f" id="nodes" value="1"></span></div>
+    <div class="metric-row"><span>CUPS THIS SATURDAY: FLOW / BUILD</span><span><input class="calc-input f2" id="pFlow" value="10"> / <input class="calc-input f2" id="pBuild" value="0"></span></div>
+    <div class="metric-row"><span>SATURDAYS / MONTH · NODES</span><span><input class="calc-input f2" id="sats" value="4"> · <input class="calc-input f2" id="nodes" value="1"></span></div>
     <div id="proj"></div>
   </div>
 
@@ -284,6 +292,8 @@ const SRC = { DIAGNOSTIC_ONLINE: 'ONLINE', ROADSIDE_IPAD: 'iPAD', QR_STAND: 'QR'
 const settings = RECUP.store.get('recup_terminal_v2', { inputs: {}, checks: {} });
 const saveSettings = () => RECUP.store.set('recup_terminal_v2', settings);
 const hist = l => RECUP.safeJSON(l.history, []);
+const chassisOk = l => l.grade === 'A' || l.chassisOk === true || l.chassisOk === 'true';
+const sRank = l => chassisOk(l) && !!l.engineOk;
 
 function stats() {
   const L = LEADS, s = {};
@@ -295,9 +305,10 @@ function stats() {
   s.cup1 = L.filter(l => l.cups >= 1).length;
   s.cup2 = L.filter(l => l.cups >= 2).length;
   s.activated = L.filter(l => l.cups >= 4).length;
+  s.srank = L.filter(sRank).length;
   s.units = 0; s.revenue = 0;
   L.forEach(l => hist(l).forEach(h => { s.units += +h.units || 1; s.revenue += +h.paid || 0; }));
-  s.left = Math.max(0, C.STOCK_UNITS - s.units);
+  s.left = Math.max(0, stockUnits() - s.units);
   s.shared = L.filter(l => l.contactMethod && l.contactMethod !== 'NONE').length;
   s.pdfTodo = L.filter(l => (l.phone || l.instagram) && !l.manualSent).length;
   s.sent = L.filter(l => l.manualSent).length;
@@ -314,8 +325,8 @@ function renderKPIs(s) {
     ['RESERVED WAITING', s.reservedWaiting, 'did diagnostic, not yet at booth'],
     ['FIRST CUPS', s.cup1, `${s.conversion}% of runners`],
     ['RETURNED (CUP 2+)', s.cup2, `${s.returnRate}% return rate`],
-    ['ACTIVATED (CUP 4+)', s.activated, 'performance partners'],
-    ['UNITS LEFT', `${s.left}/${C.STOCK_UNITS}`, `${s.units} poured`],
+    ['ACTIVATED (CUP 4+)', s.activated, `${s.srank} S-rank (zero leaks)`],
+    ['UNITS LEFT', `${s.left}/${stockUnits()}`, `${s.units} poured`],
     ['REVENUE (REAL)', rm(s.revenue), 'after ladder discounts'],
     ['PDF TO SEND', s.pdfTodo, `${pct(s.shared, s.total)}% shared contact`],
   ].map(([l, v, sub]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="sub">${sub}</span></div>`).join('');
@@ -343,12 +354,13 @@ function renderFeed() {
     const via = l.contactMethod === 'INSTAGRAM' && l.instagram ? `<a href="${RECUP.igProfileUrl(l)}" target="_blank" rel="noopener" style="color:inherit">${esc(l.instagram)} ↗</a>`
       : { WHATSAPP: 'WA', EMAIL: 'EMAIL (OLD)', NONE: 'QR ONLY' }[l.contactMethod] || '—';
     let act = `<button class="btn-t sm primary" onclick="openPour('${l.id}')">+CUP</button> `;
+    if (!chassisOk(l)) act += `<button class="btn-t sm" onclick="passChassis('${l.id}')" title="They passed the squat re-test at the booth">CHASSIS ✓</button> `;
     if (l.phone) act += `<a class="btn-t sm wa" href="${RECUP.waLink(l)}" target="_blank" onclick="markSent('${l.id}')">WA${l.manualSent ? ' ✓' : ''}</a> `;
     if (l.instagram) act += `<button class="btn-t sm ig" onclick="igDM('${l.id}')" title="Copies the message, opens their Instagram DM: paste + send">IG DM${l.manualSent ? ' ✓' : ''}</button>`;
     return `<tr>
       <td class="muted">${time}</td>
       <td><span class="tag t-${l.source}">${SRC[l.source] || l.source}</span></td>
-      <td style="text-transform:none"><b>${esc(l.name)}</b> <span class="muted">${esc(l.code)}</span>${l.status === 'RESERVED' && !l.cups ? ' <span class="res">RESERVED</span>' : ''}${l.grade ? ` <span class="muted">G-${l.grade}</span>` : ''}</td>
+      <td style="text-transform:none"><b>${esc(l.name)}</b> <span class="muted">${esc(l.code)}</span>${l.status === 'RESERVED' && !l.cups ? ' <span class="res">RESERVED</span>' : ''}${l.grade ? ` <span class="muted">G-${l.grade}</span>` : ''}${sRank(l) ? ' <span class="tag" style="background:var(--warn);color:#000">S-RANK</span>' : chassisOk(l) ? ' <span class="muted" title="Chassis ✓, engine pending (HealthBar)">⚙</span>' : ''}</td>
       <td class="muted">${esc(l.region)}</td>
       <td>${esc(l.pain)}</td>
       <td>${p.name}</td>
@@ -394,19 +406,33 @@ function renderIntel() {
 }
 
 const v = id => parseFloat($(id).value) || 0;
+// Cups planned for this Saturday (cyan inputs) = the stock the UNITS LEFT counter uses
+function stockUnits() { const n = v('pFlow') + v('pBuild'); return n || C.STOCK_UNITS; }
 function calc() {
-  const aCost = v('a_cr7') + v('a_col') + v('a_btl'), aMargin = v('a_price') - aCost;
-  const bCost = (v('b_rs') + v('b_cup')) * (1 - v('b_disc') / 100) + v('b_col') + ($('b_pb').checked ? v('b_pbc') : 0), bMargin = v('b_price') - bCost;
+  const cup = v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0, ice = v('c_ice');
+  const jug = 2.5 * v('c_nite') + 10 * v('c_col') + 10 * v('c_ele');
+  const aCost = jug / 10 + cup + ice, aMargin = v('a_price') - aCost;
+  const batch = 4 * v('c_rs') * (1 - v('c_rsdisc') / 100) + v('c_pb');
+  const bCost = batch / 2 + cup + ice, bMargin = v('b_price') - bCost;
+  $('a_jug').textContent = rm(jug); $('b_batch').textContent = rm(batch);
   $('a_cost').textContent = rm(aCost); $('a_margin').textContent = rm(aMargin); $('b_cost').textContent = rm(bCost); $('b_margin').textContent = rm(bMargin);
-  const A = v('mixA'), B = v('mixB'), rev = A * v('a_price') + B * v('b_price'), profit = A * aMargin + B * bMargin, month = profit * v('sats');
+  const A = v('pFlow'), B = v('pBuild'), jugs = Math.ceil(A / 10), batches = Math.ceil(B / 2);
+  const over = v('o_water') + v('o_sample') + v('o_other');
+  const rev = A * v('a_price') + B * v('b_price');
+  const cost = jugs * jug + batches * batch + (A + B) * (cup + ice) + over;   // you pay for whole jugs / batches
+  const profit = rev - cost, month = profit * v('sats');
+  const missing = ['c_nite', 'c_ice', 'o_water', 'o_sample'].filter(id => !v(id)).map(id => ({ c_nite: 'Niteworks', c_ice: 'ice', o_water: 'mineral water', o_sample: 'sampling cups' })[id]);
   $('proj').innerHTML = `
+    <div class="metric-row"><span>PREP: ${jugs} FLOW JUG${jugs === 1 ? '' : 'S'} · ${batches} BUILD BATCH${batches === 1 ? '' : 'ES'}</span><span class="muted" style="text-transform:none">${(2.5 * jugs).toFixed(1)} Niteworks · ${10 * jugs} Collagen · ${10 * jugs} Electrolyte · ${4 * batches} RS Pro scoops</span></div>
+    <div class="metric-row"><span>CUPS USED</span><span>${A + B} of ${v('c_cupQty')} in a pack${A + B > v('c_cupQty') ? ' <span class="bad">· buy another pack</span>' : ''}</span></div>
     <div class="metric-row"><span>POTENTIAL REVENUE / SATURDAY</span><span class="accent">${rm(rev)}</span></div>
+    <div class="metric-row"><span>TOTAL COST / SATURDAY (INCL. FREEBIES)</span><span>${rm(cost)}</span></div>
     <div class="metric-row"><span>NET PROFIT / SATURDAY</span><span class="hl">${rm(profit)}</span></div>
     <div class="metric-row"><span>NET / MONTH (${v('sats')} SATS × ${v('nodes')} NODE)</span><span class="hl">${rm(month * v('nodes'))}</span></div>
     <div class="metric-row"><span>GOAL: 10 NODES</span><span class="accent">${rm(month * 10)} / MONTH</span></div>
-    <div class="muted" style="font-size:10px;text-transform:none">Potential = full retail. The ladder (10% / BOGO / 20% / 25%) lowers real revenue per cup; see REVENUE (REAL). Collagen in THE BUILD is 0 by default: add its cost.</div>`;
+    <div class="muted" style="font-size:10px;text-transform:none">Potential = full retail; the Ascension discounts lower real revenue (see REVENUE (REAL)). ${missing.length ? `<span class="warn">Still RM 0: ${missing.join(', ')}. Type your cost in to make this accurate.</span>` : ''}</div>`;
   window.__fin = { aCost, aMargin, bCost, bMargin, rev, profit, month };
-  document.querySelectorAll('.f').forEach(el => settings.inputs[el.id] = el.type === 'checkbox' ? el.checked : el.value);
+  document.querySelectorAll('.f2').forEach(el => settings.inputs[el.id] = el.value);
   settings.inputs.headcount = $('headcount').value; saveSettings();
 }
 
@@ -488,7 +514,7 @@ function renderBrief(s) {
 `# RECUP STATION SYSTEM BRIEF
 MISSION: Biological Integrity. ARCHITECT: Joey Tan.
 NODE: ${C.NODE_NAME} · ${$('countdown').textContent}
-STOCK: ${C.STOCK_UNITS} units · ${s.left} left
+STOCK: ${stockUnits()} cups planned · ${s.left} left
 MODEL: Phase 1 Awareness (The Diagnostic) -> Phase 2 Interception (roadside booth) -> Ascension ladder (5 cups)
 
 ## LIVE
@@ -523,6 +549,13 @@ async function confirmPour() {
   closeModal(); paint();
 }
 
+// S-Rank: runner passed the movement on a re-test at the booth
+async function passChassis(id) {
+  const l = LEADS.find(x => x.id === id); if (!l) return;
+  if (!confirm(`${l.name} passed the squat re-test (knee over toes, heel tap, no collapse)?\n\nThis ticks THE CHASSIS on their S-Rank.`)) return;
+  await RECUP.updateLead(id, { chassisOk: true }); l.chassisOk = true; paint();
+  toast('Chassis ✓. Engine unlocks when their HealthBar session is marked DONE.');
+}
 async function markSent(id) { await RECUP.updateLead(id, { manualSent: 'YES' }); const l = LEADS.find(x => x.id === id); if (l) l.manualSent = 'YES'; setTimeout(paint, 300); }
 function setFilter(f) { FILTER = f; document.querySelectorAll('.filters .btn-t').forEach(b => b.classList.toggle('active', b.dataset.f === f)); renderFeed(); }
 function exportCSV() {
@@ -633,7 +666,7 @@ function tick() {
   $('countdown').textContent = `T-MINUS ${d}D ${String(h).padStart(2, '0')}H ${String(m).padStart(2, '0')}M`;
 }
 Object.entries(settings.inputs || {}).forEach(([id, val]) => { const el = $(id); if (!el) return; if (el.type === 'checkbox') el.checked = val; else el.value = val; });
-document.querySelectorAll('.f, #headcount').forEach(el => el.addEventListener('input', paint));
+document.querySelectorAll('.f2, #headcount').forEach(el => el.addEventListener('input', paint));
 $('nodeName').textContent = C.NODE_NAME;
 try { const q = qrcode(0, 'M'); q.addData(RECUP.siteUrl('intake-ig.html') + '?utm_content=qr'); q.make(); $('qr').innerHTML = q.createImgTag(3, 0); } catch {}
 $('qrHint').textContent = C.SITE_URL ? 'QR → The Diagnostic. Use in stories / flyers.' : 'Set SITE_URL so this QR works on phones.';

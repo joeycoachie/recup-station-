@@ -304,11 +304,17 @@
     if (!SELF) {
       if (l.phone) staff += `<a class="btn wa" style="text-align:center;text-decoration:none" href="${RECUP.waLink(l)}" target="_blank" onclick="RECUP.updateLead('${l.id}',{manualSent:'YES'})">SEND PDF ON WHATSAPP</a>`;
       staff += `<button class="btn" onclick="startPour()">POUR CUP ${cups + 1} →</button>`;
+      if (l.grade !== 'A' && !l.chassisOk) staff += `<button class="btn" style="background:transparent;color:var(--text);border:1.5px solid var(--border)" onclick="passChassis()">SQUAT RE-TEST PASSED ✓</button>`;
     } else {
       staff = `<div class="privacy" style="width:100%;text-align:center">Show this code at the Recup table to claim your cup.</div>`;
     }
     $('cardStaff').innerHTML = staff;
     show('s-card', 5);
+  }
+
+  async function passChassis() {
+    if (!confirm('Passed the squat re-test? (knee over toes, heel tap, no collapse)\nThis ticks THE CHASSIS on their S-Rank.')) return;
+    await RECUP.updateLead(current.id, { chassisOk: true }); current.chassisOk = true; renderCard(lookupMode);
   }
 
   /* ---------- pour a cup ---------- */

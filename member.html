@@ -87,6 +87,15 @@
   .menu details { border-bottom: 1px solid var(--border); padding: 10px 4px; }
   .menu summary { font-weight: 600; cursor: pointer; }
   .menu details p, .menu #hbAbout p { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 8px 0 0; }
+  .rank { display: grid; grid-template-columns: 74px 1fr; gap: 14px; align-items: center; }
+  .rank .badge { width: 74px; height: 74px; border-radius: 18px; display: grid; place-items: center; font: 800 40px var(--mono); border: 2px dashed var(--line-2); color: var(--muted); }
+  .rank.s .badge { border: none; background: linear-gradient(135deg, #C1592E, #B8860B); color: #fff; box-shadow: 0 6px 18px rgba(193,89,46,.35); }
+  .rank .st { font: 700 11px var(--mono); letter-spacing: 1.5px; color: var(--warn); }
+  .rank.s .st { color: var(--success); }
+  .gate { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+  .gate .ok { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 2px solid var(--line-2); color: var(--muted); }
+  .gate.done .ok { background: var(--success); border-color: var(--success); color: #fff; }
+  .gate b { display: block; } .gate small { color: var(--muted); font-size: 13px; }
   .homehint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.55; margin: -6px 0 18px; }
 </style>
 </head>
@@ -116,6 +125,9 @@
     <div class="meter" id="mMeter"></div>
     <p class="sub" style="margin:12px 0 0" id="mNext"></p>
   </div>
+
+  <!-- S-RANK STATUS GATE -->
+  <div class="card" id="rankCard" style="display:none"></div>
 
   <!-- CLAIM THE NEXT CUP (runner) → staff tap ✓ at the table -->
   <div class="card claim" id="claimCard" style="display:none"></div>
@@ -168,7 +180,7 @@
     $('mNext').textContent = next ? `${cups} cup${cups === 1 ? '' : 's'} logged. Next: ${next.name} → ${next.reward}` : 'You hold the Milestone: 25% off every cup.';
     $('manualBtn').href = RECUP.manualUrl(l);
     if (l.grade) { $('storyBtn').href = RECUP.storyUrl(l); $('storyBtn').style.display = 'block'; }
-    me = l; renderClaim(); renderHB();
+    me = l; renderClaim(); renderHB(); renderRank();
     $('mManual').href = RECUP.manualUrl(l); $('mStory').href = RECUP.storyUrl(l);
     $('homeHint').style.display = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'none' : 'block';
   }
@@ -287,6 +299,19 @@
     catch (e) { $('hbErr').textContent = 'Could not send: ' + e.message; $('hbBtn').disabled = false; $('hbBtn').textContent = 'TRY AGAIN'; }
   }
   async function cancelHB() { if (!confirm('Cancel your Health Bar session?')) return; try { await RECUP.cancelHealthbar(me.code); } catch {} me.healthbar = null; renderHB(); }
+
+  /* ---------- S-Rank status gate ---------- */
+  function renderRank() {
+    const SR = C.SRANK, ch = me.grade === 'A' || !!(me.chassisOk || me.chassis_ok), en = !!me.engine_ok, s = ch && en;
+    const row = (done, [t, d, todo]) => `<div class="gate ${done ? 'done' : ''}"><span class="ok">${done ? '✓' : ''}</span><div><b>${t}</b><small>${done ? d : todo}</small></div></div>`;
+    $('rankCard').style.display = 'block';
+    $('rankCard').innerHTML = `<div class="rank ${s ? 's' : ''}"><div class="badge">${s ? 'S' : (me.grade || '?')}</div>
+        <div><div class="st">${s ? 'S-RANK · CALIBRATED ATHLETE' : 'STATUS: CALIBRATION_PENDING'}</div>
+        <h2 style="margin:4px 0 2px">${s ? 'Zero Energy Leaks.' : 'S-Rank: ' + (ch ? '1' : '0') + ' of 2 unlocked'}</h2>
+        <p class="sub" style="margin:0">${s ? 'Chassis and engine verified. You are the standard.' : ch ? 'Your chassis holds, but your engine is unverified. Book your HealthBar session to unlock S-Rank.' : SR.LINE}</p></div></div>
+      <div style="margin-top:12px">${row(ch, SR.CHASSIS)}${row(en, SR.ENGINE)}</div>
+      ${!en ? `<button class="btn" style="margin-top:10px" onclick="goHB()">${me.healthbar && ['REQUESTED', 'BOOKED'].includes(me.healthbar.status) ? 'SEE MY HEALTHBAR SESSION' : 'BOOK MY HEALTHBAR SESSION'} →</button>` : ''}`;
+  }
 
   /* ---------- side menu ---------- */
   function openMenu(on) { $('menu').classList.toggle('open', on); $('scrim').classList.toggle('open', on); }

@@ -301,3 +301,35 @@ $$;
 revoke all on function request_healthbar(text, text, text, text[], text, text) from public;
 revoke all on function get_member(text) from public;
 grant execute on function request_healthbar(text, text, text, text[], text, text), get_member(text) to anon, authenticated;
+
+-- ============================================================================
+-- 8. S-RANK = ZERO ENERGY LEAKS (added 2026-10-04). Safe to re-run.
+--    Chassis ✓ : Grade A on the diagnostic, OR staff re-tested the squat at the booth
+--    Engine  ✓ : a HealthBar session marked DONE by staff
+-- ============================================================================
+alter table runners add column if not exists chassis_ok boolean not null default false;
+
+create or replace function get_member(p_code text) returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'id', r.id, 'code', r.code, 'name', split_part(r.name, ' ', 1), 'protocol', r.protocol, 'grade', r.grade,
+    'squat', r.squat, 'archetype', r.archetype, 'status', r.status, 'cups', r.cups, 'history', r.history,
+    'source', r.source, 'ts', r.ts,
+    'chassis_ok', (r.grade = 'A' or r.chassis_ok),
+    'engine_ok', exists (select 1 from healthbar_bookings h where h.runner_id = r.id and h.status = 'DONE'),
+    'claim', (select json_build_object('id', c.id, 'cup_no', c.cup_no, 'status', c.status, 'product', c.product, 'paid', c.paid)
+              from cup_claims c where c.runner_id = r.id and c.created_at > now() - interval '12 hours'
+              order by c.created_at desc limit 1),
+    'healthbar', (select json_build_object('status', b.status, 'slot', b.slot, 'place', b.place, 'goal', b.goal,
+                                           'preferred', b.preferred, 'note', b.staff_note, 'concerns', b.concerns,
+                                           'for_whom', b.for_whom, 'mode', b.mode)
+                  from healthbar_bookings b where b.runner_id = r.id and b.status <> 'CANCELLED'
+                  order by (b.status in ('REQUESTED', 'BOOKED')) desc, b.updated_at desc limit 1))
+  from runners r where r.code = upper(trim(p_code));
+$$;
+revoke all on function get_member(text) from public;
+grant execute on function get_member(text) to anon, authenticated;
+
+-- Staff view of who holds the Engine ✓ (terminal reads this)
+create or replace view runner_engine with (security_invoker = true) as
+  select runner_id, bool_or(status = 'DONE') as engine_ok from healthbar_bookings group by runner_id;
