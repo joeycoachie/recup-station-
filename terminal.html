@@ -85,6 +85,16 @@
   @media (max-width: 900px) { .hb-row { grid-template-columns: 1fr; } }
   .hb-row small { display: block; color: var(--muted); text-transform: none; font-size: 11px; margin-top: 2px; }
   .hb-row input { background: var(--bg); color: var(--text); border: 1px solid var(--border); font: 12px var(--mono); padding: 6px; width: 100%; margin-bottom: 4px; text-transform: none; }
+  .hint { font-size: 10px; color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: normal; }
+  .colhead { display: grid; grid-template-columns: 1fr auto; gap: 16px; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin: 6px 0 2px; }
+  .math { font-size: 11px; text-transform: none; line-height: 1.7; }
+  .math .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; border-bottom: 1px dotted #222; }
+  .math .row span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .math .tot { font-weight: 700; color: var(--text); border-bottom: none; border-top: 1px solid var(--border); margin-top: 2px; }
+  .math h4 { font: 700 9px var(--mono); letter-spacing: 1.5px; color: var(--accent); margin: 10px 0 2px; }
+  .math h4:first-child { margin-top: 0; }
+  .legend { font-size: 10px; color: var(--muted); text-transform: none; margin: -4px 0 10px; line-height: 1.6; }
+  .legend b { color: var(--text); }
   .lockwrap { display: inline-flex; align-items: center; white-space: nowrap; }
   #finPanel .calc-input { width: 58px; }
   .lockbtn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1; padding: 3px 4px; margin-left: 3px; border-radius: 3px; cursor: pointer; vertical-align: middle; }
@@ -144,7 +154,7 @@
 
   <!-- 01 FEED -->
   <div class="panel s8">
-    <h2>01_RUNNER_FEED <small>diagnostic + roadside + QR stand → one list</small>
+    <h2>01_RUNNER_LIST <small>everyone who signed up (online, booth iPad or QR stand), newest first</small>
       <span class="btn-row">
         <input class="search" id="search" placeholder="NAME / CODE / PHONE / @IG" oninput="renderFeed()">
         <span class="filters btn-row">
@@ -152,58 +162,59 @@
           <button class="btn-t" data-f="DIAGNOSTIC_ONLINE" onclick="setFilter('DIAGNOSTIC_ONLINE')">ONLINE</button>
           <button class="btn-t" data-f="ROADSIDE" onclick="setFilter('ROADSIDE')">ROADSIDE</button>
           <button class="btn-t" data-f="RESERVED" onclick="setFilter('RESERVED')">RESERVED</button>
-          <button class="btn-t" data-f="TODO" onclick="setFilter('TODO')">PDF TO SEND</button>
+          <button class="btn-t" data-f="TODO" onclick="setFilter('TODO')">MANUAL TO SEND</button>
         </span>
         <button class="btn-t" onclick="exportCSV()">⤓ CSV</button>
       </span>
     </h2>
+    <div class="legend"><b>+CUP</b> log a cup you poured · <b>WA</b> / <b>IG DM</b> send their Repair Manual (✓ = sent) · <b>CHASSIS ✓</b> they passed the squat re-test · <b>RESERVED</b> did the online diagnostic, hasn't collected yet · <b>G-A/B/C</b> squat grade · <b>S-RANK</b> chassis + engine verified · <b>⚙</b> chassis done, HealthBar pending · <b>HB</b> asked for HealthBar</div>
     <div class="feed"><table>
-      <thead><tr><th>TIME</th><th>SRC</th><th>RUNNER</th><th>REGION</th><th>LEAK</th><th>PROTOCOL</th><th>ASCENSION</th><th>PDF VIA</th><th></th></tr></thead>
+      <thead><tr><th>SIGNED UP</th><th>WHERE</th><th>RUNNER · CODE · GRADE</th><th>RUNS AT</th><th>WHAT HURTS</th><th>THEIR DRINK</th><th>CUPS (OF 5)</th><th>MANUAL VIA</th><th>ACTIONS</th></tr></thead>
       <tbody id="feed"></tbody>
     </table></div>
   </div>
 
   <!-- 02 ASCENSION -->
   <div class="panel s4">
-    <h2>02_ASCENSION_PIPELINE <small>thirsty → activated partner</small></h2>
+    <h2>02_ASCENSION_LADDER <small>how many runners reached each cup (bar = % of all runners)</small></h2>
     <div class="rungs" id="rungs"></div>
-    <div class="metric-row" style="margin-top:12px"><span>RUNNERS AT NODE (HEADCOUNT)</span><input class="calc-input" id="headcount" type="number" value="80" min="1"></div>
+    <div class="metric-row" style="margin-top:12px"><span>RUNNERS AT THE RUN TODAY<br><span class="hint">your own count, used for capture rate</span></span><input class="calc-input" id="headcount" type="number" value="80" min="1"></div>
     <div id="metrics"></div>
     <div class="arc-box" id="arcBox"></div>
   </div>
 
   <!-- 03 INTEL -->
-  <div class="panel s6">
-    <h2>03_BACKEND_PIPELINE <small>the data that builds "new power"</small></h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="panel s12">
+    <h2>03_WHAT_RUNNERS_TELL_US <small>answers from every sign-up · number = how many runners</small></h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
       <div><h3>WHAT HURTS MOST</h3><div class="bars" id="bPain"></div></div>
-      <div><h3>REGION</h3><div class="bars" id="bRegion"></div></div>
-      <div><h3>RUNNING FREQUENCY</h3><div class="bars" id="bFreq"></div></div>
-      <div><h3>PDF VIA (PRIVACY CHOICE)</h3><div class="bars" id="bContact"></div></div>
-      <div><h3>SOURCE</h3><div class="bars" id="bSource"></div></div>
-      <div><h3>GOALS (CUP 4)</h3><div class="bars" id="bGoal"></div></div>
+      <div><h3>WHERE THEY RUN</h3><div class="bars" id="bRegion"></div></div>
+      <div><h3>HOW OFTEN THEY RUN</h3><div class="bars" id="bFreq"></div></div>
+      <div><h3>HOW THEY GET THE MANUAL</h3><div class="bars" id="bContact"></div></div>
+      <div><h3>WHERE THEY SIGNED UP</h3><div class="bars" id="bSource"></div></div>
+      <div><h3>TRAINING GOAL (ASKED AT CUP 4)</h3><div class="bars" id="bGoal"></div></div>
     </div>
   </div>
 
   <!-- 04 FINANCIALS + SMART RECIPE CALCULATOR -->
-  <div class="panel s6" id="finPanel">
+  <div class="panel s12" id="finPanel">
     <h2>04_RECIPE_&amp;_MARGIN_CALCULATOR <small id="lockSub">edit any cyan field · 🔒 to lock it in</small>
       <span class="btn-row"><button class="btn-t sm" onclick="lockAll(true)">🔒 LOCK ALL</button><button class="btn-t sm" onclick="lockAll(false)">🔓 UNLOCK ALL</button><button class="btn-t sm" onclick="resetCalc()">↺ DEFAULTS</button></span></h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="recipes"></div>
-    <h3>SHARED COSTS</h3>
-    <div class="metric-row"><span>8OZ CUPS: PACK PRICE / PACK SIZE</span><span><input class="calc-input f2" id="c_cupPack" value="59.60"> / <input class="calc-input f2" id="c_cupQty" value="48"></span></div>
-    <div class="metric-row"><span>ICE / CUP</span><input class="calc-input f2" id="c_ice" value="0.00"></div>
-    <div class="metric-row"><span>2 BIG MINERAL WATERS (FREE FOR RUNNERS)</span><input class="calc-input f2" id="o_water" value="0.00"></div>
-    <div class="metric-row"><span>SAMPLING CUPS</span><input class="calc-input f2" id="o_sample" value="0.00"></div>
-    <div class="metric-row"><span>OTHER (E.G. EXTRA PEANUT BUTTER)</span><input class="calc-input f2" id="o_other" value="0.00"></div>
-    <h3>THIS SATURDAY · NODE_001_SAUJANA</h3>
-    <div class="metric-row"><span>CUPS: FLOW / BUILD</span><span><input class="calc-input f2" id="sFlow" value="10"> / <input class="calc-input f2" id="sBuild" value="3"></span></div>
-    <div class="metric-row"><span>SATURDAYS / MONTH · NODES</span><span><input class="calc-input f2" id="sats" value="4"> · <input class="calc-input f2" id="nodes" value="1"></span></div>
+    <h3>SHARED COSTS <span class="hint">· used by both drinks</span></h3>
+    <div class="metric-row"><span>8OZ CUPS: PACK PRICE (RM) / CUPS IN THE PACK</span><span><input class="calc-input f2" id="c_cupPack" value="59.60"> / <input class="calc-input f2" id="c_cupQty" value="48"></span></div>
+    <div class="metric-row"><span>ICE COST PER CUP (RM)</span><input class="calc-input f2" id="c_ice" value="0.00"></div>
+    <div class="metric-row"><span>2 BIG MINERAL WATERS, FREE FOR RUNNERS (RM PER SATURDAY)</span><input class="calc-input f2" id="o_water" value="0.00"></div>
+    <div class="metric-row"><span>SAMPLING CUPS (RM PER SATURDAY)</span><input class="calc-input f2" id="o_sample" value="0.00"></div>
+    <div class="metric-row"><span>OTHER COSTS, E.G. EXTRA PEANUT BUTTER (RM PER SATURDAY)</span><input class="calc-input f2" id="o_other" value="0.00"></div>
+    <h3>THIS SATURDAY · NODE_001_SAUJANA <span class="hint">· what you plan to sell</span></h3>
+    <div class="metric-row"><span>CUPS TO SELL: THE FLOW / THE BUILD</span><span><input class="calc-input f2" id="sFlow" value="10"> / <input class="calc-input f2" id="sBuild" value="3"></span></div>
+    <div class="metric-row"><span>SATURDAYS PER MONTH · BOOTHS (NODES) RUNNING</span><span><input class="calc-input f2" id="sats" value="4"> · <input class="calc-input f2" id="nodes" value="1"></span></div>
     <div id="proj"></div>
   </div>
 
   <!-- 05 WARNINGS -->
-  <div class="panel s4"><h2>05_WARNING_SIGNS <small>auto-checked</small></h2><div id="alerts"></div></div>
+  <div class="panel s4"><h2>05_WARNINGS <small>things to act on · checked automatically</small></h2><div id="alerts"></div></div>
 
   <!-- 06 READINESS -->
   <div class="panel s4">
@@ -215,7 +226,7 @@
 
   <!-- 07 CHANNELS & MATERIALS -->
   <div class="panel s4">
-    <h2>07_CHANNELS_&amp;_MATERIALS</h2>
+    <h2>07_LINKS_&amp;_MATERIALS <small>pages to open, print or share</small></h2>
     <div class="links">
       <a href="intake-ig.html" target="_blank">PHASE 1 · THE DIAGNOSTIC (IG LINK) <span>link in bio</span></a>
       <a href="intake-ipad.html" target="_blank">PHASE 2 · ROADSIDE iPAD <span>staff mode</span></a>
@@ -249,7 +260,7 @@
 
   <!-- 09 HANDOVER -->
   <div class="panel s6">
-    <h2>09_SYSTEM_HANDOVER <small>auto-updates</small> <button class="btn-t" onclick="copy($('brief').value)">COPY</button></h2>
+    <h2>09_HANDOVER_SUMMARY <small>today's numbers as text · copy and paste to your partner</small> <button class="btn-t" onclick="copy($('brief').value)">COPY</button></h2>
     <textarea class="brief" id="brief" readonly></textarea>
   </div>
 </div>
@@ -290,9 +301,12 @@ function stats() {
   s.cup2 = L.filter(l => l.cups >= 2).length;
   s.activated = L.filter(l => l.cups >= 4).length;
   s.srank = L.filter(sRank).length;
-  s.units = 0; s.revenue = 0;
-  L.forEach(l => hist(l).forEach(h => { s.units += +h.units || 1; s.revenue += +h.paid || 0; }));
-  s.left = Math.max(0, stockUnits() - s.units);
+  // All-time totals + today's (Malaysia date) so the booth sees what's left for THIS Saturday
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+  const isToday = ts => ts && new Date(ts).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }) === today;
+  s.units = 0; s.revenue = 0; s.unitsToday = 0; s.revenueToday = 0;
+  L.forEach(l => hist(l).forEach(h => { const u = +h.units || 1, paid = +h.paid || 0; s.units += u; s.revenue += paid; if (isToday(h.ts)) { s.unitsToday += u; s.revenueToday += paid; } }));
+  s.left = Math.max(0, stockUnits() - s.unitsToday);
   s.shared = L.filter(l => l.contactMethod && l.contactMethod !== 'NONE').length;
   s.pdfTodo = L.filter(l => (l.phone || l.instagram) && !l.manualSent).length;
   s.sent = L.filter(l => l.manualSent).length;
@@ -305,14 +319,14 @@ function stats() {
 
 function renderKPIs(s) {
   $('kpis').innerHTML = [
-    ['RUNNERS', s.total, `${s.online} online · ${s.roadside} roadside`],
-    ['RESERVED WAITING', s.reservedWaiting, 'did diagnostic, not yet at booth'],
-    ['FIRST CUPS', s.cup1, `${s.conversion}% of runners`],
-    ['RETURNED (CUP 2+)', s.cup2, `${s.returnRate}% return rate`],
-    ['ACTIVATED (CUP 4+)', s.activated, `${s.srank} S-rank (zero leaks)`],
-    ['UNITS LEFT', `${s.left}/${stockUnits()}`, `${s.units} poured`],
-    ['REVENUE (REAL)', rm(s.revenue), 'after ladder discounts'],
-    ['PDF TO SEND', s.pdfTodo, `${pct(s.shared, s.total)}% shared contact`],
+    ['RUNNERS SIGNED UP', s.total, `${s.online} online diagnostic · ${s.roadside} at the booth`],
+    ['RESERVED, NOT AT BOOTH YET', s.reservedWaiting, 'did the online diagnostic, no cup yet'],
+    ['BOUGHT A 1ST CUP', s.cup1, `${s.conversion}% of everyone signed up`],
+    ['CAME BACK (2+ CUPS)', s.cup2, `${s.returnRate}% of 1st-cup buyers returned`],
+    ['ACTIVATED (4+ CUPS)', s.activated, `${s.srank} reached S-Rank (zero leaks)`],
+    ['CUPS LEFT TODAY', `${s.left}/${stockUnits()}`, `${s.unitsToday} poured today of ${stockUnits()} planned (set in panel 04)`],
+    ['MONEY TAKEN TODAY', rm(s.revenueToday), `${rm(s.revenue)} all time · after Ascension discounts`],
+    ['MANUAL STILL TO SEND', s.pdfTodo, `${pct(s.shared, s.total)}% gave WhatsApp or Instagram`],
   ].map(([l, v, sub]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="sub">${sub}</span></div>`).join('');
 }
 
@@ -361,20 +375,20 @@ function renderRungs(s) {
     const at = L.filter(l => l.cups >= r.cup);
     const got = fill[r.cup] ? at.filter(l => l[fill[r.cup]]).length : at.filter(l => l.contactMethod && l.contactMethod !== 'NONE').length;
     return `<div class="r"><div><b>${r.name}</b><small>${r.reward}</small></div>
-      <div><div class="meter" style="margin:0"><div style="width:${pct(at.length, s.total || 1)}%"></div></div><small style="color:var(--muted);text-transform:none;font-size:10px">${r.data}: ${got}/${at.length}</small></div>
+      <div><div class="meter" style="margin:0"><div style="width:${pct(at.length, s.total || 1)}%"></div></div><small style="color:var(--muted);text-transform:none;font-size:10px">Answered "${r.data}": ${got} of ${at.length}</small></div>
       <div class="n">${at.length}</div></div>`;
   }).join('');
 }
 
 function meter(label, val, target, unit = '%') {
   const good = val >= target;
-  return `<div class="metric-row"><span>${label}</span><span class="status-tag ${good ? 'on' : val >= target * .6 ? 'mid' : 'off'}">${val}${unit} / ${target}${unit}</span></div>
+  return `<div class="metric-row"><span>${label}</span><span class="status-tag ${good ? 'on' : val >= target * .6 ? 'mid' : 'off'}">${val}${unit} <span style="opacity:.7">of ${target}${unit} target</span></span></div>
           <div class="meter"><div style="width:${Math.min(100, unit === '%' ? val : val / target * 100)}%"></div>${unit === '%' ? `<span class="target" style="left:${target}%"></span>` : ''}</div>`;
 }
 function renderMetrics(s) {
-  $('metrics').innerHTML = meter('CAPTURE RATE', s.capture, 40) + meter('ONLINE → BOOTH ARRIVAL', s.arrival, 60) + meter('RETURN (CUP 2)', s.returnRate, 25) + meter('PDF / WHATSAPP SENT', s.sent, C.WHATSAPP_FOLLOWUP_TARGET, '');
+  $('metrics').innerHTML = meter('CAPTURE: SIGNED UP ÷ RUNNERS AT THE RUN', s.capture, 40) + meter('ONLINE SIGN-UPS WHO CAME FOR A CUP', s.arrival, 60) + meter('1ST-CUP BUYERS WHO CAME BACK', s.returnRate, 25) + meter('REPAIR MANUALS SENT (TARGET)', s.sent, C.WHATSAPP_FOLLOWUP_TARGET, '');
   const p2 = s.sent >= C.WHATSAPP_FOLLOWUP_TARGET;
-  $('arcBox').innerHTML = `<b>ARC_TRANSITION: ${p2 ? '<span class="ok">PHASE 02 UNLOCKED</span>' : 'PHASE 01 · CHECK-IN'}</b><br>Phase 01 ends when ${C.WHATSAPP_FOLLOWUP_TARGET}+ runners have received the Repair Manual. <b>${s.sent}/${C.WHATSAPP_FOLLOWUP_TARGET}</b>.`;
+  $('arcBox').innerHTML = `<b>BUSINESS PHASE: ${p2 ? '<span class="ok">PHASE 2 UNLOCKED</span>' : 'PHASE 1 · GETTING RUNNERS IN'}</b><br>Phase 2 starts once ${C.WHATSAPP_FOLLOWUP_TARGET} runners have been sent the Repair Manual. Sent so far: <b>${s.sent} of ${C.WHATSAPP_FOLLOWUP_TARGET}</b>.`;
 }
 
 function bars(el, counts) {
@@ -410,17 +424,18 @@ const RV = (r, f) => v(`r${r.k}_${f}`);
   const inp = (id, val, w = 56) => `<input class="calc-input f2" style="width:${w}px" id="${id}" value="${val}">`;
   $('recipes').innerHTML = RECIPES.map(r => `<div class="protocol-card">
     <b>${r.name}</b> <span class="muted" style="font-size:10px">${r.sub}</span>
-    <div class="muted" style="font-size:10px;margin:8px 0 4px">ONE BATCH · SCOOPS × (TUB RM ÷ SCOOPS PER TUB)</div>
+    <div class="hint" style="margin:6px 0 2px">One ${r.k === 'a' ? 'jug' : 'blender batch'} = the scoops below in the water below, shared across the cups below.</div>
+    <div class="colhead"><span>INGREDIENT</span><span>SCOOPS IN ${r.k === 'a' ? 'JUG' : 'BATCH'} × ( TUB PRICE RM ÷ SCOOPS IN TUB )</span></div>
     ${r.ing.map(([id, n, sc, tub, per]) => `<div class="metric-row"><span style="text-transform:none">${n}</span><span>${inp(`r${r.k}_s_${id}`, sc, 40)} × (RM ${inp(`r${r.k}_t_${id}`, tub.toFixed(2), 62)} ÷ ${inp(`r${r.k}_n_${id}`, per, 36)})</span></div>
-      <div class="muted" style="font-size:10px;text-align:right;margin:-6px 0 6px" id="r${r.k}_cps_${id}"></div>`).join('')}
-    <div class="metric-row"><span>WATER (ML) → CUPS</span><span>${inp(`r${r.k}_water`, r.water)} → ${inp(`r${r.k}_cups`, r.cups, 40)}</span></div>
-    <div class="metric-row"><span>CUP SIZE (OZ) · RETAIL RM</span><span>${inp(`r${r.k}_oz`, r.oz, 40)} · ${inp(`r${r.k}_price`, r.price.toFixed(2))}</span></div>
+      <div class="hint" style="text-align:right;margin:-6px 0 6px" id="r${r.k}_cps_${id}"></div>`).join('')}
+    <div class="metric-row"><span>WATER IN ${r.k === 'a' ? 'JUG' : 'BATCH'} (ML) → CUPS IT FILLS</span><span>${inp(`r${r.k}_water`, r.water)} → ${inp(`r${r.k}_cups`, r.cups, 40)}</span></div>
+    <div class="metric-row"><span>CUP SIZE (OZ) · SELLING PRICE PER CUP (RM)</span><span>${inp(`r${r.k}_oz`, r.oz, 40)} · ${inp(`r${r.k}_price`, r.price.toFixed(2))}</span></div>
     <div class="arc-box" style="margin-top:8px" id="r${r.k}_out"></div></div>`).join('');
 })();
 function recipe(r) {
   const cups = Math.max(1, RV(r, 'cups')), water = RV(r, 'water'), cupMl = RV(r, 'oz') * OZ;
   const perScoop = id => RV(r, 'n_' + id) ? RV(r, 't_' + id) / RV(r, 'n_' + id) : 0;
-  r.ing.forEach(([id]) => { const el = $(`r${r.k}_cps_${id}`); if (el) el.textContent = `= ${rm(perScoop(id))} per scoop`; });
+  r.ing.forEach(([id, n]) => { const el = $(`r${r.k}_cps_${id}`); if (el) el.textContent = `1 ${/per batch/.test(n) ? 'portion' : 'scoop'} costs ${rm(perScoop(id))}`; });
   const batch = r.ing.reduce((t, [id]) => t + RV(r, 's_' + id) * perScoop(id), 0);
   const cup = v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0;
   const cost = batch / cups + cup + v('c_ice'), price = RV(r, 'price');
@@ -431,15 +446,33 @@ function calc() {
   const R = {};
   RECIPES.forEach(r => {
     const x = R[r.k] = recipe(r);
-    const cupIce = (v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0) + v('c_ice');
-    const parts = r.ing.map(([id, n]) => [n.replace(/ \(per batch\)| \d+g$/g, ''), RV(r, 's_' + id) * (RV(r, 'n_' + id) ? RV(r, 't_' + id) / RV(r, 'n_' + id) : 0) / x.cups])
-      .concat([['Cup', v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0], ['Ice', v('c_ice')]]);
-    const breakdown = parts.map(([n, c]) => `${n} ${rm(c)}`).join(' + ');
-    const per = r.ing.map(([id, n]) => `${(RV(r, 's_' + id) / x.cups).toFixed(2).replace(/\.?0+$/, '')} ${n.replace(/ \(per batch\)/, '')}`).join(' · ');
-    $(`r${r.k}_out`).innerHTML = `<b>POUR ${Math.round(x.pourMl)} ML</b> into each ${RV(r, 'oz')}oz (${Math.round(x.cupMl)} ml) cup, ${r.iceNote}.<br>
-      Per cup: ${per}${x.pourMl > x.cupMl ? ' <span class="bad">· more liquid than the cup holds</span>' : ''}<br>
-      <span class="muted">Cost per cup = ${breakdown}</span><br>
-      Batch ${rm(x.batch)} · <b>cost ${rm(x.cost)}/cup</b> · retail ${rm(x.price)} · <span class="hl">margin ${rm(x.margin)} (${x.price ? Math.round(x.margin / x.price * 100) : 0}%)</span>`;
+    const cupCost = v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0, ice = v('c_ice');
+    const unit = r.k === 'a' ? 'jug' : 'batch';
+    const row = (l, val, cls = '') => `<div class="row ${cls}"><span>${l}</span><span>${val}</span></div>`;
+    const f2 = n => (+n).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+    const ingRows = r.ing.map(([id, n]) => {
+      const sc = RV(r, 's_' + id), ps = RV(r, 'n_' + id) ? RV(r, 't_' + id) / RV(r, 'n_' + id) : 0, nm = n.replace(/ \(per batch\)/, '');
+      const u = /per batch/.test(n) ? 'portion' : 'scoop';
+      return row(`${nm}: ${f2(sc)} ${u}${sc === 1 ? '' : 's'} ÷ ${x.cups} cups = ${f2(sc / x.cups)} ${u} × ${rm(ps)}`, rm(sc * ps / x.cups));
+    }).join('');
+    $(`r${r.k}_out`).innerHTML = `<div class="math">
+      <h4>HOW TO MAKE IT</h4>
+      Mix the ${unit}, then <b>pour ${Math.round(x.pourMl)} ml</b> into each ${RV(r, 'oz')}oz cup (holds ${Math.round(x.cupMl)} ml), ${r.iceNote}.
+      ${x.pourMl > x.cupMl ? '<br><span class="bad">⚠ That is more liquid than the cup holds. Use less water or a bigger cup.</span>' : ''}
+      <h4>WHAT ONE CUP COSTS YOU</h4>
+      ${ingRows}
+      ${row(`8oz cup: ${rm(v('c_cupPack'))} pack ÷ ${v('c_cupQty')} cups`, rm(cupCost))}
+      ${ice ? row('Ice', rm(ice)) : ''}
+      ${row('= COST PER CUP', rm(x.cost), 'tot')}
+      <h4>WHAT YOU MAKE PER CUP</h4>
+      ${row(`Selling price ${rm(x.price)} − cost ${rm(x.cost)}`, `<span class="hl">${rm(x.margin)}</span>`, 'tot')}
+      ${row('Profit as % of the price (margin)', `${x.price ? Math.round(x.margin / x.price * 100) : 0}%`)}
+      <h4>ONE FULL ${unit.toUpperCase()} (${x.cups} CUPS)</h4>
+      ${row('Ingredients only', rm(x.batch))}
+      ${row(`+ ${x.cups} cups${ice ? ' & ice' : ''}`, rm(x.cups * (cupCost + ice)))}
+      ${row(`= Total cost · sells for ${rm(x.cups * x.price)}`, rm(x.batch + x.cups * (cupCost + ice)), 'tot')}
+      ${row(`Profit if all ${x.cups} cups sell`, `<span class="hl">${rm(x.cups * x.price - x.batch - x.cups * (cupCost + ice))}</span>`)}
+    </div>`;
   });
   const A = v('sFlow'), B = v('sBuild'), fa = R.a, fb = R.b;
   const jugs = Math.ceil(A / fa.cups), blends = Math.ceil(B / fb.cups);
@@ -451,15 +484,17 @@ function calc() {
   const shop = r => r.ing.map(([id, n]) => `${+(RV(r, 's_' + id) * (r.k === 'a' ? jugs : blends)).toFixed(2)} ${n.replace(/ \(per batch\)/, ' (batches)')}`).join(' · ');
   const left = (r, n, x) => n % x.cups ? ` <span class="warn">(${x.cups - n % x.cups} spare cup${x.cups - n % x.cups > 1 ? 's' : ''} in the last ${r.k === 'a' ? 'jug' : 'blend'})</span>` : '';
   const missing = [['c_ice', 'ice'], ['o_water', 'mineral water'], ['o_sample', 'sampling cups']].filter(([id]) => !v(id)).map(([, n]) => n);
+  const ingCost = jugs * fa.batch + blends * fb.batch, cupsCost = (A + B) * cupIce;
+  const prow = (l, hint, val, cls = '') => `<div class="metric-row"><span>${l}${hint ? `<br><span class="hint">${hint}</span>` : ''}</span><span class="${cls}">${val}</span></div>`;
   $('proj').innerHTML = `
-    <div class="metric-row"><span>PREP: ${jugs} FLOW JUG${jugs === 1 ? '' : 'S'}${left(RECIPES[0], A, fa)}</span><span class="muted" style="text-transform:none">${shop(RECIPES[0])} · ${jugs * fa.water} ml water</span></div>
-    <div class="metric-row"><span>PREP: ${blends} BUILD BLEND${blends === 1 ? '' : 'S'}${left(RECIPES[1], B, fb)}</span><span class="muted" style="text-transform:none">${shop(RECIPES[1])} · ${blends * fb.water} ml water</span></div>
-    <div class="metric-row"><span>CUPS USED</span><span>${A + B} of ${v('c_cupQty')} in a pack${A + B > v('c_cupQty') ? ' <span class="bad">· buy another pack</span>' : ''}</span></div>
-    <div class="metric-row"><span>REVENUE / SATURDAY (FULL PRICE)</span><span class="accent">${rm(rev)}</span></div>
-    <div class="metric-row"><span>TOTAL COST / SATURDAY (INCL. FREEBIES)</span><span>${rm(cost)}</span></div>
-    <div class="metric-row"><span>NET PROFIT / SATURDAY</span><span class="hl">${rm(profit)}</span></div>
-    <div class="metric-row"><span>NET / MONTH (${v('sats')} SATS × ${v('nodes')} NODE)</span><span class="hl">${rm(month * v('nodes'))}</span></div>
-    <div class="muted" style="font-size:10px;text-transform:none">Retail here is for this calculator only; the price runners pay at the booth comes from PROTOCOLS in assets/recup-core.js (Flow RM ${C.PROTOCOLS.N01.price} · Build RM ${C.PROTOCOLS.N02.price}). Ascension discounts lower real revenue. ${missing.length ? `<span class="warn">Still RM 0: ${missing.join(', ')}.</span>` : ''}</div>`;
+    ${prow(`PREP: ${jugs} FLOW JUG${jugs === 1 ? '' : 'S'}${left(RECIPES[0], A, fa)}`, `${shop(RECIPES[0])} · ${jugs * fa.water} ml water`, '')}
+    ${prow(`PREP: ${blends} BUILD BATCH${blends === 1 ? '' : 'ES'}${left(RECIPES[1], B, fb)}`, `${shop(RECIPES[1])} · ${blends * fb.water} ml water`, '')}
+    ${prow('8OZ CUPS NEEDED', `out of ${v('c_cupQty')} in one pack`, `${A + B}${A + B > v('c_cupQty') ? ' <span class="bad">· buy another pack</span>' : ''}`)}
+    ${prow('MONEY IN (IF EVERY CUP SELLS AT FULL PRICE)', `${A} × ${rm(fa.price)} + ${B} × ${rm(fb.price)}`, rm(rev), 'accent')}
+    ${prow('MONEY OUT', `ingredients ${rm(ingCost)} (whole jugs/batches) + cups${v('c_ice') ? ' & ice' : ''} ${rm(cupsCost)} + freebies & other ${rm(over)}`, rm(cost))}
+    ${prow('PROFIT THIS SATURDAY', 'money in − money out', rm(profit), 'hl')}
+    ${prow(`PROFIT PER MONTH`, `${rm(profit)} × ${v('sats')} Saturdays × ${v('nodes')} booth${v('nodes') === 1 ? '' : 's'}`, rm(month * v('nodes')), 'hl')}
+    <div class="hint" style="margin-top:6px">Prices here are for planning only. What runners actually pay at the booth is set in assets/recup-core.js (THE FLOW RM ${C.PROTOCOLS.N01.price} · THE BUILD RM ${C.PROTOCOLS.N02.price}), and Ascension discounts (10% / 20% / 25%) lower the real takings. ${missing.length ? `<span class="warn">Not filled in yet (counted as RM 0): ${missing.join(', ')}.</span>` : ''}</div>`;
   window.__fin = { aCost: fa.cost, aMargin: fa.margin, bCost: fb.cost, bMargin: fb.margin, rev, profit, month };
   document.querySelectorAll('.f2').forEach(el => settings.inputs[el.id] = el.value);
   settings.inputs.headcount = $('headcount').value; saveSettings();
@@ -521,19 +556,22 @@ function toggleCheck(k, on) { settings.checks[k] = on; saveSettings(); paint(); 
 
 function renderAlerts(s) {
   const a = [];
-  if (!LAST.loggedIn) a.push(['act', 'NOT LOGGED IN. Showing this device only. Log in above to see every runner.']);
+  if (!LAST.loggedIn) a.push(['act', 'Not logged in, so you only see runners saved on this device. Log in at the top to see everyone.']);
   else if (!LAST.remoteOk) a.push(['act', /runners|schema cache/.test(LAST.error || '')
     ? 'Database not set up yet. Run supabase/recup_station.sql in Supabase → SQL Editor.'
-    : `Can't read runners (${esc(LAST.error || 'offline')}). Check the connection, or that this email is in recup_staff.`]);
-  if (!C.SITE_URL) a.push(['watch', 'SITE_URL not set. QR codes and PDF links point to this computer, not the internet.']);
-  if (!C.BUSINESS_WA) a.push(['watch', 'BUSINESS_WA not set. The "message us on WhatsApp" option for no-phone runners is hidden.']);
-  if (LAST.pending) a.push(['watch', `${LAST.pending} update(s) queued offline. They'll sync when back online.`]);
-  if (s.pdfTodo) a.push(['watch', `${s.pdfTodo} runner(s) still waiting for their Repair Manual. Filter: PDF TO SEND.`]);
-  if (s.reservedWaiting >= 5) a.push(['watch', `${s.reservedWaiting} online reservations haven't come to the booth. DM them before Saturday.`]);
-  if (s.left <= 10) a.push(['act', `Only ${s.left} units left.`]); else if (s.left <= 20) a.push(['watch', `${s.left} units left.`]);
-  if (s.total >= 5 && pct(s.shared, s.total) < 50) a.push(['watch', `Only ${pct(s.shared, s.total)}% share contact. Lean on the QR + member code; it still tracks cups.`]);
-  if (Object.values(C.PROTOCOLS).some(p => !p.price)) a.push(['watch', 'Some menu prices are TBC (e.g. The Flush). Set them in PROTOCOLS / ADDONS in recup-core.js.']);
-  if (!a.length) a.push(['good', 'All systems nominal.']);
+    : `Can't load runners (${esc(LAST.error || 'offline')}). Check the internet, or that your email is on the staff list (recup_staff).`]);
+  if (!C.SITE_URL) a.push(['watch', 'Website address not set (SITE_URL in assets/recup-core.js), so QR codes and manual links only work on this computer.']);
+  if (!C.BUSINESS_WA) a.push(['watch', 'Your WhatsApp Business number isn\'t set (BUSINESS_WA in assets/recup-core.js), so runners can\'t tap "message us on WhatsApp". Send me the number to switch it on.']);
+  if (LAST.pending) a.push(['watch', `${LAST.pending} change(s) saved on this device while offline. They upload by themselves when the internet is back.`]);
+  if (s.pdfTodo) a.push(['watch', `${s.pdfTodo} runner(s) haven't been sent their Repair Manual yet. Tap the MANUAL TO SEND filter in the runner list.`]);
+  if (s.reservedWaiting >= 5) a.push(['watch', `${s.reservedWaiting} runners did the online diagnostic but haven't collected a cup. Message them before Saturday.`]);
+  const plan = stockUnits();
+  if (s.unitsToday && s.left === 0) a.push(['act', `All ${plan} planned cups poured today. Sold out: switch to taking names for next Saturday.`]);
+  else if (s.unitsToday && s.left <= Math.ceil(plan * .2)) a.push(['act', `Only ${s.left} of ${plan} cups left today.`]);
+  else if (s.unitsToday && s.left <= Math.ceil(plan * .4)) a.push(['watch', `${s.left} of ${plan} cups left today.`]);
+  if (s.total >= 5 && pct(s.shared, s.total) < 50) a.push(['watch', `Only ${pct(s.shared, s.total)}% gave a WhatsApp or Instagram. That's OK: their member code still tracks cups.`]);
+  if (Object.values(C.PROTOCOLS).some(p => !p.price)) a.push(['watch', 'Some drinks have no price yet (e.g. The Flush, add-ons), so the menu shows "TBC". Send me the prices to fill them in.']);
+  if (!a.length) a.push(['good', 'Nothing needs attention.']);
   $('alerts').innerHTML = a.map(([l, t]) => `<div class="alert ${l}"><b>${l === 'act' ? 'ACT NOW' : l === 'watch' ? 'WATCH' : 'OK'}</b> · ${t}</div>`).join('');
 }
 
@@ -543,7 +581,7 @@ function renderBrief(s) {
 `# RECUP STATION SYSTEM BRIEF
 MISSION: Biological Integrity. ARCHITECT: Joey Tan.
 NODE: ${C.NODE_NAME} · ${$('countdown').textContent}
-STOCK: ${stockUnits()} cups planned · ${s.left} left
+CUPS TODAY: ${stockUnits()} planned · ${s.unitsToday} poured · ${s.left} left
 MODEL: Phase 1 Awareness (The Diagnostic) -> Phase 2 Interception (roadside booth) -> Ascension ladder (5 cups)
 
 ## LIVE
@@ -551,7 +589,7 @@ Runners: ${s.total} (online ${s.online} / roadside ${s.roadside}) · capture ${s
 Reserved, not yet at booth: ${s.reservedWaiting} · online→booth ${s.arrival}%
 Cup 1: ${s.cup1} · Cup 2+: ${s.cup2} (${s.returnRate}%) · Activated (4+): ${s.activated}
 Repair Manual sent: ${s.sent} · waiting: ${s.pdfTodo} · shared contact ${pct(s.shared, s.total)}%
-Real revenue: ${rm(s.revenue)}
+Money taken today: ${rm(s.revenueToday)} · all time: ${rm(s.revenue)} (after Ascension discounts)
 
 ## UNIT ECONOMICS
 THE FLOW RM${RV(RECIPES[0], 'price')} · cost ${rm(f.aCost || 0)} · margin ${rm(f.aMargin || 0)}
@@ -624,7 +662,7 @@ function renderClaims() {
     return `<div class="claim-row"><div><b style="text-transform:none">${esc((l.name || '').split(' ')[0] || c.code)}</b> <span class="muted">${esc(c.code)}</span><small>${wait ? wait + ' min ago' : 'just now'}${ans ? ' · ' + esc(ans) : ''}</small></div>
       <div><b>CUP ${c.cup_no}</b><small>${rung ? esc(rung.reward) : ''}</small></div>
       <div><select id="cp-${c.id}">${opts}</select></div>
-      <div class="btn-row"><button class="btn-t primary" onclick="approve('${c.id}')">✓ POURED + PAID</button><button class="btn-t sm" onclick="reject('${c.id}')">✗</button></div></div>`;
+      <div class="btn-row"><button class="btn-t primary" onclick="approve('${c.id}')" title="Logs the cup, applies their Ascension discount, unlocks their reward">✓ POURED + PAID</button><button class="btn-t sm" onclick="reject('${c.id}')">✗</button></div></div>`;
   }).join('');
 }
 async function approve(id) {

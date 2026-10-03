@@ -449,7 +449,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
       const s = src[i % src.length]; const squat = s === 'DIAGNOSTIC_ONLINE' ? ['SOLID', 'SHAKY', 'COLLAPSE'][i % 3] : '';
       const pain = C.PAINS[i % 7]; const cups = [0, 1, 1, 1, 2, 2, 3, 4, 5, 1][i % 10];
       const protocol = recommend({ squat, pain }); const hist = [];
-      for (let c = 1; c <= cups; c++) { const pr = priceFor(protocol, c); hist.push({ n: c, ts: new Date().toISOString(), product: protocol, paid: pr.paid, units: pr.units }); }
+      for (let c = 1; c <= cups; c++) { const pr = priceFor(protocol, c); hist.push({ n: c, ts: new Date(Date.now() - ((cups - c) * 7 + (i % 3 ? 7 : 0)) * 864e5).toISOString(), product: protocol, paid: pr.paid, units: pr.units }); }
       const method = cm[i % cm.length];
       all.push({
         id: 'DEMO' + i + Math.random().toString(36).slice(2, 5), code: newCode(), ts: new Date(Date.now() - i * 41 * 60000).toISOString(),
