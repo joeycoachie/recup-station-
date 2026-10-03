@@ -385,28 +385,33 @@ function renderIntel() {
 const v = id => parseFloat($(id).value) || 0;
 // ---------- Smart recipe calculator ----------
 // One batch = some scoops of each ingredient in some ml of water, poured into N cups.
+// Ingredient cost per scoop = tub price ÷ scoops in the tub. Tub prices: Herbalife Malaysia
+// Distributor Price List (19 May 2026), Supervisor 50% nett purchase price.
 // Everything cyan is editable; it works out ml + scoops per cup, cost, margin and the prep list.
 const OZ = 29.57;
 const RECIPES = [
   { k: 'a', name: 'THE FLOW', sub: '8OZ MOBILITY · JUG', water: 1000, cups: 10, oz: 8, price: 18, iceNote: 'fill the rest of the cup with ice',
-    ing: [['nite', 'Niteworks', 2.5, 0], ['col', 'Collagen', 10, 4], ['ele', 'Electrolyte', 10, 2]] },
+    ing: [['nite', 'Niteworks 150g', 2.5, 228.81, 15], ['col', 'Collagen Plus 300g', 10, 201.90, 30], ['ele', 'CR7 Drive 810g', 10, 121.73, 60]] },
   { k: 'b', name: 'THE BUILD', sub: '8OZ DENSITY · BLENDER', water: 800, cups: 3, oz: 8, price: 10, iceNote: 'only 3 ice cubes',
-    ing: [['rs', 'RS Pro', 2, 3.69], ['pb', 'PB / Caramel (per batch)', 1, 1.5]] },
+    ing: [['rs', 'RS Pro 990g', 2, 368.49, 80], ['pb', 'PB / Caramel (per batch)', 1, 1.50, 1]] },
 ];
 const RV = (r, f) => v(`r${r.k}_${f}`);
 (function buildRecipes() {
   const inp = (id, val, w = 56) => `<input class="calc-input f2" style="width:${w}px" id="${id}" value="${val}">`;
   $('recipes').innerHTML = RECIPES.map(r => `<div class="protocol-card">
     <b>${r.name}</b> <span class="muted" style="font-size:10px">${r.sub}</span>
-    <div class="muted" style="font-size:10px;margin:8px 0 4px">ONE BATCH · SCOOPS × YOUR COST PER SCOOP</div>
-    ${r.ing.map(([id, n, sc, cost]) => `<div class="metric-row"><span style="text-transform:none">${n}</span><span>${inp(`r${r.k}_s_${id}`, sc, 44)} × RM ${inp(`r${r.k}_c_${id}`, cost.toFixed(2))}</span></div>`).join('')}
+    <div class="muted" style="font-size:10px;margin:8px 0 4px">ONE BATCH · SCOOPS × (TUB RM ÷ SCOOPS PER TUB)</div>
+    ${r.ing.map(([id, n, sc, tub, per]) => `<div class="metric-row"><span style="text-transform:none">${n}</span><span>${inp(`r${r.k}_s_${id}`, sc, 40)} × (RM ${inp(`r${r.k}_t_${id}`, tub.toFixed(2), 62)} ÷ ${inp(`r${r.k}_n_${id}`, per, 36)})</span></div>
+      <div class="muted" style="font-size:10px;text-align:right;margin:-6px 0 6px" id="r${r.k}_cps_${id}"></div>`).join('')}
     <div class="metric-row"><span>WATER (ML) → CUPS</span><span>${inp(`r${r.k}_water`, r.water)} → ${inp(`r${r.k}_cups`, r.cups, 40)}</span></div>
     <div class="metric-row"><span>CUP SIZE (OZ) · RETAIL RM</span><span>${inp(`r${r.k}_oz`, r.oz, 40)} · ${inp(`r${r.k}_price`, r.price.toFixed(2))}</span></div>
     <div class="arc-box" style="margin-top:8px" id="r${r.k}_out"></div></div>`).join('');
 })();
 function recipe(r) {
   const cups = Math.max(1, RV(r, 'cups')), water = RV(r, 'water'), cupMl = RV(r, 'oz') * OZ;
-  const batch = r.ing.reduce((t, [id]) => t + RV(r, 's_' + id) * RV(r, 'c_' + id), 0);
+  const perScoop = id => RV(r, 'n_' + id) ? RV(r, 't_' + id) / RV(r, 'n_' + id) : 0;
+  r.ing.forEach(([id]) => { const el = $(`r${r.k}_cps_${id}`); if (el) el.textContent = `= ${rm(perScoop(id))} per scoop`; });
+  const batch = r.ing.reduce((t, [id]) => t + RV(r, 's_' + id) * perScoop(id), 0);
   const cup = v('c_cupQty') ? v('c_cupPack') / v('c_cupQty') : 0;
   const cost = batch / cups + cup + v('c_ice'), price = RV(r, 'price');
   return { cups, water, cupMl, batch, cost, price, margin: price - cost, pourMl: water / cups };
@@ -430,7 +435,7 @@ function calc() {
   const profit = rev - cost, month = profit * v('sats');
   const shop = r => r.ing.map(([id, n]) => `${+(RV(r, 's_' + id) * (r.k === 'a' ? jugs : blends)).toFixed(2)} ${n.replace(/ \(per batch\)/, ' (batches)')}`).join(' · ');
   const left = (r, n, x) => n % x.cups ? ` <span class="warn">(${x.cups - n % x.cups} spare cup${x.cups - n % x.cups > 1 ? 's' : ''} in the last ${r.k === 'a' ? 'jug' : 'blend'})</span>` : '';
-  const missing = [['ra_c_nite', 'Niteworks'], ['c_ice', 'ice'], ['o_water', 'mineral water'], ['o_sample', 'sampling cups']].filter(([id]) => !v(id)).map(([, n]) => n);
+  const missing = [['c_ice', 'ice'], ['o_water', 'mineral water'], ['o_sample', 'sampling cups']].filter(([id]) => !v(id)).map(([, n]) => n);
   $('proj').innerHTML = `
     <div class="metric-row"><span>PREP: ${jugs} FLOW JUG${jugs === 1 ? '' : 'S'}${left(RECIPES[0], A, fa)}</span><span class="muted" style="text-transform:none">${shop(RECIPES[0])} · ${jugs * fa.water} ml water</span></div>
     <div class="metric-row"><span>PREP: ${blends} BUILD BLEND${blends === 1 ? '' : 'S'}${left(RECIPES[1], B, fb)}</span><span class="muted" style="text-transform:none">${shop(RECIPES[1])} · ${blends * fb.water} ml water</span></div>
