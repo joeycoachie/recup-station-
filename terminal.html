@@ -557,6 +557,7 @@ function toggleCheck(k, on) { settings.checks[k] = on; saveSettings(); paint(); 
 function renderAlerts(s) {
   const a = [];
   if (!LAST.loggedIn) a.push(['act', 'Not logged in, so you only see runners saved on this device. Log in at the top to see everyone.']);
+  else if (LAST.notStaff) a.push(['act', `You're logged in as ${esc(LAST.email || 'this email')}, but it isn't on the staff list, so the database shows you no runners. Log out and use joeytqw@gmail.com, or add this email in Supabase → SQL Editor: insert into recup_staff (email) values ('${esc(LAST.email || 'name@example.com')}');`]);
   else if (!LAST.remoteOk) a.push(['act', /runners|schema cache/.test(LAST.error || '')
     ? 'Database not set up yet. Run supabase/recup_station.sql in Supabase → SQL Editor.'
     : `Can't load runners (${esc(LAST.error || 'offline')}). Check the internet, or that your email is on the staff list (recup_staff).`]);
@@ -721,7 +722,7 @@ async function refresh() {
   const r = await RECUP.loadLeads(); LEADS = r.leads; LAST = r;
   const live = r.remoteOk;
   $('syncDot').className = 'dot ' + (live ? 'live' : r.loggedIn ? 'bad' : 'local');
-  $('syncTxt').textContent = (live ? 'LIVE · SYNCED ' : r.loggedIn ? 'LOGGED IN · NOT SYNCING ' : 'LOCAL DEVICE ONLY · ') + new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('syncTxt').textContent = (live ? 'LIVE · SYNCED ' : r.notStaff ? 'NOT ON STAFF LIST · ' : r.loggedIn ? 'LOGGED IN · NOT SYNCING ' : 'LOCAL DEVICE ONLY · ') + new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: false });
   $('loginPanel').style.display = r.loggedIn ? 'none' : '';
   $('logoutBtn').style.display = r.loggedIn ? '' : 'none';
   paint();

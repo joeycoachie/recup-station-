@@ -299,8 +299,13 @@ const RECUP = (() => {
     const local = store.get(K_LEADS, []);
     let remote = [], remoteOk = false, error = '';
     const token = await staffToken();
+    let notStaff = false;
     if (token) {
       try {
+        // A login that isn't on the staff list gets an empty list from the database, not an error.
+        // Check first so we never mistake that for "no runners" (and never prune this device's copies).
+        notStaff = (await rest('rpc/recup_is_staff', { method: 'POST', body: {}, token })) === false;
+        if (notStaff) throw new Error('not_staff');
         remote = (await rest('runners?select=*&order=ts.desc&limit=5000', { token })).map(fromRow); remoteOk = true;
         try { const eng = new Set((await rest('runner_engine?select=runner_id&engine_ok=eq.true', { token })).map(e => e.runner_id)); remote.forEach(l => l.engineOk = eng.has(l.id)); } catch {}
       }
@@ -317,7 +322,7 @@ const RECUP = (() => {
       if (pruned) store.set(K_LEADS, keep);
     }
     const leads = mergeById([remote, keep]).filter(l => l.ts).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
-    return { leads, remoteOk, loggedIn: !!token, error, pruned, pending: store.get(K_QUEUE, []).length };
+    return { leads, remoteOk, loggedIn: !!token, notStaff, email: (session() || {}).email || '', error, pruned, pending: store.get(K_QUEUE, []).length };
   }
 
   // Booth lookup. Staff (logged in): code, phone, @handle or name. Otherwise: exact member code only.
