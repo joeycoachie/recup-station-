@@ -247,14 +247,14 @@
 
   <!-- 08 PROTOCOLS -->
   <div class="panel s6">
-    <h2>08_MARKETING_VOICE · BODY_SCIENCE_SPECIALIST <a class="btn-t primary" href="marketing.html" target="_blank">OPEN MARKETING KIT →</a></h2>
+    <h2>08_MARKETING_VOICE · PLAIN_WORDS <a class="btn-t primary" href="marketing.html" target="_blank">OPEN MARKETING KIT →</a></h2>
     <div class="protocol-card" style="opacity:.55"><b>A · PRE-RUN · NITRIC PRIME</b> <span class="status-tag mid">NOT LAUNCHED · CUP 2 REWARD</span><div class="muted" style="font-size:11px;margin-top:4px;text-transform:none">Nitric Oxide + Electrolytes 15 min before flag-off. "Opens your body's pipes so energy flows faster."</div></div>
     <div class="protocol-card"><b>B · DURING-RUN · THE ELECTROLYTE BALANCE → THE FLOW</b><div class="muted" style="font-size:11px;margin-top:4px;text-transform:none">Sip electrolytes every 2km. Don't wait until you're thirsty.</div></div>
     <div class="protocol-card"><b>C · POST-RUN · THE METABOLIC WINDOW → THE BUILD</b><div class="muted" style="font-size:11px;margin-top:4px;text-transform:none">1. Protein + Collagen immediately · 2. Acai antioxidant · 3. The Night Shift before bed.</div></div>
     <div class="voice" style="margin-top:12px">
-      <b>HOOK:</b> "If you can't do this after your run, your metabolic engine is leaking. You aren't recovering; you're just decaying. Scan for the diagnostic."<br>
-      <b>BOOTH:</b> "Did you do the online diagnostic?" · Big jugs, no labels. "The Protocol", not a supplement.<br>
-      <b>CALL:</b> "Scan. Identify the Leak. Calibrate your Repair."
+      <b>HOOK:</b> "Can't do this squat after your run? Your body isn't recovering properly. Find out why in 60 seconds."<br>
+      <b>BOOTH:</b> "Did you do the online diagnostic?" · Big jugs, no labels. Say "the drink", never a brand name.<br>
+      <b>CALL:</b> "Check your body. Find the weak spot. Fix it."
     </div>
   </div>
 
@@ -621,7 +621,7 @@ async function passChassis(id) {
   const l = LEADS.find(x => x.id === id); if (!l) return;
   if (!confirm(`${l.name} passed the squat re-test (knee over toes, heel tap, no collapse)?\n\nThis ticks MOVEMENT on their S-Rank.`)) return;
   await RECUP.updateLead(id, { chassisOk: true }); l.chassisOk = true; paint();
-  toast('Movement ✓. Inside health ticks when their HealthBar session is marked DONE.');
+  toast('Movement ✓. Inside health ticks when their RECUP.STN HQ session is marked DONE.');
 }
 async function markSent(id) { await RECUP.updateLead(id, { manualSent: 'YES' }); const l = LEADS.find(x => x.id === id); if (l) l.manualSent = 'YES'; setTimeout(paint, 300); }
 function setFilter(f) { FILTER = f; document.querySelectorAll('.filters .btn-t').forEach(b => b.classList.toggle('active', b.dataset.f === f)); renderFeed(); }
@@ -686,7 +686,7 @@ function renderHB() {
   $('hbSub').textContent = `${req} to book · ${HB.length - req} booked · set a time and it shows on the runner's card`;
   $('hbList').innerHTML = HB.map(b => {
     const l = LEADS.find(x => x.id === b.runner_id) || {};
-    const msg = l.phone ? `<a class="btn-t sm wa" href="https://wa.me/${l.phone}?text=${encodeURIComponent(`Hi ${(l.name || '').split(' ')[0]}, RECUP.STN here. Your Health Bar session: ${RECUP.slotText(b.slot) || '(time to confirm)'}${b.place ? ' at ' + b.place : ''}. See it on your card: ${RECUP.memberUrl(l)}`)}" target="_blank">WA</a>`
+    const msg = l.phone ? `<a class="btn-t sm wa" href="https://wa.me/${l.phone}?text=${encodeURIComponent(`Hi ${(l.name || '').split(' ')[0]}, RECUP.STN here. Your RECUP.STN HQ session: ${RECUP.slotText(b.slot) || '(time to confirm)'}${b.place ? ' at ' + b.place : ''}. See it on your card: ${RECUP.memberUrl(l)}`)}" target="_blank">WA</a>`
       : l.instagram ? `<a class="btn-t sm ig" href="${RECUP.igDmUrl(l)}" target="_blank">IG DM</a>` : '';
     return `<div class="hb-row ${b.status === 'BOOKED' ? 'booked' : ''}"><div><b style="text-transform:none">${esc((l.name || '').split(' ')[0] || b.code)}</b> <span class="muted">${esc(b.code)}</span><small>${b.status === 'BOOKED' ? '✓ BOOKED ' + esc(RECUP.slotText(b.slot)) : 'REQUESTED ' + new Date(b.created_at).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' })}</small></div>
       <div style="text-transform:none"><b>${esc((b.concerns || []).join(' · ') || '—')}</b>${b.goal ? `<small>“${esc(b.goal)}”</small>` : ''}<small>For: ${esc(b.for_whom || 'Myself')} · ${b.mode === 'ONLINE' ? '🌏 ONLINE CALL' : '📍 CAFE'} · Prefers: ${esc(b.preferred || '—')}</small></div>
@@ -701,7 +701,7 @@ async function bookHB(id) {
   catch (e) { alert(e.message); }
   document.activeElement && document.activeElement.blur(); pollHB();
 }
-async function setHB(id, status) { if (status === 'CANCELLED' && !confirm('Cancel this Health Bar appointment?')) return; try { await RECUP.updateHealthbar(id, { status }); } catch (e) { alert(e.message); } pollHB(); }
+async function setHB(id, status) { if (status === 'CANCELLED' && !confirm('Cancel this RECUP.STN HQ appointment?')) return; try { await RECUP.updateHealthbar(id, { status }); } catch (e) { alert(e.message); } pollHB(); }
 
 async function reject(id) { if (!confirm('Remove this claim? (No cup is logged.)')) return; try { await RECUP.rejectClaim(id); } catch (e) { alert(e.message); } pollClaims(); }
 function demo() { if (RECUP.session()) return alert('Demo data is only for previewing while logged out. Logged in, the terminal shows the real database only.'); RECUP.seedDemo(); refresh(); }

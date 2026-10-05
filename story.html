@@ -79,7 +79,7 @@
 <script>
   const C = RECUP_CONFIG; const $ = id => document.getElementById(id);
   const INK = '#20211D', RUST = '#C1592E', STONE = '#F1EEE6', SAGE = '#4F6B4C', MUTED = '#B8B4A6';
-  const GRADES = { A: ['SOLID MOVEMENT', 'My mechanics hold.'], B: ['ENERGY LEAK', "I'm losing power through the wobble."], C: ['STRUCTURAL REPAIR', 'Rebuilding my knees, hips and form.'] };
+  const GRADES = { A: ['SOLID MOVEMENT', 'My mechanics hold.'], B: ['ENERGY LEAK', "I'm losing power through the wobble."], C: ['REBUILD MODE', 'Rebuilding my knees, hips and form.'] };
   const ARCH = { SPRINTER: 'The Sprinter', DIESEL: 'The Diesel', TANK: 'The Tank', 'SOUL RUNNER': 'The Soul Runner', 'OFFICE BODY': 'The Office Body' };
   const qs = new URLSearchParams(location.search);
   let runner = { grade: qs.get('g') || 'B', archetype: qs.get('a') || '', protocol: qs.get('p') || 'N02', cups: 0 };
@@ -115,22 +115,22 @@
 
   function drawBold() {
     bg(true); brand(RUST);
-    text('MY KINETIC GRADE', W / 2, 430, `600 44px ${SANS}`, MUTED);
+    text('MY SQUAT GRADE', W / 2, 430, `600 44px ${SANS}`, MUTED);
     text(runner.grade, W / 2, 1000, `800 620px ${DISPLAY}`, '#fff');
     text(g()[0], W / 2, 1130, `800 96px ${DISPLAY}`, RUST);
     text(g()[1], W / 2, 1210, `400 40px ${SANS}`, '#DEDACD');
     if (runner.archetype && runner.archetype !== 'NONE') text(ARCH[runner.archetype] || runner.archetype, W / 2, 1360, `700 52px ${SANS}`, '#fff');
-    text(`Protocol: ${proto()}`, W / 2, 1430, `500 36px ${SANS}`, MUTED);
+    text(`My drink: ${proto()}`, W / 2, 1430, `500 36px ${SANS}`, MUTED);
     cta(true);
   }
   function drawCard() {
     bg(false); brand(RUST);
     roundRect(110, 330, W - 220, 1150, 44); ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(32,33,29,.18)'; ctx.shadowBlur = 50; ctx.fill(); ctx.shadowBlur = 0;
-    text('KINETIC DIAGNOSTIC', W / 2, 460, `600 38px ${SANS}`, '#7A766A');
+    text('SQUAT TEST', W / 2, 460, `600 38px ${SANS}`, '#7A766A');
     text(runner.grade, W / 2, 900, `800 460px ${DISPLAY}`, INK);
     text(g()[0], W / 2, 1020, `800 84px ${DISPLAY}`, RUST);
     if (runner.archetype && runner.archetype !== 'NONE') text(ARCH[runner.archetype] || runner.archetype, W / 2, 1120, `700 48px ${SANS}`, INK);
-    text(`Protocol: ${proto()}`, W / 2, 1185, `500 34px ${SANS}`, '#7A766A');
+    text(`My drink: ${proto()}`, W / 2, 1185, `500 34px ${SANS}`, '#7A766A');
     // ascension ladder
     const n = C.LADDER.length, sz = 96, gap = 34, x0 = W / 2 - (n * sz + (n - 1) * gap) / 2;
     for (let i = 0; i < n; i++) {
@@ -151,7 +151,7 @@
     text(runner.grade, W - 200, 318, `800 220px ${DISPLAY}`, '#fff');
     text('RECUP.STN', 90, 150, `800 54px ${DISPLAY}`, '#fff', 'left');
     text(`GRADE ${runner.grade} · ${g()[0]}`, 90, 1360, `800 88px ${DISPLAY}`, '#fff', 'left');
-    if (runner.archetype && runner.archetype !== 'NONE') text(`${ARCH[runner.archetype] || runner.archetype} · Protocol: ${proto()}`, 90, 1430, `500 38px ${SANS}`, '#DEDACD', 'left');
+    if (runner.archetype && runner.archetype !== 'NONE') text(`${ARCH[runner.archetype] || runner.archetype} · My drink: ${proto()}`, 90, 1430, `500 38px ${SANS}`, '#DEDACD', 'left');
     cta(true);
   }
   /* ---------- "My run": Strava-style stats card ---------- */

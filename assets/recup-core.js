@@ -33,8 +33,8 @@ const RECUP_CONFIG = {
   // Menu. price: null = not set yet (shows "TBC", counts RM 0 in revenue)
   PROTOCOLS: {
     FLUSH: { code: 'FLUSH', name: 'THE FLUSH',  phase: 'CHECK-IN', tag: 'Check-in cup · hydrate & reset', price: null },
-    N01:   { code: 'NODE_01', name: 'THE FLOW', phase: 'DURING-RUN', tag: 'Electrolyte balance + structural glue', price: 18 },
-    N02:   { code: 'NODE_02', name: 'THE BUILD', phase: 'POST-RUN', tag: 'Protein + collagen · the metabolic window', price: 10 },   // 3 cups per blend
+    N01:   { code: 'NODE_01', name: 'THE FLOW', phase: 'DURING-RUN', tag: 'Salts + collagen · sip during the run', price: 18 },
+    N02:   { code: 'NODE_02', name: 'THE BUILD', phase: 'POST-RUN', tag: 'Protein + collagen · drink within 30 min', price: 10 },   // 3 cups per blend
   },
 
   // Add-ons & take-home (poster + manual). Nitric Prime is NOT launched yet — shown as locked (Cup 2 reward).
@@ -76,29 +76,30 @@ const RECUP_CONFIG = {
   ],
 };
 
-// HEALTHBAR: our running nutrition cafe. Edit copy here; the runner's card and the side menu use it.
+// HEALTHBAR (internal key) = RECUP.STN HQ in public. Customer copy follows the Plain Language Mandate (SSOT artifact). Edit copy here; the runner's card and the side menu use it.
 RECUP_CONFIG.HEALTHBAR = {
-  NAME: 'HealthBar',
-  PLACE: 'Bukit Damansara Nutrition Cafe',
-  ONLINE: 'Worldwide online calls available',
+  NAME: 'RECUP.STN HQ',
+  PLACE: 'RECUP.STN HQ, Bukit Damansara',
+  ONLINE: 'Or a video call, from anywhere',
   HEADLINE: 'Want a plan built around your body?',
-  PITCH: 'One-on-one nutrition and performance planning at HealthBar, our running nutrition cafe.',
-  CONCERNS: ['Energy', 'Sleep', 'Skin', 'Gut / Toilet', 'Mood & Mental health', 'Biomarkers (BP, cholesterol, blood sugar)',
-             'Thyroid', 'Hormones', 'Fertility', 'PCOS', 'Acid reflux'],
+  PITCH: 'A one-on-one plan for your food, sleep and recovery. In person at RECUP.STN HQ or on a video call.',
+  CONCERNS: ['Energy', 'Sleep', 'Skin', 'Stomach / toilet', 'Mood', 'Belly fat', 'Recovery after runs', 'My health check results'],
+  // Safety questions (Plain Language Mandate · exclusions). Ticked answers are added to the enquiry for staff.
+  SAFETY: ['Pregnant or breastfeeding', 'Kidney disease (stage 3, 4 or 5)', 'Having chemo or radiotherapy', 'Taking blood thinners (e.g. warfarin)', 'None of these'],
 };
 
-// S-RANK = Zero Energy Leaks. Movement (passes the squat) + Inside health (HealthBar session done).
+// S-RANK = Zero Energy Leaks. Movement (passes the squat) + Inside health (RECUP.STN HQ session done).
 RECUP_CONFIG.SRANK = {
-  LINE: 'Zero Energy Leaks. The Calibrated Athlete.',
+  LINE: 'Zero Energy Leaks. Checked inside and out.',
   CHASSIS: ['Movement · outside', 'You pass the squat test: knees stay over your toes, your joints hold.', 'Pass the squat test. Ask for a re-test at the Recup table.'],
-  ENGINE: ['Inside health', 'Your sleep, gut, energy and blood markers are checked at HealthBar.', 'Book a HealthBar session to check your sleep, gut, energy and blood markers.'],
+  ENGINE: ['Inside health', 'Your sleep, stomach, energy and health check results are checked at RECUP.STN HQ.', 'Book a session at RECUP.STN HQ to check your sleep, stomach, energy and health check results.'],
 };
 
 // ABOUT (side menu on the runner's card). DRAFT copy: edit freely.
 RECUP_CONFIG.ABOUT = [
-  ['Who we are', 'RECUP.STN is a Body Science Specialist for runners. Not a juice bar. We sell Metabolic Protocols: what your body needs before, during and after a run, so you recover instead of decay.'],
-  ['How it works', 'Scan. Identify the Leak. Calibrate your Repair. A 60-second diagnostic grades your mechanics, we reserve the right Protocol, and every cup moves you up the Ascension ladder.'],
-  ['Where to find us', 'Every Saturday at the PHB Saujana run club, from flag-off until the cups are gone. One-on-one sessions at HealthBar, our running nutrition cafe in Bukit Damansara, or online worldwide.'],
+  ['Who we are', 'RECUP.STN helps runners recover. Not a juice bar. We make drinks matched to what your body needs before, during and after a run, so you bounce back faster.'],
+  ['How it works', 'Check your body. Find the weak spot. Fix it. A 60-second squat test grades how your legs hold up, we save the right drink for you, and every cup unlocks a reward on your card.'],
+  ['Where to find us', 'Every Saturday at the PHB Saujana run club, from flag-off until the cups are gone. One-on-one sessions at RECUP.STN HQ in Bukit Damansara, or on a video call from anywhere.'],
   ['Your data', 'Only used for your guide, your cups and your rewards. Never shared or sold. Want it removed? Tell us at the table or message us.'],
 ];
 
@@ -116,7 +117,7 @@ const RECUP = (() => {
 
   /* ---------- normalisers ---------- */
   const SQUAT = { 'Yes': 'SOLID', 'Struggle': 'SHAKY', 'No': 'COLLAPSE', 'Solid': 'SOLID', 'Shaky': 'SHAKY', 'Collapse': 'COLLAPSE' };
-  const GRADE = { SOLID: { grade: 'A', label: 'SOLID MOVEMENT' }, SHAKY: { grade: 'B', label: 'ENERGY LEAK' }, COLLAPSE: { grade: 'C', label: 'STRUCTURAL REPAIR' } };
+  const GRADE = { SOLID: { grade: 'A', label: 'SOLID MOVEMENT' }, SHAKY: { grade: 'B', label: 'ENERGY LEAK' }, COLLAPSE: { grade: 'C', label: 'REBUILD MODE' } };
   function normArchetype(v = '') {
     const s = v.toLowerCase();
     if (/^none/.test(s)) return 'NONE';
@@ -429,7 +430,7 @@ const RECUP = (() => {
 `Hi ${first}, RECUP.STN here.
 
 Your member code: ${lead.code}
-Reserved protocol: ${p.name}${lead.grade ? ` (Grade ${lead.grade})` : ''}
+Your saved drink: ${p.name}${lead.grade ? ` (Grade ${lead.grade})` : ''}
 
 Your Free Runner's Repair Manual:
 ${manualUrl(lead)}
@@ -438,7 +439,7 @@ Your Ascension card (track your cups & rewards):
 ${memberUrl(lead)}
 
 Show code ${C.DISCOUNT_CODE} for 10% off your first cup at ${C.NODE_NAME}.
-Scan. Identify the Leak. Calibrate your Repair.`;
+Check your body. Find the weak spot. Fix it.`;
     return `https://wa.me/${lead.phone}?text=${encodeURIComponent(msg)}`;
   }
   // For runners who don't want to type a number: they message US (they choose to share)
@@ -446,7 +447,7 @@ Scan. Identify the Leak. Calibrate your Repair.`;
   function contactWaLink(lead, purpose) {
     if (!C.BUSINESS_WA) return '';
     const first = ((lead && lead.name) || '').split(' ')[0];
-    const why = purpose === 'healthbar' ? "I'd like to book a HealthBar session" : 'I have a question';
+    const why = purpose === 'healthbar' ? "I'd like to book a session at RECUP.STN HQ" : 'I have a question';
     return `https://wa.me/${C.BUSINESS_WA}?text=${encodeURIComponent(`Hi RECUP.STN, ${first ? first + ' here' : ''}${lead && lead.code ? ` (member ${lead.code})` : ''}. ${why}.`)}`;
   }
   function selfWaLink(lead) {

@@ -6,7 +6,7 @@
 <title>RECUP.STN: The Diagnostic</title>
 <meta name="description" content="The Invisible Energy Leak. 60-second runner diagnostic. Reserve your Protocol at PHB Saujana.">
 <meta property="og:title" content="RECUP.STN: The Diagnostic">
-<meta property="og:description" content="If you can't do this after your run, your metabolic engine is leaking. Scan for the diagnostic.">
+<meta property="og:description" content="Can't do this squat after your run? Your body isn't recovering properly. Find out why in 60 seconds.">
 <link rel="stylesheet" href="assets/recup.css">
 <link rel="stylesheet" href="assets/brand.css">
 <style>
@@ -43,13 +43,13 @@
     <section class="step active" data-step="0">
       <div class="phase">RECUP.STN: THE DIAGNOSTIC</div>
       <h1>The Invisible<br><span class="accent">Energy Leak.</span></h1>
-      <p>If you can't do the movement on the next screen after your run, your metabolic engine is leaking. You aren't recovering, you're just decaying.</p>
-      <p style="color:var(--text)">60 seconds → your Grade, a <b>reserved Protocol</b> at the PHB Saujana node, <b>10% off</b> and the free <b>Runner's Repair Manual</b>.</p>
+      <p>Can't do the squat on the next screen after your run? Your body isn't recovering properly. Find out why in 60 seconds.</p>
+      <p style="color:var(--text)">60 seconds → your Grade, <b>a drink saved for you</b> at the PHB Saujana booth, <b>10% off</b> and the free <b>Runner's Repair Manual</b>.</p>
       <button class="btn" onclick="go(1)">START THE DIAGNOSTIC</button>
     </section>
 
     <section class="step" data-step="1">
-      <div class="phase">01 / 07 · THE CALIBRATION</div>
+      <div class="phase">01 / 07 · THE SQUAT TEST</div>
       <h3>Can you do a Patterson Squat (single-leg, heel-touch) without your knee caving in?</h3>
       <figure class="demo">
         <img src="assets/squat-demo.svg" alt="Animated demo: stand on one leg on a step, bend that knee until your other heel taps the floor, knee stays over your toes, then stand back up.">
@@ -71,7 +71,7 @@
     </section>
 
     <section class="step" data-step="3">
-      <div class="phase">03 / 07 · THE LEAK</div>
+      <div class="phase">03 / 07 · WHAT HURTS</div>
       <h3>What hurts most after a run?</h3>
       <p class="hintline">Pick all that apply.</p>
       <div class="grid2 multi" id="painOpts"></div>
@@ -105,7 +105,7 @@
     </section>
 
     <section class="step" data-step="7">
-      <div class="phase">07 / 07 · RESERVE YOUR PROTOCOL</div>
+      <div class="phase">07 / 07 · SAVE YOUR DRINK</div>
       <h3>Your name + where to send your Repair Manual</h3>
       <input class="field" id="name" placeholder="First name is fine" autocomplete="given-name">
       <div class="privacy">🔒 Only used to send your Repair Manual and cup rewards. Never shared or sold.</div>
@@ -116,18 +116,18 @@
       <input class="field" id="contact" style="display:none;margin-top:14px">
       <div class="consent" id="consent" style="display:none">I agree to receive my results and cup rewards from RECUP.STN on this channel.</div>
       <div class="err" id="err"></div>
-      <button class="btn" id="submitBtn" onclick="finish()">RESERVE MY PROTOCOL</button>
+      <button class="btn" id="submitBtn" onclick="finish()">SAVE MY DRINK</button>
       <button class="back" onclick="go(6)">← BACK</button>
     </section>
 
     <section class="step" data-step="8" style="text-align:center">
-      <div class="phase">DIAGNOSTIC COMPLETE · PROTOCOL RESERVED</div>
+      <div class="phase">DONE · YOUR DRINK IS SAVED</div>
       <div class="grade-big" id="rGrade">B</div>
       <div style="font-family:var(--mono);letter-spacing:2px" id="rLabel"></div>
       <div class="result-box" id="rBox" style="text-align:left"></div>
       <div style="font:11px var(--mono);color:var(--muted);letter-spacing:1px">YOUR MEMBER CODE · SCREENSHOT THIS</div>
       <div class="code" id="rCode"></div>
-      <p>At the booth, say <b style="color:var(--text)">"I did the diagnostic"</b> and show this code. Your Protocol is waiting + <b style="color:var(--text)">10% off</b>.</p>
+      <p>At the booth, say <b style="color:var(--text)">"I did the diagnostic"</b> and show this code. Your drink is waiting + <b style="color:var(--text)">10% off</b>.</p>
       <div class="links" id="links"></div>
     </section>
   </div>
@@ -185,7 +185,7 @@
     const lead = await RECUP.submitLead({ source: 'DIAGNOSTIC_ONLINE', name, contact: v, campaign, ...answers });
     const p = C.PROTOCOLS[lead.protocol];
     $('rGrade').textContent = lead.grade; $('rLabel').textContent = lead.gradeLabel; $('rCode').textContent = lead.code;
-    $('rBox').innerHTML = `<b>Runner:</b> ${name.replace(/[<>&]/g, '')}${lead.archetype && lead.archetype !== 'NONE' ? ' · ' + lead.archetype : ''}<br><b>Leak:</b> ${answers.pain}<br><b>Reserved:</b> <span class="accent">${p.name}</span> — ${p.tag}`;
+    $('rBox').innerHTML = `<b>Runner:</b> ${name.replace(/[<>&]/g, '')}${lead.archetype && lead.archetype !== 'NONE' ? ' · ' + lead.archetype : ''}<br><b>What hurts:</b> ${answers.pain}<br><b>Saved for you:</b> <span class="accent">${p.name}</span> — ${p.tag}`;
     let links = `<a class="btn story" href="${storyLink(lead)}">SHARE MY GRADE TO MY STORY</a><a class="btn" href="${RECUP.manualUrl(lead)}">OPEN MY REPAIR MANUAL</a><a class="btn ghost" href="${RECUP.memberUrl(lead)}">MY ASCENSION CARD</a>`;
     if (C.BUSINESS_WA) links += `<a class="btn wa" href="${RECUP.selfWaLink(lead)}">SAVE IT TO MY WHATSAPP</a>`;
     $('links').innerHTML = links;

@@ -55,9 +55,9 @@
   <div class="dl"><button class="btn" onclick="window.print()">SAVE AS PDF / PRINT</button></div>
 
   <div class="cover">
-    <div class="kicker">RECUP.STN · BODY SCIENCE SPECIALIST</div>
+    <div class="kicker">RECUP.STN · RECOVERY FOR RUNNERS</div>
     <h1>The Runner's<br>Repair Manual</h1>
-    <p>Your engine doesn't get stronger during the run. It gets stronger in the repair after it. Four quick hits to stop the leak.</p>
+    <p>Your body doesn't get stronger during the run. It gets stronger while it repairs after. Four quick ways to recover better.</p>
     <div class="for" id="forLine"></div>
   </div>
 
@@ -66,7 +66,7 @@
     <h2>3 things to do in the first 30 minutes after a run</h2>
     <ol class="big">
       <li><div><b>Replace what you sweated out.</b><span>In Malaysian heat you lose salt, not just water. Sip fluids with electrolytes. Plain water alone can leave you flat and crampy.</span></div></li>
-      <li><div><b>Feed the repair window.</b><span>Get protein in (around 20–30 g) with some carbs. This is when muscle breakdown turns into rebuilding. Skip it and you're just decaying.</span></div></li>
+      <li><div><b>Feed the repair window.</b><span>Get protein in (around 20–30 g) with some carbs. This is when muscle breakdown turns into rebuilding. Skip it and you stay sore for longer.</span></div></li>
       <li><div><b>Walk it down, don't sit it down.</b><span>5 minutes of easy walking plus light mobility before you get in the car. Going straight from running to sitting is how hips and knees stiffen up.</span></div></li>
     </ol>
   </div>
@@ -109,7 +109,7 @@
     <a class="btn" id="cardBtn" href="member.html" style="text-decoration:none;display:inline-block;width:auto;padding:14px 28px">VIEW MY ASCENSION CARD</a>
   </div>
 
-  <p class="disclaimer">General wellness information for healthy adult runners. Not medical advice. If you have a medical condition, are pregnant, or take medication, check with your doctor before using supplements.<br>RECUP.STN · Scan. Identify the Leak. Calibrate your Repair.</p>
+  <p class="disclaimer">General wellness information for healthy adult runners. Not medical advice. If you have a medical condition, are pregnant, or take medication, check with your doctor before using supplements.<br>RECUP.STN · Check your body. Find the weak spot. Fix it.</p>
 </div>
 
 <script src="assets/recup-core.js"></script>
@@ -131,7 +131,7 @@
     $('cardBtn').href = 'member.html?c=' + encodeURIComponent(code);
     RECUP.getByCode(code).then(l => {
       const p = l && C.PROTOCOLS[l.protocol];
-      $('forLine').innerHTML = l ? `PREPARED FOR ${String(l.name || '').split(' ')[0].toUpperCase()} · ${l.code}${p ? ` · YOUR PROTOCOL: <span class="accent">${p.name}</span>` : ''}` : `MEMBER CODE ${code}`;
+      $('forLine').innerHTML = l ? `PREPARED FOR ${String(l.name || '').split(' ')[0].toUpperCase()} · ${l.code}${p ? ` · YOUR DRINK: <span class="accent">${p.name}</span>` : ''}` : `MEMBER CODE ${code}`;
     });
   }
 </script>

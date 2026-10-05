@@ -75,9 +75,9 @@
     <div class="claimq" id="claimQ"></div>
     <div class="hook">SCAN FOR YOUR 10% DISCOUNT + FREE RECOVERY PDF</div>
     <h1 class="big-q">Did you do the online diagnostic?</h1>
-    <button class="path primary" onclick="goLookup('reserved')">YES — I have my code<small>We'll pull up your reserved Protocol.</small></button>
+    <button class="path primary" onclick="goLookup('reserved')">YES — I have my code<small>We'll pull up the drink saved for you.</small></button>
     <button class="path" onclick="startCheckin()">NO — check me in<small>5 taps. 60 seconds. Get your 10% + Repair Manual.</small></button>
-    <button class="path" onclick="goLookup('return')">I'M BACK — log my cup<small>Climb the Ascension ladder: rewards on every cup.</small></button>
+    <button class="path" onclick="goLookup('return')">I'M BACK — log my cup<small>Every cup unlocks a reward.</small></button>
     <form class="stafflogin" id="staffLogin" style="display:none" onsubmit="staffLoginSubmit(event)">
       <div class="consent" style="margin-top:0"><b>Staff, once per iPad:</b> log in so this iPad can search runners by name/phone and log cups to the shared database.</div>
       <div class="row"><input class="field" id="sEmail" type="email" placeholder="staff email" autocomplete="username"><input class="field" id="sPass" type="password" placeholder="password" autocomplete="current-password"><button class="btn">LOG IN</button></div>
@@ -87,7 +87,7 @@
 
   <!-- LOOKUP -->
   <section class="step" id="s-lookup">
-    <div class="phase" id="lookupPhase">FIND YOUR PROTOCOL</div>
+    <div class="phase" id="lookupPhase">FIND YOUR DRINK</div>
     <h3>Enter your member code, WhatsApp number, @handle or name</h3>
     <input class="field" id="q" placeholder="e.g. RS-7Q4K · 012xxxxxxx · @aina · Aina" autocomplete="off" autocapitalize="characters" onkeydown="if(event.key==='Enter')doLookup()">
     <button class="btn" onclick="doLookup()">SEARCH</button>
@@ -120,7 +120,7 @@
   </section>
 
   <section class="step" id="s-c4">
-    <div class="phase">04 / 05 · THE LEAK</div>
+    <div class="phase">04 / 05 · WHAT HURTS</div>
     <h3>What hurts most after a run?</h3>
     <p class="hintline">Pick all that apply.</p>
     <div class="grid2 multi" id="painOpts"></div>
@@ -166,7 +166,7 @@
     <div class="phase" id="pourPhase">CUP</div>
     <h3 id="pourTitle">Pour</h3>
     <div class="reward" id="pourReward"></div>
-    <div class="phase" style="margin-top:14px">WHICH PROTOCOL?</div>
+    <div class="phase" style="margin-top:14px">WHICH DRINK?</div>
     <div class="grid2" id="productOpts"></div>
     <div id="askBox" style="margin-top:16px"></div>
     <div class="err" id="ePour"></div>
@@ -262,7 +262,7 @@
   /* ---------- lookup (online diagnostic / returning) ---------- */
   function goLookup(mode) {
     lookupMode = mode;
-    $('lookupPhase').textContent = mode === 'reserved' ? 'ONLINE DIAGNOSTIC · FIND YOUR RESERVED PROTOCOL' : 'RETURNING RUNNER · LOG YOUR CUP';
+    $('lookupPhase').textContent = mode === 'reserved' ? 'ONLINE DIAGNOSTIC · FIND YOUR SAVED DRINK' : 'RETURNING RUNNER · LOG YOUR CUP';
     $('results').innerHTML = ''; show('s-lookup', 0); setTimeout(() => $('q').focus(), 100);
   }
   async function doLookup() {
@@ -285,8 +285,8 @@
     const l = current; const p = C.PROTOCOLS[l.protocol] || C.PROTOCOLS.N02; const cups = +l.cups || 0;
     const first = (l.name || '').split(' ')[0] || 'Runner';
     const next = RECUP.nextTier(cups);
-    $('cardPhase').textContent = mode === 'new' ? "YOU'RE IN · 10% OFF YOUR FIRST CUP" : mode === 'reserved' ? 'RESERVED PROTOCOL FOUND' : 'WELCOME BACK';
-    $('cardHello').textContent = mode === 'return' ? `Welcome back, ${first}.` : `${first}, you're calibrated.`;
+    $('cardPhase').textContent = mode === 'new' ? "YOU'RE IN · 10% OFF YOUR FIRST CUP" : mode === 'reserved' ? 'YOUR SAVED DRINK' : 'WELCOME BACK';
+    $('cardHello').textContent = mode === 'return' ? `Welcome back, ${first}.` : `${first}, you're checked in.`;
     $('cardCode').textContent = l.code;
     $('cardBox').innerHTML =
       `${mode === 'reserved' ? 'RESERVED' : 'RECOMMENDED'}: <span class="accent">${p.name}</span> · ${p.tag}${p.price ? ` · RM ${p.price}` : ''}<br>` +

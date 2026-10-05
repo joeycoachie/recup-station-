@@ -53,9 +53,9 @@
 
 <div class="label">POSTER A · THE PROTOCOL MENU (A3)</div>
 <div class="poster">
-  <div class="p-kicker">RECUP STATION · BODY SCIENCE SPECIALIST</div>
-  <div class="p-title">THE<br>PROTOCOL</div>
-  <div class="p-sub">Not a juice bar. Metabolic Protocols for runners. PHB Saujana.</div>
+  <div class="p-kicker">RECUP STATION · RECOVERY FOR RUNNERS</div>
+  <div class="p-title">THE<br>MENU</div>
+  <div class="p-sub">Not a juice bar. Drinks matched to your run. PHB Saujana.</div>
   <div id="menu"></div>
   <div class="foot">
     <div>
@@ -83,7 +83,7 @@
   $('menu').innerHTML = `
     <div class="phase locked"><div class="lab">PRE-RUN<small>The Nitric Prime</small></div><div>${item(C.ADDONS.NITRIC)}</div></div>
     <div class="phase"><div class="lab">DURING-RUN<small>The Electrolyte Balance · sip every 2km</small></div><div>${item(C.PROTOCOLS.N01)}</div></div>
-    <div class="phase"><div class="lab">POST-RUN<small>The Metabolic Window · the "Recup" phase</small></div><div>${item(C.PROTOCOLS.FLUSH)}${item(C.PROTOCOLS.N02)}${item(C.ADDONS.ACAI)}${item(C.ADDONS.NIGHT)}</div></div>`;
+    <div class="phase"><div class="lab">POST-RUN<small>The 30-minute window · the "Recup" phase</small></div><div>${item(C.PROTOCOLS.FLUSH)}${item(C.PROTOCOLS.N02)}${item(C.ADDONS.ACAI)}${item(C.ADDONS.NIGHT)}</div></div>`;
   $('ladder').innerHTML = C.LADDER.map(r => `<div>${r.cup === C.LADDER.length ? '★' : 'CUP ' + r.cup} · ${r.reward.split(' + ')[0].split(' — ')[0]}</div>`).join('');
   function qr(el, text) { try { const q = qrcode(0, 'M'); q.addData(text); q.make(); $(el).innerHTML = q.createImgTag(6, 0); } catch {} }
   const checkin = RECUP.siteUrl('intake-ipad.html?src=qr');

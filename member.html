@@ -121,13 +121,13 @@
 <nav class="menu" id="menu" aria-label="Menu">
   <div class="logo">RECUP.STN</div>
   <button class="mi" onclick="openMenu(false);scrollTo({top:0,behavior:'smooth'})">My Ascension card</button>
-  <button class="mi" onclick="goHB()">Book HealthBar</button>
+  <button class="mi" onclick="goHB()">Book RECUP.STN HQ</button>
   <a id="mManual" href="repair-manual.html">Runner's Repair Manual</a>
   <a id="mStory" href="story.html">Share my grade</a>
   <a id="mWa" href="#" target="_blank" rel="noopener" style="display:none">💬 WhatsApp us</a>
   <h4>ABOUT US</h4>
   <div id="aboutList"></div>
-  <h4>HEALTHBAR</h4>
+  <h4>RECUP.STN HQ</h4>
   <div id="hbAbout"></div>
 </nav>
 <div class="wrap">
@@ -150,7 +150,7 @@
   <div class="card claim" id="claimCard" style="display:none"></div>
   <div class="card savecard" id="homeHint" style="display:none"></div>
 
-  <!-- HEALTH BAR APPOINTMENT -->
+  <!-- RECUP.STN HQ APPOINTMENT (internal key: healthbar) -->
   <div class="card hb" id="hbCard" style="display:none"></div>
 
   <div class="card" id="findCard" style="display:none">
@@ -281,7 +281,7 @@
     if (!hbForm) {
       box.innerHTML = `<div class="hbk">${esc(HBC.NAME.toUpperCase())}</div><h2>${esc(HBC.HEADLINE.toUpperCase())}</h2>
         <p class="sub" style="margin:6px 0 0">${esc(HBC.PITCH)}</p>${where}
-        <div class="hbk" style="margin-top:14px">WE CALIBRATE</div>${tags(HBC.CONCERNS)}
+        <div class="hbk" style="margin-top:14px">WE LOOK AT</div>${tags(HBC.CONCERNS)}
         <button class="btn" onclick="editHB()">BOOK OR ENQUIRE →</button>
         ${C.BUSINESS_WA ? `<a href="${RECUP.contactWaLink(me, 'healthbar')}" target="_blank" rel="noopener" style="display:block;text-align:center;color:#DEDACD;font-size:13px;margin-top:10px">Prefer to chat? 💬 WhatsApp us to book</a>` : ''}
         <p class="sub" style="margin:10px 0 0;text-align:center">For yourself or your family.</p>${b && b.status === 'DONE' ? '<p class="sub" style="margin:6px 0 0;text-align:center">Last session done ✓</p>' : ''}`;
@@ -295,8 +295,11 @@
       <div class="seg">${['Myself', 'A family member'].map(w => `<button type="button" class="${(w === 'Myself') === (d.forWhom === 'Myself') ? 'on' : ''}" onclick="hbDraft.forWhom='${w === 'Myself' ? 'Myself' : ''}';renderHB()">${w}</button>`).join('')}</div>
       ${d.forWhom !== 'Myself' ? `<input class="field" id="hbWho" placeholder="Who? (e.g. my wife, my dad, 2 kids)" value="${esc(d.forWhom)}" oninput="hbDraft.forWhom=this.value||' '">` : ''}
       <div class="hbk" style="margin-top:14px">WHERE?</div>
-      <div class="seg"><button type="button" class="${d.mode === 'CAFE' ? 'on' : ''}" onclick="hbDraft.mode='CAFE';renderHB()">📍 At the cafe</button><button type="button" class="${d.mode === 'ONLINE' ? 'on' : ''}" onclick="hbDraft.mode='ONLINE';renderHB()">🌏 Online call</button></div>
+      <div class="seg"><button type="button" class="${d.mode === 'CAFE' ? 'on' : ''}" onclick="hbDraft.mode='CAFE';renderHB()">📍 At HQ</button><button type="button" class="${d.mode === 'ONLINE' ? 'on' : ''}" onclick="hbDraft.mode='ONLINE';renderHB()">🌏 Online call</button></div>
       <p class="sub" style="margin:6px 0 10px">${d.mode === 'ONLINE' ? esc(HBC.ONLINE) : esc(HBC.PLACE)}</p>
+      <div class="hbk" style="margin-top:14px">DO ANY OF THESE APPLY?</div>
+      <p class="sub" style="margin:4px 0 0">This keeps you safe. Some plans need your doctor's OK first.</p>
+      <div class="tags pick">${HBC.SAFETY.map(t => `<button type="button" class="${d.safety.includes(t) ? 'on' : ''}" onclick="toggleSafety(this)" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       <input class="field" id="hbPref" placeholder="When suits you? (e.g. weekday evenings)" value="${esc(d.preferred)}" oninput="hbDraft.preferred=this.value">
       <textarea class="field" id="hbGoal" rows="3" placeholder="Anything else we should know? Questions welcome." oninput="hbDraft.goal=this.value">${esc(d.goal)}</textarea>
       <div class="err" id="hbErr"></div>
@@ -304,21 +307,28 @@
   }
   function editHB() {
     const b = me.healthbar && me.healthbar.status === 'REQUESTED' ? me.healthbar : {};
-    hbDraft = { concerns: [...(b.concerns || [])], forWhom: b.for_whom || 'Myself', mode: b.mode || 'CAFE', preferred: b.preferred || '', goal: b.goal || '' };
+    hbDraft = { safety: [], concerns: [...(b.concerns || [])], forWhom: b.for_whom || 'Myself', mode: b.mode || 'CAFE', preferred: b.preferred || '', goal: b.goal || '' };
     hbForm = true; renderHB();
   }
   function toggleConcern(el) {
     const v = el.dataset.v; hbDraft.concerns = hbDraft.concerns.includes(v) ? hbDraft.concerns.filter(x => x !== v) : hbDraft.concerns.concat(v);
     el.classList.toggle('on');
   }
+  function toggleSafety(el) {
+    const v = el.dataset.v, none = HBC.SAFETY[HBC.SAFETY.length - 1];
+    if (v === none) hbDraft.safety = hbDraft.safety.includes(none) ? [] : [none];
+    else hbDraft.safety = (hbDraft.safety.includes(v) ? hbDraft.safety.filter(x => x !== v) : hbDraft.safety.concat(v)).filter(x => x !== none);
+    el.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', hbDraft.safety.includes(b.dataset.v)));
+  }
   async function submitHB() {
     const d = hbDraft;
     if (!d.concerns.length && !d.goal.trim()) return $('hbErr').textContent = 'Tap at least one area, or tell us what you need.';
+    if (!d.safety.length) return $('hbErr').textContent = 'Please answer the safety question (tap "None of these" if none apply).';
     $('hbBtn').disabled = true; $('hbBtn').textContent = 'SENDING…';
-    try { me.healthbar = await RECUP.requestHealthbar(me.code, { ...d, forWhom: d.forWhom.trim() || 'A family member', goal: d.goal.trim(), preferred: d.preferred.trim() }); hbForm = false; renderHB(); }
+    try { me.healthbar = await RECUP.requestHealthbar(me.code, { ...d, forWhom: d.forWhom.trim() || 'A family member', goal: [d.goal.trim(), 'SAFETY: ' + d.safety.join(', ')].filter(Boolean).join('\n'), preferred: d.preferred.trim() }); hbForm = false; renderHB(); }
     catch (e) { $('hbErr').textContent = 'Could not send: ' + e.message; $('hbBtn').disabled = false; $('hbBtn').textContent = 'TRY AGAIN'; }
   }
-  async function cancelHB() { if (!confirm('Cancel your Health Bar session?')) return; try { await RECUP.cancelHealthbar(me.code); } catch {} me.healthbar = null; renderHB(); }
+  async function cancelHB() { if (!confirm('Cancel your RECUP.STN HQ session?')) return; try { await RECUP.cancelHealthbar(me.code); } catch {} me.healthbar = null; renderHB(); }
 
   /* ---------- S-Rank picture: OUTSIDE = movement (legs/knees), INSIDE = sleep, gut, energy, blood markers ---------- */
   function bodyFig(ch, en) {
@@ -337,7 +347,7 @@
       </svg>
       <div class="key">
         <div><b><span class="dot" style="background:${out}"></span>Outside · Movement</b>Your legs, knees and form. Checked with the squat test.</div>
-        <div><b><span class="dot" style="background:${ins}"></span>Inside health</b>Sleep, gut, energy, hormones and blood markers. Checked at HealthBar.</div>
+        <div><b><span class="dot" style="background:${ins}"></span>Inside health</b>Sleep, stomach, energy and health check results. Checked at RECUP.STN HQ.</div>
       </div></div>`;
   }
 
@@ -347,12 +357,12 @@
     const row = (done, [t, d, todo]) => `<div class="gate ${done ? 'done' : ''}"><span class="ok">${done ? '✓' : ''}</span><div><b>${t}</b><small>${done ? d : todo}</small></div></div>`;
     $('rankCard').style.display = 'block';
     $('rankCard').innerHTML = `<div class="rank ${s ? 's' : ''}"><div class="badge">${s ? 'S' : (me.grade || '?')}</div>
-        <div><div class="st">${s ? 'S-RANK · CALIBRATED ATHLETE' : 'STATUS: CALIBRATION_PENDING'}</div>
+        <div><div class="st">${s ? 'S-RANK · CHECKED INSIDE AND OUT' : 'STATUS: NOT FULLY CHECKED YET'}</div>
         <h2 style="margin:4px 0 2px">${s ? 'Zero Energy Leaks.' : 'S-Rank: ' + (ch ? '1' : '0') + ' of 2 unlocked'}</h2>
-        <p class="sub" style="margin:0">${s ? 'Outside and inside both checked. No energy leaks.' : ch ? 'Your movement passes. Now check what\'s happening inside: book a HealthBar session to unlock S-Rank.' : 'S-Rank means no energy leaks, outside and inside. Unlock both to get it.'}</p></div></div>
+        <p class="sub" style="margin:0">${s ? 'Outside and inside both checked. No energy leaks.' : ch ? 'Your movement passes. Now check what\'s happening inside: book a session at RECUP.STN HQ to unlock S-Rank.' : 'S-Rank means no energy leaks, outside and inside. Unlock both to get it.'}</p></div></div>
       ${bodyFig(ch, en)}
       <div style="margin-top:6px">${row(ch, SR.CHASSIS)}${row(en, SR.ENGINE)}</div>
-      ${!en ? `<button class="btn" style="margin-top:10px" onclick="goHB()">${me.healthbar && ['REQUESTED', 'BOOKED'].includes(me.healthbar.status) ? 'SEE MY HEALTHBAR SESSION' : 'BOOK MY HEALTHBAR SESSION'} →</button>` : ''}`;
+      ${!en ? `<button class="btn" style="margin-top:10px" onclick="goHB()">${me.healthbar && ['REQUESTED', 'BOOKED'].includes(me.healthbar.status) ? 'SEE MY HQ SESSION' : 'BOOK MY HQ SESSION'} →</button>` : ''}`;
   }
 
   /* ---------- side menu ---------- */
