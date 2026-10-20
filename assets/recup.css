@@ -56,6 +56,9 @@ button { font-family: inherit; }
 .progress { height: 4px; background: var(--track); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
 .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 .consent { font-size: 12px; color: var(--muted); margin: 4px 0 8px; line-height: 1.5; }
+/* Consent ticks (PDPA): the first is required before anything is saved, the second only shows at a host studio. */
+.agree { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0 0 12px; cursor: pointer; }
+.agree input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--accent); }
 .err { color: var(--danger); font-size: 14px; min-height: 20px; margin-bottom: 6px; }
 .result-box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin: 18px 0; font-family: var(--mono); font-size: 14px; line-height: 1.9; }
 .grade-big { font: 800 64px/1 var(--mono); color: var(--accent); text-align: center; margin: 10px 0 4px; }

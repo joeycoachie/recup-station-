@@ -133,7 +133,10 @@
   <section class="step" id="s-c5">
     <div class="phase">05 / 05 · YOUR FREE REPAIR MANUAL</div>
     <h3>Where should we send your Recovery PDF?</h3>
-    <div class="privacy">🔒 Your choice. Only used to send your guide and your cup rewards. Never shared or sold. Rather not share? Pick <b>"Just show me the QR"</b> — you still get the 10% and the PDF.</div>
+    <div class="privacy">🔒 Your choice. Never sold. Only used to choose your drink and send your guide and cup rewards. Rather not share contact details? Pick <b>"Just show me the QR"</b> — you still get the 10% and the PDF.</div>
+    <label class="agree"><input type="checkbox" id="agree"><span>I agree that RECUP.STN keeps my answers to choose my drink and send my guide. This is not a medical test. I can ask for my details to be deleted at any time on WhatsApp.</span></label>
+      <label class="agree" id="shareRow" style="display:none"><input type="checkbox" id="share"><span id="shareText">Also share my results with the studio hosting today.</span></label>
+    <div class="err" id="eAgree"></div>
     <div class="grid2">
       <button class="opt" onclick="setContact('WHATSAPP')"><strong>WhatsApp</strong><small>Fastest — sent right away</small></button>
       <button class="opt" onclick="setContact('INSTAGRAM')"><strong>Instagram DM</strong><small>Just your @handle</small></button>
@@ -141,7 +144,6 @@
     </div>
     <div id="contactBox" style="display:none;margin-top:16px">
       <input class="field" id="contact" autocomplete="off">
-      <div class="consent">I agree to receive my results and cup rewards from RECUP.STN on this channel.</div>
       <div class="err" id="e5"></div>
       <button class="btn" id="submitBtn" onclick="submitCheckin()">GET MY 10% + PDF</button>
     </div>
@@ -195,6 +197,8 @@
   // ?src=qr → runner's own phone at the QR stand (self check-in, no staff buttons)
   const SELF = new URLSearchParams(location.search).get('src') === 'qr';
   const SOURCE = SELF ? 'QR_STAND' : 'ROADSIDE_IPAD';
+  const HOST = RECUP.hostFromUrl();
+  RECUP.showShareRow(HOST);
   $('modeTag').textContent = SELF ? 'QR STAND · SELF CHECK-IN' : 'IPAD · STAFF MODE';
 
   let form = {}, current = null, lookupMode = 'reserved', pour = {}, timer;
@@ -220,7 +224,7 @@
   $('painOpts').innerHTML = C.PAINS.map(v => `<button class="opt" data-v="${esc(v)}" onclick="pickPain(this)">${esc(v)}</button>`).join('');
 
   /* ---------- check-in ---------- */
-  function startCheckin() { form = {}; show('s-c1', 1); setTimeout(() => $('name').focus(), 100); }
+  function startCheckin() { form = {}; $('agree').checked = false; $('share').checked = false; $('eAgree').textContent = ''; show('s-c1', 1); setTimeout(() => $('name').focus(), 100); }
   function c1() { const n = $('name').value.trim(); if (!n) { $('e1').textContent = 'Just a first name is fine.'; return; } $('e1').textContent = ''; form.name = n; show('s-c2', 2); }
   function setRegion(v) { form.region = v; show('s-c3', 3); }
   function setFreq(v) { form.frequency = v; show('s-c4', 4); }
@@ -238,7 +242,12 @@
     setPain(pains.map(p => p === 'Other' && other ? other : p).join(', '));
   }
   function setPain(v) { form.pain = v; pains = []; document.querySelectorAll('#painOpts .opt').forEach(x => x.classList.remove('on')); $('painOther').style.display = 'none'; show('s-c5', 5); $('contactBox').style.display = 'none'; }
+  function agreed() {
+    if ($('agree').checked) { $('eAgree').textContent = ''; return true; }
+    $('eAgree').textContent = 'Tick the first box to continue.'; return false;
+  }
   function setContact(m) {
+    if (!agreed()) return;
     form.contactMethod = m;
     if (m === 'NONE') { form.contact = ''; submitCheckin(); return; }
     const ph = { WHATSAPP: ['WhatsApp number (e.g. 012xxxxxxx)', 'tel'], INSTAGRAM: ['@yourhandle', 'text'] }[m];
@@ -246,6 +255,7 @@
     $('contactBox').style.display = 'block'; $('contact').focus();
   }
   async function submitCheckin() {
+    if (!agreed()) return;
     if (form.contactMethod !== 'NONE') {
       const v = $('contact').value.trim(); const m = form.contactMethod;
       const bad = (m === 'WHATSAPP' && !/^\d{9,12}$/.test(v.replace(/\D/g, ''))) || (m === 'INSTAGRAM' && v.replace('@', '').length < 2);
@@ -254,7 +264,7 @@
     }
     $('e5').textContent = '';
     const btn = $('submitBtn'); btn.disabled = true;
-    const lead = await RECUP.submitLead({ source: SOURCE, ...form });
+    const lead = await RECUP.submitLead({ source: SOURCE, ...form, ...RECUP.consentFields(HOST) });
     btn.disabled = false;
     current = lead; renderCard('new');
   }

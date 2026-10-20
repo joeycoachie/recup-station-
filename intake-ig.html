@@ -108,13 +108,14 @@
       <div class="phase">07 / 07 · SAVE YOUR DRINK</div>
       <h3>Your name + where to send your Repair Manual</h3>
       <input class="field" id="name" placeholder="First name is fine" autocomplete="given-name">
-      <div class="privacy">🔒 Only used to send your Repair Manual and cup rewards. Never shared or sold.</div>
+      <div class="privacy">🔒 Never sold. Only used to choose your drink and send your guide and cup rewards.</div>
+      <label class="agree"><input type="checkbox" id="agree"><span>I agree that RECUP.STN keeps my answers to choose my drink and send my guide. This is not a medical test. I can ask for my details to be deleted at any time on WhatsApp.</span></label>
+      <label class="agree" id="shareRow" style="display:none"><input type="checkbox" id="share"><span id="shareText">Also share my results with the studio hosting today.</span></label>
       <div class="grid2">
         <button class="opt" onclick="setContact('WHATSAPP')"><strong>WhatsApp</strong><small>Your number</small></button>
         <button class="opt" onclick="setContact('INSTAGRAM')"><strong>Instagram DM</strong><small>Just your @handle</small></button>
       </div>
       <input class="field" id="contact" style="display:none;margin-top:14px">
-      <div class="consent" id="consent" style="display:none">I agree to receive my results and cup rewards from RECUP.STN on this channel.</div>
       <div class="err" id="err"></div>
       <button class="btn" id="submitBtn" onclick="finish()">SAVE MY DRINK</button>
       <button class="back" onclick="go(6)">← BACK</button>
@@ -139,6 +140,8 @@
   const answers = {}; const TOTAL = 8;
   const qs = new URLSearchParams(location.search);
   const campaign = qs.get('utm_content') || qs.get('c') || '';
+  const HOST = RECUP.hostFromUrl();
+  RECUP.showShareRow(HOST);
 
   function go(n) { document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', +s.dataset.step === n)); $('bar').style.width = (n / TOTAL * 100) + '%'; window.scrollTo(0, 0); }
   function pick(k, v, next) { answers[k] = v; go(next); }
@@ -172,7 +175,7 @@
     document.querySelectorAll('[data-step="7"] .grid2 .opt').forEach(b => { const on = b.textContent.toUpperCase().includes({ WHATSAPP: 'WHATSAPP', INSTAGRAM: 'INSTAGRAM' }[m]); b.style.borderColor = on ? 'var(--accent)' : ''; b.style.background = on ? 'rgba(var(--accent-rgb),.08)' : ''; });
     const f = $('contact');
     const ph = { WHATSAPP: ['WhatsApp number (e.g. 012xxxxxxx)', 'tel'], INSTAGRAM: ['@yourhandle', 'text'] }[m];
-    f.placeholder = ph[0]; f.type = ph[1]; f.style.display = 'block'; $('consent').style.display = 'block'; f.focus();
+    f.placeholder = ph[0]; f.type = ph[1]; f.style.display = 'block'; f.focus();
   }
 
   async function finish() {
@@ -181,8 +184,9 @@
     if (!m) return $('err').textContent = 'Choose WhatsApp or Instagram for your Repair Manual.';
     const bad = (m === 'WHATSAPP' && !/^\d{9,12}$/.test(v.replace(/\D/g, ''))) || (m === 'INSTAGRAM' && v.replace('@', '').length < 2);
     if (bad) return $('err').textContent = m === 'WHATSAPP' ? 'Please check your WhatsApp number.' : 'Please check your @handle.';
+    if (!$('agree').checked) return $('err').textContent = 'Tick the first box to save your drink.';
     $('err').textContent = ''; $('submitBtn').disabled = true;
-    const lead = await RECUP.submitLead({ source: 'DIAGNOSTIC_ONLINE', name, contact: v, campaign, ...answers });
+    const lead = await RECUP.submitLead({ source: 'DIAGNOSTIC_ONLINE', name, contact: v, campaign, ...answers, ...RECUP.consentFields(HOST) });
     const p = C.PROTOCOLS[lead.protocol];
     $('rGrade').textContent = lead.grade; $('rLabel').textContent = lead.gradeLabel; $('rCode').textContent = lead.code;
     $('rBox').innerHTML = `<b>Runner:</b> ${name.replace(/[<>&]/g, '')}${lead.archetype && lead.archetype !== 'NONE' ? ' · ' + lead.archetype : ''}<br><b>What hurts:</b> ${answers.pain}<br><b>Saved for you:</b> <span class="accent">${p.name}</span> — ${p.tag}`;

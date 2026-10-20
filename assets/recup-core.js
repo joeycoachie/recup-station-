@@ -227,6 +227,19 @@ const RECUP = (() => {
   }
 
   /* ---------- create a runner (both channels use this) ---------- */
+  // The consent wording on both check-in pages. Change the wording → bump the version.
+  const CONSENT_VERSION = 'v1-2026-10-20';
+  // ?host=Studio%20Name on a check-in link marks a tasting hosted by that studio.
+  function hostFromUrl() { return (new URLSearchParams(location.search).get('host') || '').trim().slice(0, 60); }
+  function consentFields(host) {
+    return { consentVersion: CONSENT_VERSION, consentAt: new Date().toISOString(), host, shareWithHost: !!(host && document.getElementById('share') && document.getElementById('share').checked) };
+  }
+  function showShareRow(host) {
+    if (!host) return;
+    document.getElementById('shareText').textContent = 'Also share my results with ' + host + ', who is hosting today.';
+    document.getElementById('shareRow').style.display = 'flex';
+  }
+
   async function submitLead(raw) {
     const squat = raw.squat ? (SQUAT[raw.squat] || 'SHAKY') : '';
     const g = squat ? GRADE[squat] : null;
@@ -247,7 +260,9 @@ const RECUP = (() => {
       status: raw.source === 'DIAGNOSTIC_ONLINE' ? 'RESERVED' : 'CHECKED_IN',   // RESERVED -> CHECKED_IN
       cups: 0, history: '[]',
       painFocus: '', referral: '', goal: '', wearable: '',
-      manualSent: '', campaign: raw.campaign || '', notes: '',
+      manualSent: '', campaign: raw.campaign || (raw.host ? ('host:' + raw.host).slice(0, 60) : ''), notes: '',
+      // Consent (PDPA): which wording they agreed to, when, and whether the host studio may see their results.
+      consentVersion: raw.consentVersion || '', consentAt: raw.consentAt || '', shareWithHost: !!raw.shareWithHost, host: raw.host || '',
       updatedAt: new Date().toISOString(),
     };
     saveLocal(lead);
@@ -488,7 +503,7 @@ Check your body. Find the weak spot. Fix it.`;
     store.set(K_LEADS, all);
   }
 
-  return { submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, contactWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
+  return { hostFromUrl, consentFields, showShareRow, submitLead, updateLead, stampCup, priceFor, loadLeads, findRunner, getByCode, flushQueue, waLink, selfWaLink, contactWaLink, manualUrl, memberUrl, storyUrl, siteUrl,
            getSetting, setSetting, requestHealthbar, cancelHealthbar, loadHealthbar, updateHealthbar, slotText,
            claimCup, cancelClaim, loadClaims, approveClaim, rejectClaim, igDmUrl, igProfileUrl, igMessage,
            tierOf, nextTier, recommend, clearLocal, seedDemo, safeJSON, login, logout, session, GRADE, store };
