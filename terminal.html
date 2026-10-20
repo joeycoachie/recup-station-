@@ -245,6 +245,24 @@
     </div>
   </div>
 
+  <!-- 07B PARTNER KIT: what a studio gets, in order -->
+  <div class="panel s12" id="partnerKit">
+    <h2>07B_PARTNER_KIT · STUDIOS <small>they reply YES → send the deck PDF + the guide link · day before the tasting → send the check-in link</small></h2>
+    <div class="links" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px">
+      <a href="https://claude.ai/artifact/KL27kTxrpPkLfCt9yazx6F" target="_blank" rel="noreferrer" style="margin:0">STUDIO DECK · 12 SLIDES <span>claude.ai · Share → Export → PDF</span></a>
+      <a href="partner-guide.html" target="_blank" style="margin:0">PARTNER GUIDE <span>public page · send this link</span></a>
+    </div>
+    <div class="btn-row" style="margin-top:10px;align-items:center;gap:8px;flex-wrap:wrap">
+      <button class="btn-t" onclick="copy(RECUP.siteUrl('partner-guide.html'))">COPY GUIDE LINK</button>
+      <input class="search" id="hostName" placeholder="STUDIO NAME FOR THE TASTING" style="width:260px" oninput="hostLink()">
+      <button class="btn-t primary" onclick="copy(hostLink())">COPY CHECK-IN LINK</button>
+    </div>
+    <div class="btn-row" style="margin-top:10px;align-items:center;gap:12px">
+      <div id="hostQr"></div>
+      <div style="font-size:10px;text-transform:none;word-break:break-all" class="muted" id="hostUrl"></div>
+    </div>
+  </div>
+
   <!-- 08 PROTOCOLS -->
   <div class="panel s6">
     <h2>08_MARKETING_VOICE · PLAIN_WORDS <a class="btn-t primary" href="marketing.html" target="_blank">OPEN MARKETING KIT →</a></h2>
@@ -632,6 +650,14 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `recup-runners-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
 }
 function copy(t) { navigator.clipboard?.writeText(t); }
+// Check-in link for a hosted tasting: members see the studio's name and can agree to share results with it.
+function hostLink() {
+  const n = $('hostName').value.trim();
+  const u = RECUP.siteUrl('intake-ipad.html') + '?src=qr' + (n ? '&host=' + encodeURIComponent(n) : '');
+  $('hostUrl').textContent = n ? u : 'Type the studio name to make its check-in link and QR.';
+  try { const q = qrcode(0, 'M'); q.addData(u); q.make(); $('hostQr').innerHTML = n ? q.createImgTag(3, 0) : ''; } catch {}
+  return u;
+}
 // Instagram can't pre-fill a DM, so: copy the message, open the DM, staff paste + send
 function igDM(id) {
   const l = LEADS.find(x => x.id === id); if (!l) return;
@@ -771,6 +797,7 @@ Object.entries(settings.inputs || {}).forEach(([id, val]) => { const el = $(id);
 document.querySelectorAll('.f2, #headcount').forEach(el => el.addEventListener('input', paint));
 $('nodeName').textContent = C.NODE_NAME;
 try { const q = qrcode(0, 'M'); q.addData(RECUP.siteUrl('intake-ig.html') + '?utm_content=qr'); q.make(); $('qr').innerHTML = q.createImgTag(3, 0); } catch {}
+hostLink();
 $('qrHint').textContent = C.SITE_URL ? 'QR → The Diagnostic. Use in stories / flyers.' : 'Set SITE_URL so this QR works on phones.';
 decorateLocks();
 tick(); setInterval(tick, 30000);

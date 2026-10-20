@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RECUP.STN · Partner Guide</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Rubik:wght@400;500;700&display=swap">
+<style>
+  /* Layout: one reading column, the deck's warm palette; tables for "slide → what to look for", a timeline for the day. */
+  :root {
+    --bg: #F6F0E7; --panel: #EADFD0; --panel-2: #F0E7DA; --fg: #221B17; --muted: #5A4D44;
+    --accent: #B8482A; --accent-fg: #FBF4EC; --line: #DDCFBD;
+    --display: 'Oswald', 'Arial Narrow', Arial, sans-serif; --body: 'Rubik', Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1C1613; --panel: #2A221D; --panel-2: #241D19; --fg: #F3EBE1; --muted: #C9BBAB;
+    --accent: #E07A55; --accent-fg: #1C1613; --line: #3A2F28; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #1C1613; --panel: #2A221D; --panel-2: #241D19; --fg: #F3EBE1; --muted: #C9BBAB;
+    --accent: #E07A55; --accent-fg: #1C1613; --line: #3A2F28; color-scheme: dark }
+
+  body { background: var(--bg); color: var(--fg); font: 400 16px/1.6 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap { max-width: 760px; margin: 0 auto; padding-block: 40px 64px; display: flex; flex-direction: column; gap: 40px; }
+  h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 7vw, 52px); line-height: 1.05; }
+  h2 { font-size: 26px; line-height: 1.15; }
+  p { margin: 0; }
+  .eyebrow { font-family: var(--display); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+  .lede { font-size: 18px; color: var(--muted); max-width: 60ch; }
+  section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .intent { background: var(--accent); color: var(--accent-fg); padding: 24px; border-radius: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .intent p { font-size: 19px; line-height: 1.45; }
+  .intent .eyebrow { color: var(--accent-fg); opacity: .85; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15px; }
+  th { text-align: left; font-family: var(--display); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; font-size: 13px; color: var(--muted); padding: 8px 10px; border-bottom: 2px solid var(--line); }
+  td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-weight: 500; white-space: nowrap; }
+  .asks { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .ask { background: var(--panel); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .ask b { font-family: var(--display); font-weight: 600; font-size: 20px; }
+  .ask span { color: var(--muted); font-size: 14px; }
+  ol.day { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  ol.day li { display: grid; grid-template-columns: 128px 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+  ol.day li:last-child { border-bottom: 1px solid var(--line); }
+  .when { font-family: var(--display); font-weight: 500; color: var(--accent); }
+  .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+  .box h3 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 18px; }
+  .box ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+  details { border-top: 1px solid var(--line); padding: 12px 0; }
+  details:last-of-type { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; font-weight: 500; }
+  summary:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  details p { margin-top: 8px; color: var(--muted); }
+  .contact { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; background: var(--panel); border-radius: 14px; padding: 18px 20px; }
+  .contact .num { font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; user-select: all; }
+  button { font: 500 14px var(--body); background: var(--fg); color: var(--bg); border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+  .note { font-size: 13px; color: var(--muted); }
+  @media (max-width: 480px) { ol.day li { grid-template-columns: 1fr; gap: 2px; } }
+  body { margin: 0; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header style="display:flex;flex-direction:column;gap:12px">
+    <p class="eyebrow">RECUP.STN · by The M.O.E. Group</p>
+    <h1>Partner Guide</h1>
+    <p class="lede">Read this next to our deck. It takes three minutes. It shows what we intend, how the day works, and the four answers we need from you.</p>
+  </header>
+
+  <div class="intent">
+    <p class="eyebrow">What we are here to do</p>
+    <p>Your members get a recovery drink matched to how they trained. You get the numbers after. Nobody gets sold to, and your studio pays nothing.</p>
+  </div>
+
+  <section>
+    <h2>How to read the deck</h2>
+    <div class="scroll">
+      <table>
+        <tr><th>Slides</th><th>What to look for</th><th>Ask yourself</th></tr>
+        <tr><td>Who we are · Why now</td><td>Who is behind RECUP.STN, and why members need recovery more while training moves indoors</td><td>Do my members train hard enough to need this?</td></tr>
+        <tr><td>Why us</td><td>How we differ from a brand booth: drinks matched to each member, and you keep the numbers</td><td>What did I get back from my last collaboration?</td></tr>
+        <tr><td>The menu</td><td>At your studio we pour a selected few, chosen per member. The full menu lives at RECUP.STN HQ</td><td>Do I want to see every label first? (Come to HQ.)</td></tr>
+        <tr><td>Three options</td><td>The post-class tasting, the Recovery Omakase, and the one-to-one wellness check</td><td>Which one fits my members best?</td></tr>
+        <tr><td>Proof</td><td>Years on the floor, an HQ that already runs, real members in their own words</td><td>Is this a team I trust with my members?</td></tr>
+        <tr><td>Who does what · How we work</td><td>What you give, what we bring, and how we keep it safe</td><td>Any venue rules they should know?</td></tr>
+        <tr><td>After the day</td><td>The numbers you get, and how we decide what is next together</td><td>Which class and which date?</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>The four answers we need from you</h2>
+    <p class="note">That is all the homework. Reply with these and we handle the rest.</p>
+    <div class="asks">
+      <div class="ask"><b>Which class</b><span>Your busiest one works best.</span></div>
+      <div class="ask"><b>Which date</b><span>Any day in the next two to three weeks.</span></div>
+      <div class="ask"><b>Who on the day</b><span>One person from your team we can call.</span></div>
+      <div class="ask"><b>Your rules</b><span>Any rules on food, drink, space or branding.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How the day runs</h2>
+    <ol class="day">
+      <li><span class="when">Before</span><span>We agree the class, the date, your rules, and what we will count on the day. You share one post or story with your members.</span></li>
+      <li><span class="when">Day before</span><span>We confirm the time and send you the check-in link with your studio’s name on it.</span></li>
+      <li><span class="when">15 min before class ends</span><span>We set up one table near your door. Nothing for your team to do.</span></li>
+      <li><span class="when">Class ends</span><span>Members check in on their phones in 60 seconds, try a three-cup flight, and take home a free recovery guide.</span></li>
+      <li><span class="when">After</span><span>We clean up and leave the space as we found it.</span></li>
+      <li><span class="when">Next few days</span><span>You get the numbers: who tried it, what they chose, who wants more. Then a short chat to decide together what comes next.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Who brings what</h2>
+    <div class="split">
+      <div class="box"><h3>Your studio</h3><ul><li>A spot for one table near the door</li><li>One class and a date</li><li>One post or story for members</li><li>One contact person on the day</li></ul></div>
+      <div class="box"><h3>RECUP.STN</h3><ul><li>Drinks, cups, ice and trained staff</li><li>The check-in stand and QR code</li><li>Set-up and clean-up</li><li>Your numbers after the day</li></ul></div>
+    </div>
+    <p class="note">Your studio pays nothing. Members pay a small price for the three-cup flight.</p>
+  </section>
+
+  <section>
+    <h2>Your members and their data</h2>
+    <div class="split">
+      <div class="box"><h3>Before anything is saved</h3><p>Every member ticks a box to agree. Nothing is saved without it.</p></div>
+      <div class="box"><h3>Shared with you</h3><p>Members choose, with a second box, whether you see their results.</p></div>
+      <div class="box"><h3>Never sold</h3><p>Members can ask us to delete their details at any time.</p></div>
+      <div class="box"><h3>Not a medical test</h3><p>Members with health conditions see their doctor first. We make no medical claims.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Questions partners ask</h2>
+    <div>
+      <details><summary>Which products do you use?</summary><p>Products from a global nutrition company. Come to RECUP.STN HQ and we will show you the full menu and every label.</p></details>
+      <details><summary>What does it cost our studio?</summary><p>Nothing. Members pay a small price for the tasting flight, and we bring everything.</p></details>
+      <details><summary>Will you sell to our members?</summary><p>No. We pour, we listen, and we send members their free guide. If a member wants more, they ask us.</p></details>
+      <details><summary>What if a member has a health condition?</summary><p>The check-in asks the safety questions first. Anyone pregnant, under a doctor’s care, with kidney disease or on blood thinners is asked to see their doctor first.</p></details>
+      <details><summary>What happens after the tasting?</summary><p>We look at the numbers with you and decide together. Some studios want regular sessions. Some want the same picture for every client, every week. We can show you how when you are ready.</p></details>
+    </div>
+  </section>
+
+  <section>
+    <h2>Talk to us</h2>
+    <div class="contact">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <b>Joey</b>
+        <span class="note">Architect of human performance ecosystems</span>
+      </div>
+      <span class="num" id="wa">+60 10-231 9893</span>
+      <button type="button" id="copyBtn">Copy number</button>
+      <span class="note">WhatsApp · Instagram @recup.stn</span>
+    </div>
+  </section>
+</main>
+
+<script>
+  document.getElementById('copyBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget, text = document.getElementById('wa').textContent;
+    try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+    catch { const r = document.createRange(); r.selectNodeContents(document.getElementById('wa')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected, press copy'; }
+    setTimeout(() => (btn.textContent = 'Copy number'), 2000);
+  });
+</script>
+</body>
+</html>
