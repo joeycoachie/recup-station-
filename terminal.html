@@ -247,14 +247,15 @@
 
   <!-- 07B PARTNER KIT: what a studio gets, in order -->
   <div class="panel s12" id="partnerKit">
-    <h2>07B_PARTNER_KIT · STUDIOS <small>they reply YES → send the deck PDF + the studio guide link · day before the tasting → send the check-in link</small></h2>
+    <h2>07B_PARTNER_KIT · STUDIOS <small>they reply YES → send the deck link + the studio guide link · day before the tasting → send the check-in link</small></h2>
     <div class="links" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px">
-      <a href="https://claude.ai/artifact/KL27kTxrpPkLfCt9yazx6F" target="_blank" rel="noreferrer" style="margin:0">STUDIO DECK · 12 SLIDES <span>claude.ai · Share → Export → PDF</span></a>
+      <a href="https://studio.theoperatorplaybook.com/recup/deck" target="_blank" rel="noreferrer" style="margin:0">STUDIO DECK · 12 SLIDES <span>our domain · send this link</span></a>
       <a href="https://studio.theoperatorplaybook.com/recup/guide" target="_blank" rel="noreferrer" style="margin:0">STUDIO GUIDE <span>one view on mobile · send to studios</span></a>
       <a href="https://studio.theoperatorplaybook.com/recup/login" target="_blank" rel="noreferrer" style="margin:0">TEAM SIGN-IN <span>partners · Team Guide + their studios</span></a>
       <a href="https://terminal.theoperatorplaybook.com/ops/partners" target="_blank" rel="noreferrer" style="margin:0">TEAM OVERVIEW <span>founder · who each partner reached</span></a>
     </div>
     <div class="btn-row" style="margin-top:10px;align-items:center;gap:8px;flex-wrap:wrap">
+      <button class="btn-t" onclick="copy('https://studio.theoperatorplaybook.com/recup/deck')">COPY DECK LINK</button>
       <button class="btn-t" onclick="copy('https://studio.theoperatorplaybook.com/recup/guide')">COPY STUDIO GUIDE LINK</button>
       <button class="btn-t" onclick="copy('https://studio.theoperatorplaybook.com/recup/login')">COPY TEAM SIGN-IN LINK</button>
       <input class="search" id="hostName" placeholder="STUDIO NAME FOR THE TASTING" style="width:260px" oninput="hostLink()">
