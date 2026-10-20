@@ -247,13 +247,15 @@
 
   <!-- 07B PARTNER KIT: what a studio gets, in order -->
   <div class="panel s12" id="partnerKit">
-    <h2>07B_PARTNER_KIT · STUDIOS <small>they reply YES → send the deck PDF + the guide link · day before the tasting → send the check-in link</small></h2>
+    <h2>07B_PARTNER_KIT · STUDIOS <small>they reply YES → send the deck PDF + the studio guide link · day before the tasting → send the check-in link</small></h2>
     <div class="links" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px">
       <a href="https://claude.ai/artifact/KL27kTxrpPkLfCt9yazx6F" target="_blank" rel="noreferrer" style="margin:0">STUDIO DECK · 12 SLIDES <span>claude.ai · Share → Export → PDF</span></a>
-      <a href="partner-guide.html" target="_blank" style="margin:0">PARTNER GUIDE <span>public page · send this link</span></a>
+      <a href="https://studio.theoperatorplaybook.com/recup/guide" target="_blank" rel="noreferrer" style="margin:0">STUDIO GUIDE <span>one view on mobile · send to studios</span></a>
+      <a href="https://studio.theoperatorplaybook.com/recup/team" target="_blank" rel="noreferrer" style="margin:0">TEAM GUIDE <span>for partners doing outreach with us</span></a>
     </div>
     <div class="btn-row" style="margin-top:10px;align-items:center;gap:8px;flex-wrap:wrap">
-      <button class="btn-t" onclick="copy(RECUP.siteUrl('partner-guide.html'))">COPY GUIDE LINK</button>
+      <button class="btn-t" onclick="copy('https://studio.theoperatorplaybook.com/recup/guide')">COPY STUDIO GUIDE LINK</button>
+      <button class="btn-t" onclick="copy('https://studio.theoperatorplaybook.com/recup/team')">COPY TEAM GUIDE LINK</button>
       <input class="search" id="hostName" placeholder="STUDIO NAME FOR THE TASTING" style="width:260px" oninput="hostLink()">
       <button class="btn-t primary" onclick="copy(hostLink())">COPY CHECK-IN LINK</button>
     </div>
